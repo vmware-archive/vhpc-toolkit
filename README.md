@@ -53,10 +53,6 @@ Feature Highlights:
 - Easy creation and  deletion of a virtual HPC clusters using cluster configuration files
 - Support of common vSphere tasks, such as cloning VMs, configuring vCPUs, memory, reservations, shares, Latency Sensitivity, Distributed Virtual Switch/Standard Virtual Switch, network adapters and network configurations
 
-
-The software described in this document is not a VMware product and as such is 
-not supported by VMware.
-
 ## Try It Out
 
 ### Prerequisites
