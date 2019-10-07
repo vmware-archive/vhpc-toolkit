@@ -1,5 +1,3 @@
-!["vhpclogo"](docs/img/hpc-logo400.png)
-
 # Virtualized High Performance Computing Toolkit (vHPC Toolkit) 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -25,6 +23,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+!["vhpclogo"](docs/img/hpc-logo400.png)
 
 ## Overview 
 This toolkit is intended to help vSphere administrators easily configure and 
