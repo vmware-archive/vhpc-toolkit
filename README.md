@@ -36,7 +36,7 @@ molecular dynamics, weather modeling and deep learning with neural networks.
 Due to their extreme demand on performance, HPC workloads often have much 
 more intensive resource requirements than those workloads found in the 
 typical enterprise. For example, HPC commonly leverages hardware 
-accelerators, such as __GPU__ and __FPGA__ for compute as well as RDMA 
+accelerators, such as GPU and FPGA for compute as well as RDMA 
 interconnects, which require special vSphere configurations. 
 
 This toolkit is intended to facilitate managing the lifecycle of these 
