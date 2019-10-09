@@ -26,7 +26,7 @@
 !["vhpclogo"](docs/img/hpc-logo400.png)
 
 ## Overview 
-High Performance Computing (HPC)is the use of parallel-processing techniques to solve complex 
+High Performance Computing (HPC) is the use of parallel-processing techniques to solve complex 
 computational problems. HPC systems have the ability to deliver sustained 
 performance through the concurrent use of distributed computing resources, 
 and they are typically used for solving advanced scientific and engineering problems, 
