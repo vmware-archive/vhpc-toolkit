@@ -83,7 +83,7 @@ To install ```virtualenv``` if you don't have one, for example,
 Setup this toolkit with an virtual env:
  
 ```bash 
-git clone xx
+git clone https://github.com/vmware/vhpc-toolkit.git
 cd vhpc_toolkit
 virtualenv -p python3 venv
 source venv/bin/activate
