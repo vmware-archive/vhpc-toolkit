@@ -15,6 +15,6 @@ repos:
       files: \.py$
     - id: trailing-whitespace
       files: \.py$
-    - id: flake8
-      files: \.py$
+#    - id: flake8
+#      files: \.py$
 

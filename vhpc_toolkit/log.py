@@ -8,12 +8,10 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
-import logging
 import datetime
+import logging
 
 
 loggers = {}
@@ -45,13 +43,10 @@ def my_logger(name=" ", log_level=logging.INFO, log_file=LOG_FILE):
         logging.basicConfig(level=log_level, format=FORMAT)
         logger.setLevel(log_level)
         now = datetime.datetime.now()
-        handler = logging.FileHandler(
-            log_file + now.strftime("-%Y-%m-%d") + ".log"
-        )
+        handler = logging.FileHandler(log_file + now.strftime("-%Y-%m-%d") + ".log")
         handler.setLevel(log_level)
         formatter = logging.Formatter(FORMAT)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         loggers.update({name: logger})
         return logger
-

@@ -8,33 +8,31 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
 import logging
 from distutils.util import strtobool
-from pyVmomi import vim, vmodl
+
+from pyVmomi import vim
+from pyVmomi import vmodl
 from textwrap3 import TextWrapper
 
-from vhpc_toolkit import log
 from vhpc_toolkit import connect
-from vhpc_toolkit.get_objs import (
-    GetObjects,
-    GetDatacenter,
-    GetHost,
-    GetVM,
-    GetClone,
-)
-from vhpc_toolkit.config_objs import (
-    ConfigDatacenter,
-    ConfigDVS,
-    ConfigHost,
-    ConfigVM,
-)
-from vhpc_toolkit.wait import VMGetWait, GetWait
-from vhpc_toolkit.cluster import Cluster, Check
+from vhpc_toolkit import log
+from vhpc_toolkit.cluster import Check
+from vhpc_toolkit.cluster import Cluster
+from vhpc_toolkit.config_objs import ConfigDatacenter
+from vhpc_toolkit.config_objs import ConfigDVS
+from vhpc_toolkit.config_objs import ConfigHost
+from vhpc_toolkit.config_objs import ConfigVM
+from vhpc_toolkit.get_objs import GetClone
+from vhpc_toolkit.get_objs import GetDatacenter
+from vhpc_toolkit.get_objs import GetHost
+from vhpc_toolkit.get_objs import GetObjects
+from vhpc_toolkit.get_objs import GetVM
 from vhpc_toolkit.view import View
+from vhpc_toolkit.wait import GetWait
+from vhpc_toolkit.wait import VMGetWait
 
 
 class Operations(object):
@@ -63,7 +61,7 @@ class Operations(object):
             None
 
         """
-        
+
         datacenters = self.objs.get_container_view([vim.Datacenter])
         # print basic information by default (compute resources)
         print("Basic View:")
@@ -164,9 +162,7 @@ class Operations(object):
         template_obj = self.objs.get_vm(vm_cfg["template"])
         if template_obj:
             dest_vm_name = vm_cfg["vm"]
-            self.logger.info(
-                "Creating clone task for VM {0}".format(dest_vm_name)
-            )
+            self.logger.info("Creating clone task for VM {0}".format(dest_vm_name))
             clone_dests = {}
             for clone_dest in [
                 "datacenter",
@@ -186,14 +182,14 @@ class Operations(object):
             clone_objs = GetClone(
                 content=self.content,
                 template_obj=template_obj,
-                datacenter_name=clone_dests['datacenter'],
-                folder_name=clone_dests['vm_folder'],
-                cluster_name=clone_dests['cluster'],
-                resource_pool_name=clone_dests['resource_pool'],
-                host_name=clone_dests['host'],
-                datastore_name=clone_dests['datastore'],
-                cpu=clone_dests['cpu'],
-                memory=clone_dests['memory']
+                datacenter_name=clone_dests["datacenter"],
+                folder_name=clone_dests["vm_folder"],
+                cluster_name=clone_dests["cluster"],
+                resource_pool_name=clone_dests["resource_pool"],
+                host_name=clone_dests["host"],
+                datastore_name=clone_dests["datastore"],
+                cpu=clone_dests["cpu"],
+                memory=clone_dests["memory"],
             )
             # linked clone
             if Check().check_kv(vm_cfg, "linked"):
@@ -203,7 +199,7 @@ class Operations(object):
                     folder_obj=clone_objs.dest_folder_obj,
                     resource_pool_obj=clone_objs.dest_resource_pool_obj,
                     cpu=clone_objs.cpu,
-                    mem=clone_objs.memory
+                    mem=clone_objs.memory,
                 )
 
             # full clone
@@ -215,7 +211,7 @@ class Operations(object):
                     vm_folder_obj=clone_objs.dest_folder_obj,
                     resource_pool_obj=clone_objs.dest_resource_pool_obj,
                     cpu=clone_objs.cpu,
-                    mem=clone_objs.memory
+                    mem=clone_objs.memory,
                 )
             return task
         else:
@@ -267,10 +263,7 @@ class Operations(object):
             vm_obj = self.objs.get_vm(vm, _exit=False)
             if vm_obj is not None:
                 vm_objs.append(vm_obj)
-                if (
-                    vm_obj.runtime.powerState
-                    == vim.VirtualMachinePowerState.poweredOn
-                ):
+                if vm_obj.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
                     power_tasks.append(ConfigVM(vm_obj).power_off())
         if power_tasks:
             GetWait().wait_for_tasks(
@@ -294,17 +287,11 @@ class Operations(object):
         for vm_cfg in vm_cfgs:
             cpumem_tasks.extend(self._get_cpumem_tasks(vm_cfg))
         if cpumem_tasks:
-            GetWait().wait_for_tasks(
-                cpumem_tasks, task_name="Configure CPU/memory"
-            )
+            GetWait().wait_for_tasks(cpumem_tasks, task_name="Configure CPU/memory")
         # Configure CPU shares
-        cpu_shares_tasks = [
-            self._get_cpu_shares_task(vm_cfg) for vm_cfg in vm_cfgs
-        ]
+        cpu_shares_tasks = [self._get_cpu_shares_task(vm_cfg) for vm_cfg in vm_cfgs]
         if cpu_shares_tasks:
-            GetWait().wait_for_tasks(
-                cpu_shares_tasks, task_name="Configure CPU shares"
-            )
+            GetWait().wait_for_tasks(cpu_shares_tasks, task_name="Configure CPU shares")
         # Configure memory shares
         memory_shares_tasks = [
             self._get_memory_shares_task(vm_cfg) for vm_cfg in vm_cfgs
@@ -318,8 +305,7 @@ class Operations(object):
             cpumem_reser_tasks.extend(self._get_cpumem_reser_tasks(vm_cfg))
         if cpumem_reser_tasks:
             GetWait().wait_for_tasks(
-                cpumem_reser_tasks,
-                task_name="Configure CPU/memory reservation",
+                cpumem_reser_tasks, task_name="Configure CPU/memory reservation",
             )
 
     def _cpumem_cluster(self, vm_cfgs, *keys):
@@ -360,7 +346,7 @@ class Operations(object):
         ]
         if tasks:
             GetWait().wait_for_tasks(tasks, task_name="Configure CPU shares")
-            
+
     def _memory_shares_cluster(self, vm_cfgs, *keys):
         """set memory shares for VMs (defined in cluster conf file)
 
@@ -418,14 +404,12 @@ class Operations(object):
         if Check().check_kv(vm_cfg, "cpu"):
             if GetVM(vm_obj).cpu() != vm_cfg["cpu"]:
                 self.logger.info(
-                    "Creating CPU re-configure "
-                    "task for VM {0}".format(vm_obj.name)
+                    "Creating CPU re-configure " "task for VM {0}".format(vm_obj.name)
                 )
                 tasks.append(ConfigVM(vm_obj).cpus(vm_cfg["cpu"]))
             else:
                 self.logger.info(
-                    "No change of number of "
-                    "CPUs for VM {0}".format(vm_obj.name)
+                    "No change of number of " "CPUs for VM {0}".format(vm_obj.name)
                 )
         if Check().check_kv(vm_cfg, "memory"):
             mem = int(float(vm_cfg["memory"]) * 1024)
@@ -464,7 +448,7 @@ class Operations(object):
                 self.logger.info(
                     "No change of CPU Shares for VM {0}".format(vm_obj.name)
                 )
-    
+
     def _get_memory_shares_task(self, vm_cfg):
         """set memory shares for a VM and return Task
 
@@ -512,65 +496,45 @@ class Operations(object):
                     vm_status.is_cpu_reser_full(host_cpu_mhz)
                     != vm_cfg["cpu_reservation"]
                 ):
-                    self.logger.info(
-                        "Reserving CPU for VM {0}".format(vm_obj.name)
-                    )
+                    self.logger.info("Reserving CPU for VM {0}".format(vm_obj.name))
                     host_cpu_mhz = GetHost(host_obj).cpu_mhz_per_core()
                     tasks.append(
-                        vm_update.cpu_reservation(
-                            host_cpu_mhz=host_cpu_mhz, reser=1
-                        )
+                        vm_update.cpu_reservation(host_cpu_mhz=host_cpu_mhz, reser=1)
                     )
                 else:
                     self.logger.info(
-                        "CPU is already reserved "
-                        "for VM {0}".format(vm_obj.name)
+                        "CPU is already reserved " "for VM {0}".format(vm_obj.name)
                     )
             else:
                 if vm_status.cpu_reser():
                     self.logger.info(
-                        "Removing CPU reservation for VM {0}".format(
-                            vm_cfg["vm"]
-                        )
+                        "Removing CPU reservation for VM {0}".format(vm_cfg["vm"])
                     )
                     tasks.append(vm_update.cpu_reservation(reser=0))
                 else:
                     self.logger.info(
-                        "CPU is already not reserved for VM {0}".format(
-                            vm_obj.name
-                        )
+                        "CPU is already not reserved for VM {0}".format(vm_obj.name)
                     )
         if Check().check_kv(vm_cfg, "memory_reservation", none_check=False):
             if vm_cfg["memory_reservation"]:
-                if (
-                    vm_status.is_memory_reser_full()
-                    != vm_cfg["memory_reservation"]
-                ):
-                    self.logger.info(
-                        "Reserving memory for VM {0}".format(vm_obj.name)
-                    )
+                if vm_status.is_memory_reser_full() != vm_cfg["memory_reservation"]:
+                    self.logger.info("Reserving memory for VM {0}".format(vm_obj.name))
                     tasks.append(
-                        vm_update.memory_reservation(
-                            vm_cfg["memory_reservation"]
-                        )
+                        vm_update.memory_reservation(vm_cfg["memory_reservation"])
                     )
                 else:
                     self.logger.info(
-                        "Memory is already reserved for VM {0}".format(
-                            vm_obj.name
-                        )
+                        "Memory is already reserved for VM {0}".format(vm_obj.name)
                     )
             else:
                 if vm_status.memory_reser():
                     self.logger.info(
-                        "Removing memory reservation for "
-                        "VM {0}".format(vm_obj.name)
+                        "Removing memory reservation for " "VM {0}".format(vm_obj.name)
                     )
                     tasks.append(vm_update.memory_reservation(reser=0))
                 else:
                     self.logger.info(
-                        "Memory is already not reserved for "
-                        "{0}".format(vm_obj.name)
+                        "Memory is already not reserved for " "{0}".format(vm_obj.name)
                     )
         return tasks
 
@@ -632,9 +596,7 @@ class Operations(object):
                 task = ConfigVM(vm_obj).power_on()
                 tasks.append(task)
             else:
-                self.logger.info(
-                    "VM {0} is already in power on state".format(vm)
-                )
+                self.logger.info("VM {0} is already in power on state".format(vm))
         return tasks
 
     def _get_poweroff_tasks(self, vms):
@@ -655,9 +617,7 @@ class Operations(object):
                 task = ConfigVM(vm_obj).power_off()
                 tasks.append(task)
             else:
-                self.logger.info(
-                    "VM {0} is already in power off state".format(vm)
-                )
+                self.logger.info("VM {0} is already in power off state".format(vm))
         return tasks
 
     def network_cli(self):
@@ -674,16 +634,12 @@ class Operations(object):
             for vm_cfg in vm_cfgs:
                 tasks.extend(self._get_network_add_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Add network adapter(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Add network adapter(s)")
         if self.cfg["remove"]:
             for vm_cfg in vm_cfgs:
                 tasks.extend(self._get_network_remove_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Remove network adapter(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Remove network adapter(s)")
 
     def _network_cluster(self, vm_cfgs, *keys):
         """Add/Remove network adapters for VM(s) (defined in cluster conf file)
@@ -752,8 +708,7 @@ class Operations(object):
             pg_obj = GetVM(vm_obj).network_obj(pg)
             if pg_obj:
                 self.logger.info(
-                    "Found port group {0} "
-                    "for VM {1}".format(pg, vm_obj.name)
+                    "Found port group {0} " "for VM {1}".format(pg, vm_obj.name)
                 )
                 tasks.append(ConfigVM(vm_obj).remove_network_adapter(pg_obj))
             else:
@@ -774,9 +729,7 @@ class Operations(object):
         vm_cfgs = self._extract_file(self.cfg)
         tasks = [self._get_network_cfg_task(vm_cfg) for vm_cfg in vm_cfgs]
         if tasks:
-            GetWait().wait_for_tasks(
-                tasks, task_name="Configure network properties"
-            )
+            GetWait().wait_for_tasks(tasks, task_name="Configure network properties")
 
     def _network_cfg_cluster(self, vm_cfgs, *keys):
         """ Configure network properties for VM(s)
@@ -796,9 +749,7 @@ class Operations(object):
             if any(k in vm_cfg for k in keys):
                 tasks.append(self._get_network_cfg_task(vm_cfg))
         if tasks:
-            GetWait().wait_for_tasks(
-                tasks, task_name="Configure network properties"
-            )
+            GetWait().wait_for_tasks(tasks, task_name="Configure network properties")
 
     def _get_network_cfg_task(self, vm_cfg):
         """Configure network property for a a VM and get Task
@@ -832,15 +783,9 @@ class Operations(object):
                 )
             )
             return
-        netmask = (
-            vm_cfg["netmask"] if Check().check_kv(vm_cfg, "netmask") else None
-        )
-        gateway = (
-            vm_cfg["gateway"] if Check().check_kv(vm_cfg, "gateway") else None
-        )
-        domain = (
-            vm_cfg["domain"] if Check().check_kv(vm_cfg, "domain") else None
-        )
+        netmask = vm_cfg["netmask"] if Check().check_kv(vm_cfg, "netmask") else None
+        gateway = vm_cfg["gateway"] if Check().check_kv(vm_cfg, "gateway") else None
+        domain = vm_cfg["domain"] if Check().check_kv(vm_cfg, "domain") else None
         dns = vm_cfg["dns"] if Check().check_kv(vm_cfg, "dns") else None
         guest_hostname = (
             vm_cfg["guest_hostname"]
@@ -880,9 +825,7 @@ class Operations(object):
         for vm_cfg in vm_cfgs:
             vm_obj = self.objs.get_vm(vm_cfg["vm"])
             if GetVM(vm_obj).is_power_on():
-                self.logger.info(
-                    "VM {0} is powered on. Good.".format(vm_obj.name)
-                )
+                self.logger.info("VM {0} is powered on. Good.".format(vm_obj.name))
             else:
                 self.logger.info(
                     "VM {0} is not powered on. "
@@ -927,9 +870,7 @@ class Operations(object):
         proc_mng = self.content.guestOperationsManager.processManager
         if vm_status.wait_for_vmtools():
             for script in scripts:
-                proc = vm_update.execute_script(
-                    proc_mng, script, username, password
-                )
+                proc = vm_update.execute_script(proc_mng, script, username, password)
                 procs.append(proc)
         return procs
 
@@ -944,9 +885,7 @@ class Operations(object):
         vm_cfgs = self._extract_file(self.cfg)
         tasks = [self._get_latency_task(vm_cfg) for vm_cfg in vm_cfgs]
         if tasks:
-            GetWait().wait_for_tasks(
-                tasks, task_name="Configure latency sensitivity"
-            )
+            GetWait().wait_for_tasks(tasks, task_name="Configure latency sensitivity")
             self._latency_high(vm_cfgs)
 
     def _latency_cluster(self, vm_cfgs, key):
@@ -968,9 +907,7 @@ class Operations(object):
                 vm_cfg["level"] = vm_cfg[key]
                 tasks.append(self._get_latency_task(vm_cfg))
         if tasks:
-            GetWait().wait_for_tasks(
-                tasks, task_name="Configure latency sensitivity"
-            )
+            GetWait().wait_for_tasks(tasks, task_name="Configure latency sensitivity")
             self._latency_high(vm_cfgs)
 
     def _latency_high(self, vm_cfgs):
@@ -1000,9 +937,7 @@ class Operations(object):
                         "set to high requires "
                         "memory reservation"
                     )
-                    self.logger.info(
-                        "Reserving memory for VM {0}".format(vm_obj.name)
-                    )
+                    self.logger.info("Reserving memory for VM {0}".format(vm_obj.name))
                     tasks.append(ConfigVM(vm_obj).memory_reservation(reser=1))
                 host_obj = self.objs.get_host_by_vm(vm_obj)
                 host_cpu_mhz = GetHost(host_obj).cpu_mhz_per_core()
@@ -1017,9 +952,7 @@ class Operations(object):
                         "set to high requires "
                         "full CPU reservation"
                     )
-                    self.logger.info(
-                        "Reserving CPU for VM {0}".format(vm_obj.name)
-                    )
+                    self.logger.info("Reserving CPU for VM {0}".format(vm_obj.name))
                     tasks.append(
                         ConfigVM(vm_obj).cpu_reservation(host_cpu_mhz, reser=1)
                     )
@@ -1066,9 +999,7 @@ class Operations(object):
             for vm_cfg in vm_cfgs:
                 tasks.extend(self._get_add_passthru_task(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Add Passthrough device(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Add Passthrough device(s)")
         if self.cfg["remove"]:
             tasks = []
             for vm_cfg in vm_cfgs:
@@ -1096,9 +1027,7 @@ class Operations(object):
             if all(k in vm_cfg for k in keys):
                 tasks.extend(self._get_add_passthru_task(vm_cfg))
         if tasks:
-            GetWait().wait_for_tasks(
-                tasks, task_name="Add Passthrough device(s)"
-            )
+            GetWait().wait_for_tasks(tasks, task_name="Add Passthrough device(s)")
 
     def _query_passthru(self, vm_cfg):
         """Query Passthrough device(s) for a VM
@@ -1115,11 +1044,7 @@ class Operations(object):
         vm_status = GetVM(vm_obj)
         devices = vm_status.avail_pci_info()
         if devices:
-            print(
-                "Available Passthrough device(s) for VM {0}:".format(
-                    vm_obj.name
-                )
-            )
+            print("Available Passthrough device(s) for VM {0}:".format(vm_obj.name))
             print("------------------------------------------------")
             for index, pci_device in enumerate(devices):
                 device_name, vendor_name, device_id, system_id = pci_device
@@ -1130,10 +1055,7 @@ class Operations(object):
                 print(wrapper.fill("device id = {0}".format(device_id)))
                 print(wrapper.fill("system id = {0}\n".format(system_id)))
         else:
-            print(
-                "No available Passthrough "
-                "devices for VM {0}".format(vm_obj.name)
-            )
+            print("No available Passthrough " "devices for VM {0}".format(vm_obj.name))
 
     def _get_add_passthru_task(self, vm_cfg):
         """Add device(s) in Passthrough mode for a VM and get Task
@@ -1155,26 +1077,27 @@ class Operations(object):
         mmio_size = None
         if Check().check_kv(vm_cfg, "mmio_size"):
             if not self.is_valid_mmio_size(vm_cfg["mmio_size"]):
-                self.logger.warning("mmio_size has to be power of 2 and "
-                                    "larger than 0. "
-                                    "This value will be ignored. "
-                                    "The default mmio_size (256) will be used")
+                self.logger.warning(
+                    "mmio_size has to be power of 2 and "
+                    "larger than 0. "
+                    "This value will be ignored. "
+                    "The default mmio_size (256) will be used"
+                )
             else:
                 mmio_size = vm_cfg["mmio_size"]
         for device in vm_cfg["device"]:
             device = device.lower()
             if device in vm_status.configurable_pci_ids():
                 self.logger.debug(
-                    "Device {0} is available for "
-                    "VM {1}".format(device, vm_obj.name)
+                    "Device {0} is available for " "VM {1}".format(device, vm_obj.name)
                 )
-                tasks.extend(vm_update.add_pci(device, host_obj,
-                                               vm_update, vm_status, mmio_size))
+                tasks.extend(
+                    vm_update.add_pci(device, host_obj, vm_update, vm_status, mmio_size)
+                )
             else:
                 if device in vm_status.existing_pci_ids():
                     self.logger.error(
-                        "Device {0} is already configured. "
-                        "Skip.".format(device)
+                        "Device {0} is already configured. " "Skip.".format(device)
                     )
                 elif device not in vm_status.avail_pci_ids():
                     self.logger.error(
@@ -1198,7 +1121,7 @@ class Operations(object):
     def is_valid_mmio_size(num):
         """check MMIO size setting is valid
         """
-    
+
         return num > 0 and ((num & (num - 1)) == 0)
 
     def _get_remove_passthru_task(self, vm_cfg):
@@ -1221,8 +1144,7 @@ class Operations(object):
             device = device.lower()
             if device in vm_status.existing_pci_ids():
                 self.logger.info(
-                    "Device {0} to be removed "
-                    "on VM {1}".format(device, vm_cfg["vm"])
+                    "Device {0} to be removed " "on VM {1}".format(device, vm_cfg["vm"])
                 )
                 tasks.append(vm_update.remove_pci(device, vm_status))
             else:
@@ -1250,17 +1172,13 @@ class Operations(object):
             for vm_cfg in vm_cfgs:
                 tasks.extend(self._get_add_sriov_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Add SR-IOV device(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Add SR-IOV device(s)")
         if self.cfg["remove"]:
             tasks = []
             for vm_cfg in vm_cfgs:
                 tasks.append(self._get_remove_sriov_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Remove SR-IOV device(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Remove SR-IOV device(s)")
 
     def _sriov_cluster(self, vm_cfgs, *keys):
         """ Configure device in SR-IOV mode for VM(s)
@@ -1297,15 +1215,10 @@ class Operations(object):
         vm_status = GetVM(vm_obj)
         devices = vm_status.avail_sriov_info()
         if devices:
-            print(
-                "Available Passthrough device(s) "
-                "for VM {0}:".format(vm_obj.name)
-            )
+            print("Available Passthrough device(s) " "for VM {0}:".format(vm_obj.name))
             print("------------------------------------------------")
             for index, pci_device in enumerate(devices):
-                pnic, vf, device_name, vendor_name, device_id, system_id = (
-                    pci_device
-                )
+                pnic, vf, device_name, vendor_name, device_id, system_id = pci_device
                 print("device # {0}".format(index))
                 wrapper = TextWrapper(initial_indent=" " * 4)
                 print(wrapper.fill("PNIC = {0}".format(pnic)))
@@ -1343,19 +1256,17 @@ class Operations(object):
         if pf in device_ids:
             self.logger.info(
                 "Find physical function {0} for VM {1} "
-                "and this physical function is SR-IOV capable".format(
-                    pf, vm_obj.name
-                )
+                "and this physical function is SR-IOV capable".format(pf, vm_obj.name)
             )
             tasks.append(vm_update.add_sriov_adapter(pg_obj, pf_obj))
         else:
-            self.logger.error("This physical function is not SR-IOV capable. "
-                              "Skipping")
+            self.logger.error(
+                "This physical function is not SR-IOV capable. " "Skipping"
+            )
         if tasks:
             if not GetVM(vm_obj).is_memory_reser_full():
                 self.logger.warning(
-                    "Add a SR-IOV device needs to reserve memory. "
-                    "Reserving memory."
+                    "Add a SR-IOV device needs to reserve memory. " "Reserving memory."
                 )
                 tasks.append(vm_update.memory_reservation(reser=1))
             else:
@@ -1382,8 +1293,8 @@ class Operations(object):
         elif Check().check_kv(vm_cfg, "sriov_port_group"):
             pg = vm_cfg["sriov_port_group"]
             pg_obj = GetVM(vm_obj).network_obj(
-                network_name=pg,
-                device_type=vim.vm.device.VirtualSriovEthernetCard)
+                network_name=pg, device_type=vim.vm.device.VirtualSriovEthernetCard
+            )
             if pg_obj:
                 self.logger.debug(
                     "Found port group {0} for VM {1}".format(pg, vm_obj.name)
@@ -1563,17 +1474,13 @@ class Operations(object):
             for vm_cfg in vm_cfgs:
                 tasks.extend(self._get_add_pvrdma_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Add PVRDMA device(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Add PVRDMA device(s)")
         if self.cfg["remove"]:
             tasks = []
             for vm_cfg in vm_cfgs:
                 tasks.append(self._get_remove_pvrdma_tasks(vm_cfg))
             if tasks:
-                GetWait().wait_for_tasks(
-                    tasks, task_name="Remove PVRDMA device(s)"
-                )
+                GetWait().wait_for_tasks(tasks, task_name="Remove PVRDMA device(s)")
 
     def _pvrdma_cluster(self, vm_cfgs, *keys):
         """Add/Remove PVRDMA device for VM(s) (defined in cluster conf file)
@@ -1626,8 +1533,7 @@ class Operations(object):
         if tasks:
             if not vm_status.is_memory_reser_full():
                 self.logger.warning(
-                    "Add a PVRDMA device needs to reserve memory. "
-                    "Reserving memory."
+                    "Add a PVRDMA device needs to reserve memory. " "Reserving memory."
                 )
                 tasks.append(vm_update.memory_reservation(reser=1))
             else:
@@ -1648,12 +1554,11 @@ class Operations(object):
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         Check().check_kv(vm_cfg, "pvrdma_port_group", required=True)
         pg = vm_cfg["pvrdma_port_group"]
-        pg_obj = GetVM(vm_obj).network_obj(network_name=pg,
-                                           device_type=vim.VirtualVmxnet3Vrdma)
+        pg_obj = GetVM(vm_obj).network_obj(
+            network_name=pg, device_type=vim.VirtualVmxnet3Vrdma
+        )
         if pg_obj:
-            self.logger.debug(
-                "Found port group {0} for VM {1}".format(pg, vm_obj.name)
-            )
+            self.logger.debug("Found port group {0} for VM {1}".format(pg, vm_obj.name))
             task = ConfigVM(vm_obj).remove_network_adapter(pg_obj)
             return task
         else:
@@ -1707,8 +1612,7 @@ class Operations(object):
             try:
                 host_update.create_svs(svs_name=svs, vmnic=pnic)
                 self.logger.info(
-                    "Creating standard virtual switch {0} "
-                    "is successful.".format(svs)
+                    "Creating standard virtual switch {0} " "is successful.".format(svs)
                 )
             except vmodl.MethodFault as error:
                 self.logger.error("Caught vmodl fault: " + error.msg)
@@ -1764,8 +1668,7 @@ class Operations(object):
             try:
                 host_update.destroy_svs(svs_name)
                 self.logger.info(
-                    "Destroying virtual switch {0} is "
-                    "successful.".format(svs_name)
+                    "Destroying virtual switch {0} is " "successful.".format(svs_name)
                 )
             except vmodl.MethodFault as error:
                 self.logger.error("Caught vmodl fault : " + error.msg)
@@ -1793,7 +1696,7 @@ class Operations(object):
             None
 
         """
-        
+
         self.logger.info("Checking DVS arguments...")
         Check().check_kv(dvs_cfg, "name", required=True)
         Check().check_kv(dvs_cfg, "datacenter", required=True)
@@ -1820,12 +1723,8 @@ class Operations(object):
         for dvs_host in dvs_hosts:
             host_obj = self.objs.get_host(dvs_host)
             host_vmnics[host_obj] = pnics
-        task = ConfigDatacenter(datacenter_obj).create_dvs(
-            host_vmnics, dvs_name
-        )
-        GetWait().wait_for_tasks(
-            [task], task_name="Create distributed virtual switch"
-        )
+        task = ConfigDatacenter(datacenter_obj).create_dvs(host_vmnics, dvs_name)
+        GetWait().wait_for_tasks([task], task_name="Create distributed virtual switch")
         # create port group within this DVS
         if Check().check_kv(dvs_cfg, "port_group"):
             dvs_obj = self.objs.get_dvs(dvs_name)
@@ -1856,13 +1755,9 @@ class Operations(object):
                         "DVS: {1} first".format(pg_obj.name, dvs_obj.name)
                     )
                     task = pg_obj.Destroy_Task()
-                    GetWait().wait_for_tasks(
-                        [task], task_name="Destroy port group"
-                    )
+                    GetWait().wait_for_tasks([task], task_name="Destroy port group")
         task = ConfigDVS(dvs_obj).destroy_dvs()
-        GetWait().wait_for_tasks(
-            [task], task_name="Destroy distributed virtual switch"
-        )
+        GetWait().wait_for_tasks([task], task_name="Destroy distributed virtual switch")
 
     def cluster(self):
         """ Cluster creation/destroy based on the definition from cluster conf
@@ -1913,7 +1808,7 @@ class Operations(object):
                 self._destroy_cluster_svs(svs_cfgs)
             if dvs_cfgs:
                 self._destroy_cluster_dvs(dvs_cfgs)
-                
+
     def _create_cluster_svs(self, switch_cfgs):
         """
 
@@ -1959,9 +1854,7 @@ class Operations(object):
         self._clone_cluster(vm_cfgs, "template")
         self._cpu_shares_cluster(vm_cfgs, "cpu_shares")
         self._memory_shares_cluster(vm_cfgs, "memory_shares")
-        self._cpumem_reser_cluster(
-            vm_cfgs, "cpu_reservation", "memory_reservation"
-        )
+        self._cpumem_reser_cluster(vm_cfgs, "cpu_reservation", "memory_reservation")
         self._network_cluster(vm_cfgs, "port_group")
         self._network_cfg_cluster(vm_cfgs, "ip", "is_dhcp")
         self._latency_cluster(vm_cfgs, "latency")
@@ -2000,9 +1893,7 @@ class Operations(object):
 
         vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
         if vms:
-            confirm = input(
-                "[ACTION] Do you really want to destroy {0} ? ".format(vms)
-            )
+            confirm = input("[ACTION] Do you really want to destroy {0} ? ".format(vms))
             try:
                 if bool(strtobool(confirm)):
                     tasks = self._get_destroy_tasks(vms)
@@ -2028,9 +1919,7 @@ class Operations(object):
         """
 
         svs_cfgs = [
-            switch_cfg
-            for switch_cfg in switch_cfgs
-            if switch_cfg["op"] == "svs"
+            switch_cfg for switch_cfg in switch_cfgs if switch_cfg["op"] == "svs"
         ]
         svs_for_del = [svs["name"] for svs in svs_cfgs]
         if svs_for_del:
@@ -2057,9 +1946,7 @@ class Operations(object):
         """
 
         dvs_cfgs = [
-            switch_cfg
-            for switch_cfg in switch_cfgs
-            if switch_cfg["op"] == "dvs"
+            switch_cfg for switch_cfg in switch_cfgs if switch_cfg["op"] == "dvs"
         ]
         dvs_for_del = [dvs["name"] for dvs in dvs_cfgs]
         if dvs_for_del:
@@ -2071,7 +1958,4 @@ class Operations(object):
                 for cl_config in dvs_cfgs:
                     self._destroy_dvs(cl_config)
             else:
-                self.logger.info(
-                    "Not destroying any distributed virtual switches"
-                )
-
+                self.logger.info("Not destroying any distributed virtual switches")

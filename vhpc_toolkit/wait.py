@@ -8,12 +8,12 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
 import time
+
 from pyVmomi import vim
+
 from vhpc_toolkit import log
 
 
@@ -54,9 +54,7 @@ class VMGetWait(object):
                 waited += self.sleep
             else:
                 return ip_address
-        self.logger.error(
-            "Couldn't get IP address for VM {0}".format(self.vm_obj.name)
-        )
+        self.logger.error("Couldn't get IP address for VM {0}".format(self.vm_obj.name))
 
     def wait_for_vmtools(self):
         """ check vmtools status
@@ -136,13 +134,11 @@ class GetWait(object):
                 if info.state == vim.TaskInfo.State.success:
                     task_done = True
                     self.logger.info(
-                        "Task {0} (number {1}) is "
-                        "successful".format(task_name, task)
+                        "Task {0} (number {1}) is " "successful".format(task_name, task)
                     )
                 elif info.state == vim.TaskInfo.State.queued:
                     self.logger.info(
-                        "Task {0} (number {1}) is "
-                        "queued".format(task_name, task)
+                        "Task {0} (number {1}) is " "queued".format(task_name, task)
                     )
                     time.sleep(self.sleep)
                 elif info.state == vim.TaskInfo.State.error:
@@ -173,16 +169,10 @@ class GetWait(object):
             proc_info = proc_mng.ListProcessesInGuest(vm_obj, auth, [pid])
             while not proc_info[0].endTime:
                 time.sleep(sleep)
-                proc_info = proc_mng.ListProcessesInGuest(
-                    vm_obj, auth, [pid]
-                )
+                proc_info = proc_mng.ListProcessesInGuest(vm_obj, auth, [pid])
             exit_code = proc_info[0].exitCode
             if exit_code == 0:
-                self.logger.info(
-                    "Process {0} completed successfully".format(pid)
-                )
+                self.logger.info("Process {0} completed successfully".format(pid))
             elif exit_code != 0:
-                self.logger.error(
-                    "Process {0} is finished with an error".format(pid)
-                )
+                self.logger.error("Process {0} is finished with an error".format(pid))
                 raise SystemExit

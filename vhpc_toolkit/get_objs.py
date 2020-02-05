@@ -8,11 +8,10 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
+from pyVmomi import vmodl
 
 from vhpc_toolkit import log
 from vhpc_toolkit.wait import VMGetWait
@@ -92,9 +91,7 @@ class GetObjects(object):
             self.logger.info("Datacenter: {0}".format(datacenter_obj.name))
             return datacenter_obj
         else:
-            self.logger.error(
-                "Cannot find datacenter {0}".format(datacenter_name)
-            )
+            self.logger.error("Cannot find datacenter {0}".format(datacenter_name))
             if _exit:
                 raise SystemExit
             else:
@@ -204,9 +201,7 @@ class GetObjects(object):
             self.logger.info("Datastore: {0}".format(datastore_obj.name))
             return datastore_obj
         else:
-            self.logger.error(
-                "Cannot find datastore {0}".format(datastore_name)
-            )
+            self.logger.error("Cannot find datastore {0}".format(datastore_name))
             if _exit:
                 raise SystemExit
             else:
@@ -226,9 +221,7 @@ class GetObjects(object):
 
         resource_pool_obj = self.get_obj([vim.ResourcePool], resource_pool_name)
         if resource_pool_obj:
-            self.logger.info(
-                "Resource pool: {0}".format(resource_pool_obj.name)
-            )
+            self.logger.info("Resource pool: {0}".format(resource_pool_obj.name))
             return resource_pool_obj
         else:
             self.logger.error(
@@ -275,8 +268,7 @@ class GetObjects(object):
 
         network_obj = self.get_obj([vim.Network], network_name)
         if network_obj:
-            self.logger.info(
-                "Found network {0}".format(network_name))
+            self.logger.info("Found network {0}".format(network_name))
             return network_obj
         else:
             self.logger.error("Cannot find network {0}".format(network_name))
@@ -297,12 +289,9 @@ class GetObjects(object):
 
         """
 
-        dvs_obj = self.get_obj(
-            [vim.dvs.VmwareDistributedVirtualSwitch], dvs_name
-        )
+        dvs_obj = self.get_obj([vim.dvs.VmwareDistributedVirtualSwitch], dvs_name)
         if dvs_obj:
-            self.logger.info("Found distributed "
-                             "virtual switch {0}".format(dvs_name))
+            self.logger.info("Found distributed " "virtual switch {0}".format(dvs_name))
             return dvs_obj
         else:
             self.logger.error(
@@ -479,9 +468,7 @@ class GetHost(object):
                 network_obj = network
         if network_obj:
             self.logger.info(
-                "Found network {0} on the host {1}".format(
-                    network, self.host_obj.name
-                )
+                "Found network {0} on the host {1}".format(network, self.host_obj.name)
             )
         else:
             self.logger.info(
@@ -679,7 +666,7 @@ class GetVM(object):
         """
 
         return self.vm_obj.config.cpuAllocation.shares.shares
-    
+
     def memory_shares(self):
         """
 
@@ -767,10 +754,7 @@ class GetVM(object):
 
         """
 
-        return (
-            self.vm_obj.runtime.powerState ==
-            vim.VirtualMachinePowerState.poweredOn
-        )
+        return self.vm_obj.runtime.powerState == vim.VirtualMachinePowerState.poweredOn
 
     def network_obj(self, network_name, device_type=vim.VirtualVmxnet3):
         """
@@ -792,30 +776,32 @@ class GetVM(object):
             if network.name != network_name:
                 continue
             if isinstance(network, vim.Network):
-                network_type = 'svs_pg'
+                network_type = "svs_pg"
             if isinstance(network, vim.DistributedVirtualPortgroup):
                 port_group_key = network.key
-                network_type = 'dvs_pg'
+                network_type = "dvs_pg"
         if network_type is None:
             return None
         for dev in self.vm_obj.config.hardware.device:
-            if (network_type == 'svs_pg' and
-                isinstance(dev, device_type)
+            if (
+                network_type == "svs_pg"
+                and isinstance(dev, device_type)
                 and dev.deviceInfo.summary == network_name
             ):
                 network_obj = dev
-            elif (network_type == 'dvs_pg' and
-                isinstance(dev, device_type) and
-                  dev.backing.port.portgroupKey == port_group_key
+            elif (
+                network_type == "dvs_pg"
+                and isinstance(dev, device_type)
+                and dev.backing.port.portgroupKey == port_group_key
             ):
                 network_obj = dev
         return network_obj
-    
+
     def device_objs_all(self):
         """
         Returns:
         	a list of VM network objects [vim.Network]
-        
+
         """
         return self.vm_obj.config.hardware.device
 
@@ -1087,11 +1073,9 @@ class GetVM(object):
             ):
                 if device.backing.vgpu == vgpu_profile:
                     vgpu_obj = device
-                    self.logger.info(
-                        "Found the vGPU profile {0}".format(vgpu_profile))
+                    self.logger.info("Found the vGPU profile {0}".format(vgpu_profile))
                     return vgpu_obj
-        self.logger.info(
-            "Couldn't find the vGPU profile {0}".format(vgpu_profile))
+        self.logger.info("Couldn't find the vGPU profile {0}".format(vgpu_profile))
         return None
 
     def get_ip_addr(self):
@@ -1130,7 +1114,7 @@ class GetClone(GetObjects):
         host_name=None,
         datastore_name=None,
         cpu=None,
-        memory=None
+        memory=None,
     ):
         """
 
@@ -1162,17 +1146,13 @@ class GetClone(GetObjects):
                 "No VM folder specified. "
                 "The first VM folder ({0}) "
                 "in the datacenter ({1}) is "
-                "used.".format(
-                    self.dest_folder_obj.name, self.dest_datacenter_obj.name
-                )
+                "used.".format(self.dest_folder_obj.name, self.dest_datacenter_obj.name)
             )
 
         if datastore_name:
             self.dest_datastore_obj = self.get_datastore(datastore_name)
         else:
-            self.dest_datastore_obj = self.get_datastore(
-                template_obj.datastore[0].name
-            )
+            self.dest_datastore_obj = self.get_datastore(template_obj.datastore[0].name)
             self.logger.info(
                 "No datastore specified. "
                 "The same datastore ({0}) "
@@ -1184,13 +1164,10 @@ class GetClone(GetObjects):
         if cluster_name:
             self.dest_cluster_obj = self.get_cluster(cluster_name)
         else:
-            self.dest_cluster_obj = \
-                self.dest_datacenter_obj.hostFolder.childEntity[0]
+            self.dest_cluster_obj = self.dest_datacenter_obj.hostFolder.childEntity[0]
 
         if resource_pool_name:
-            self.dest_resource_pool_obj = self.get_resource_pool(
-                resource_pool_name
-            )
+            self.dest_resource_pool_obj = self.get_resource_pool(resource_pool_name)
         else:
             self.dest_resource_pool_obj = None
             self.logger.info(
