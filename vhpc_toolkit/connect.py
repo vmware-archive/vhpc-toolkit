@@ -8,16 +8,15 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
-import os
 import atexit
-import ssl
-import yaml
 import getpass
+import os
+import ssl
 from distutils.util import strtobool
+
+import yaml
 
 
 try:
@@ -46,8 +45,13 @@ def connect(host, username, password, port, keyfile=None, certfile=None):
     context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     try:
         si = SmartConnect(
-            host=host, user=username, pwd=password, port=port,
-            sslContext=context, keyFile=keyfile, certFile=certfile,
+            host=host,
+            user=username,
+            pwd=password,
+            port=port,
+            sslContext=context,
+            keyFile=keyfile,
+            certFile=certfile,
         )
         content = si.content
     except Exception:
@@ -66,7 +70,7 @@ def get_global_config(kwargs):
     Returns:
         dict: which contains global config properties,
     """
-    
+
     global_config = {}
     for key, value in kwargs.items():
         if value is not None:
@@ -83,8 +87,7 @@ def get_vcenter_config():
         vcenter_config.update(loader)
         f.close()
     except (OSError, TypeError):
-        print("*** Not able to read vCenter server and username from config "
-              "file.")
+        print("*** Not able to read vCenter server and username from config " "file.")
         raise SystemExit
     return check_vcenter_config(vcenter_config)
 
@@ -102,6 +105,7 @@ def check_vcenter_config(vcenter_config):
     """
 
     from vhpc_toolkit.cluster import Check
+
     if not Check().check_kv(vcenter_config, "server"):
         print("*** Please provide vCenter server in config file.")
         raise SystemExit
@@ -113,8 +117,7 @@ def check_vcenter_config(vcenter_config):
     if not Check().check_kv(vcenter_config, "password"):
         vcenter_config["password"] = getpass.getpass("vCenter password: ")
     if Check().check_kv(vcenter_config, "validate_certs"):
-        vcenter_config["validate_certs"] = strtobool(
-            vcenter_config["validate_certs"])
+        vcenter_config["validate_certs"] = strtobool(vcenter_config["validate_certs"])
     else:
         vcenter_config["validate_certs"] = False
     if not Check().check_kv(vcenter_config, "certfile"):
@@ -136,6 +139,7 @@ def _find_vcenter_conf_file(file):
     """
 
     from os.path import expanduser
+
     default_conf_dir = "../config"
     default_conf_dir = os.path.abspath(default_conf_dir)
     default_conf_file = "%s/%s" % (default_conf_dir, file)

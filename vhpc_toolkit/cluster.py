@@ -8,16 +8,15 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
-import re
-import itertools
-from operator import itemgetter
 import configparser
-from texttable import Texttable
+import itertools
+import re
 from distutils.util import strtobool
+from operator import itemgetter
+
+from texttable import Texttable
 
 from vhpc_toolkit import get_args
 from vhpc_toolkit import log
@@ -27,7 +26,7 @@ class Cluster(object):
     """
     Read cluster configuration file
     """
-    
+
     def __init__(self, file):
         """
 
@@ -35,7 +34,7 @@ class Cluster(object):
             file (str): cluster configuration file
 
         """
-        
+
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
@@ -58,7 +57,7 @@ class Cluster(object):
             list
 
         """
-    
+
         if len(list1) < len(list2):
             raise RangeMappingError
         return [i for i, _ in zip(itertools.cycle(list2), list1)]
@@ -76,7 +75,7 @@ class Cluster(object):
             list
 
         """
-    
+
         if len(list1) < len(list2):
             raise RangeMappingError
         iters = int(len(list1) / len(list2))
@@ -86,7 +85,7 @@ class Cluster(object):
                 itertools.repeat(i, iters) for i in list2
             )
         ]
-    
+
     def read_svs_dvs_section(self, sec_def_key):
         """read _SVS_ section in the cluster configuration file
 
@@ -95,7 +94,7 @@ class Cluster(object):
                   switch creation/destroy info
 
         """
-        
+
         cfgs = []
         try:
             # for every row in the _SVS_ or _DVS_ section:
@@ -138,7 +137,7 @@ class Cluster(object):
         except RangeMappingError as e:
             e.log()
             raise SystemExit
-    
+
     def _unfold_range_svs_dvs(self, cfg):
         """ Pass the cfg dict and scan the range key(s).
             If range is defined, unfold range,
@@ -151,16 +150,14 @@ class Cluster(object):
             cfg (dict): the cfg dict return by initial reading
 
         """
-        
+
         range_key = "host"
         if not Check().check_kv(cfg, range_key):
             return
         scatter_unfold, scatter_mark = self._range_unfold_scatter(
             range_key, cfg[range_key]
         )
-        bunch_unfold, bunch_mark = self._range_unfold_bunch(
-            range_key, cfg[range_key]
-        )
+        bunch_unfold, bunch_mark = self._range_unfold_bunch(range_key, cfg[range_key])
         if scatter_mark:
             cfg[range_key] = scatter_unfold[range_key]
         # svs and dvs don't support bunch mapping for the range key
@@ -171,7 +168,7 @@ class Cluster(object):
                 "mapping".format(range_key)
             )
             raise RangeMappingError
-    
+
     def read_vm_section(self, sec_def_key):
         """read _VM_ section in the cluster configuration file
 
@@ -180,7 +177,7 @@ class Cluster(object):
                   info
 
         """
-        
+
         cfgs = []
         try:
             # for each row under _VMS_ section
@@ -234,7 +231,7 @@ class Cluster(object):
         except ValueError:
             self.logger.info("Invalid value in section {0}".format(sec_def_key))
             raise SystemExit
-        
+
     @staticmethod
     def _range_unfold_scatter(key, value):
         """scan scatter pattern and unfold range.
@@ -253,7 +250,7 @@ class Cluster(object):
             definition
 
         """
-        
+
         scatter_re = r"[^\{]\{([\d]+:[\d]+)\}"
         scatter_range = re.findall(scatter_re, value)
         range_unfold = {}
@@ -270,7 +267,7 @@ class Cluster(object):
         else:
             range_unfold[key] = value
         return range_unfold, range_mark
-    
+
     @staticmethod
     def _range_unfold_bunch(key, value):
         """scan bunch pattern and unfold range.
@@ -288,7 +285,7 @@ class Cluster(object):
             definition
 
         """
-        
+
         bunch_re = r"\{\{([\d]+:[\d]+)\}\}"
         bunch_range = re.findall(bunch_re, value)
         range_unfold = {}
@@ -305,7 +302,7 @@ class Cluster(object):
         else:
             range_unfold[key] = value
         return range_unfold, range_mark
-    
+
     def _unfold_range_vm_section(self, cfg):
         """ Pass the cfg dict and scan the range keys.
             If ranges are defined, unfold range.
@@ -324,7 +321,7 @@ class Cluster(object):
                   if no range, {key: value} will be [{key: value}]
 
         """
-        
+
         # keys can be defined in a range
         range_keys = ["host", "datastore", "guest_hostname", "ip"]
         # use "vm" as pivot range key
@@ -343,8 +340,9 @@ class Cluster(object):
             if not Check().check_kv(cfg, range_key):
                 continue
             # scatter range
-            scatter_unfold, scatter_mark = \
-                self._range_unfold_scatter(range_key, cfg[range_key])
+            scatter_unfold, scatter_mark = self._range_unfold_scatter(
+                range_key, cfg[range_key]
+            )
             # bunch range
             bunch_unfold, bunch_mark = self._range_unfold_bunch(
                 range_key, cfg[range_key]
@@ -352,14 +350,12 @@ class Cluster(object):
             # if it has scatter range, unfold it
             if scatter_mark:
                 range_unfold[range_key] = self._scatter_mapping(
-                    pivot_range_unfold[pivot],
-                    scatter_unfold[range_key],
+                    pivot_range_unfold[pivot], scatter_unfold[range_key],
                 )
             # if it has bunch range, unfold it
             if bunch_mark:
                 range_unfold[range_key] = self._bunch_mapping(
-                    pivot_range_unfold[pivot],
-                    bunch_unfold[range_key],
+                    pivot_range_unfold[pivot], bunch_unfold[range_key],
                 )
         # map the range key's range to pivot range ('vm')
         for idx, value in enumerate(pivot_range_unfold[pivot]):
@@ -378,7 +374,7 @@ class Cluster(object):
     def _plot_range(range_dicts):
         """plot range results
         """
-        
+
         table = Texttable()
         table_rows = []
         table_columns = []
@@ -391,14 +387,13 @@ class Cluster(object):
         table.set_deco(Texttable.VLINES | Texttable.HEADER)
         print(table.draw())
         print("\n")
-    
+
     def _confirm_range(self):
         """Prompt user to confirm range definition
         """
-        
+
         confirm = input(
-            "[ACTION] For the range definition, "
-            "is this mapping what you expected? "
+            "[ACTION] For the range definition, " "is this mapping what you expected? "
         )
         try:
             if strtobool(confirm) == 0:
@@ -410,7 +405,7 @@ class Cluster(object):
         except ValueError:
             self.logger.error("Not a valid answer for range confirmation")
             raise NonConfirmError
-        
+
     @staticmethod
     def collect_scripts(vm_cfgs):
         """collect all scripts in vm_cfgs and return labeled and sorted
@@ -424,7 +419,7 @@ class Cluster(object):
                   tuple in sorted order
 
         """
-        
+
         post_cfgs = []
         temp = []
         for vm_cfg in vm_cfgs:
@@ -445,7 +440,7 @@ class Cluster(object):
         for _, g in itertools.groupby(temp, key=itemgetter(4)):
             post_cfgs.append(list(g))
         return post_cfgs
-    
+
     def _add_item_svs_dvs(self, cfg, key, value):
         """_SVS_ or _DVS_ add key: value into cfg dict
 
@@ -459,7 +454,7 @@ class Cluster(object):
                    can be added.
 
         """
-        
+
         str_keys = ["name", "port_group", "host", "datacenter"]
         list_keys = ["pnic"]
         try:
@@ -472,7 +467,7 @@ class Cluster(object):
         except UnknownKeyError as e:
             e.log()
             raise SystemExit
-    
+
     @staticmethod
     def _find_list(s):
         """extract text between square brackets from a string
@@ -486,13 +481,13 @@ class Cluster(object):
             list or str
 
         """
-        
+
         bracket_text = re.findall(r"\[(.*?)\]", s)
         if bracket_text:
             return eval(s)
         else:
             return s
-    
+
     @staticmethod
     def _remove_space(s):
         """remove space before and after ":" or ","
@@ -504,11 +499,11 @@ class Cluster(object):
             str
 
         """
-        
+
         s = re.sub(r"[\s]*:[\s]*", ":", s)
         s = re.sub(r"[\s]*,[\s]*", ",", s)
         return s
-    
+
     def _add_item_vm(self, cfg, key, value):
         """_VM_ section add key: value into cfg dict
 
@@ -522,7 +517,7 @@ class Cluster(object):
                       can be added.
 
         """
-        
+
         str_keys = [
             "template",
             "datacenter",
@@ -549,10 +544,7 @@ class Cluster(object):
             "dvs_name",
         ]
         float_keys = ["memory"]
-        int_keys = ["cpu",
-                    "mmio_size",
-                    "cpu_shares",
-                    "memory_shares"]
+        int_keys = ["cpu", "mmio_size", "cpu_shares", "memory_shares"]
         bool_keys = [
             "cpu_reservation",
             "memory_reservation",
@@ -593,10 +585,10 @@ class Check(object):
     """
     a class for checking
     """
-    
+
     def __init__(self):
         self.logger = log.my_logger(name=self.__class__.__name__)
-    
+
     def check_kv(self, dict_to_check, key, none_check=True, required=False):
         """check key value existence
         """
@@ -619,7 +611,7 @@ class UnknownKeyError(Error):
     def __init__(self, msg):
         self.msg = msg
         self.logger = log.my_logger(name=self.__class__.__name__)
-    
+
     def log(self):
         self.logger.error("Unknown key {0}".format(self.msg))
 
@@ -628,7 +620,7 @@ class UnknownOpError(Error):
     def __init__(self, msg):
         self.msg = msg
         self.logger = log.my_logger(name=self.__class__.__name__)
-    
+
     def log(self):
         self.logger.error("Unknown operation {0}".format(self.msg))
 
@@ -636,7 +628,7 @@ class UnknownOpError(Error):
 class NonConfirmError(Error):
     def __init__(self):
         self.logger = log.my_logger(name=self.__class__.__name__)
-    
+
     def log(self):
         self.logger.error("Not confirmed")
 
@@ -644,7 +636,8 @@ class NonConfirmError(Error):
 class RangeMappingError(Error):
     def __init__(self):
         self.logger = log.my_logger(name=self.__class__.__name__)
-    
+
     def log(self):
-        self.logger.error("Range definition is wrong. Couldn't do range "
-                          "mapping successfully.")
+        self.logger.error(
+            "Range definition is wrong. Couldn't do range " "mapping successfully."
+        )

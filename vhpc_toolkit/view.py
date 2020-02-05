@@ -8,11 +8,10 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
+from pyVmomi import vmodl
 from textwrap3 import TextWrapper
 
 
@@ -64,8 +63,7 @@ class View(object):
             )
             for host in self.view_entity.host:
                 self._view_wrapper(
-                    "|-+:%s [Host][%s]"
-                    % (host.name, host.runtime.connectionState),
+                    "|-+:%s [Host][%s]" % (host.name, host.runtime.connectionState),
                     (self.cur_level * 2 + 2) * " ",
                 )
                 for vm in host.vm:
@@ -104,4 +102,3 @@ class View(object):
                     "|-:%s [DistributedVirtualPortgroup]" % pg.name,
                     (self.cur_level * 2 + 2) * " ",
                 )
-

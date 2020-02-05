@@ -8,17 +8,18 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
 import os
 
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
+from pyVmomi import vmodl
 
-from vhpc_toolkit.get_objs import GetDatacenter, GetHost, GetVM
-from vhpc_toolkit.wait import GetWait
 from vhpc_toolkit import log
+from vhpc_toolkit.get_objs import GetDatacenter
+from vhpc_toolkit.get_objs import GetHost
+from vhpc_toolkit.get_objs import GetVM
+from vhpc_toolkit.wait import GetWait
 
 
 class ConfigVM(object):
@@ -90,7 +91,7 @@ class ConfigVM(object):
         shares_alloc.shares = vim.SharesInfo(level="custom", shares=shares)
         config_spec.cpuAllocation = shares_alloc
         return self.vm_obj.ReconfigVM_Task(config_spec)
-    
+
     def memory_shares(self, shares):
         """ Configure memory shares for a VM
 
@@ -101,7 +102,7 @@ class ConfigVM(object):
             Task
 
         """
-        
+
         assert shares >= 0
         config_spec = vim.vm.ConfigSpec()
         shares_alloc = vim.ResourceAllocationInfo()
@@ -266,9 +267,7 @@ class ConfigVM(object):
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = (
-            vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        )
+        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
         nic_spec.device.backing.network = network_obj
         nic_spec.device.backing.deviceName = network_obj.name
         nic_spec.device.backing.useAutoDetect = False
@@ -330,9 +329,7 @@ class ConfigVM(object):
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = (
-            vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        )
+        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
         nic_spec.device.backing.network = network_obj
         nic_spec.device.backing.deviceName = network_obj.name
         nic_spec.device.backing.useAutoDetect = False
@@ -406,8 +403,7 @@ class ConfigVM(object):
         nic_spec.device.deviceInfo = vim.Description(label=label)
         nic_spec.device.addressType = "generated"
         nic_spec.device.backing = (
-            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo(
-            )
+            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
         )
         nic_spec.device.backing.port = vim.dvs.PortConnection(
             switchUuid=dvs_obj.summary.uuid, portgroupKey=network_obj.config.key
@@ -529,9 +525,7 @@ class ConfigVM(object):
 
         """
 
-        self.logger.info(
-            "Full cloning VM %s to %s" % (self.vm_obj.name, dest_vm_name)
-        )
+        self.logger.info("Full cloning VM %s to %s" % (self.vm_obj.name, dest_vm_name))
         relocation_spec = vim.vm.RelocateSpec()
         relocation_spec.pool = resource_pool_obj
         relocation_spec.datastore = datastore_obj
@@ -551,8 +545,7 @@ class ConfigVM(object):
         return task
 
     def linked_clone(
-        self, dest_vm, host_obj, folder_obj, resource_pool_obj, cpu, mem,
-            power_on=True
+        self, dest_vm, host_obj, folder_obj, resource_pool_obj, cpu, mem, power_on=True
     ):
         """ Clone a VM via linked clone
 
@@ -574,7 +567,7 @@ class ConfigVM(object):
         relocation_spec = vim.vm.RelocateSpec()
         relocation_spec.pool = resource_pool_obj
         relocation_spec.host = host_obj
-        relocation_spec.diskMoveType = 'createNewChildDiskBacking'
+        relocation_spec.diskMoveType = "createNewChildDiskBacking"
         clone_spec = vim.vm.CloneSpec()
         clone_spec.location = relocation_spec
         if len(self.vm_obj.rootSnapshot) < 1:
@@ -601,9 +594,7 @@ class ConfigVM(object):
             clone_spec.config = config_spec
         else:
             self.logger.debug("No hardware customization for the cloned VM")
-        task = self.vm_obj.Clone(
-            folder=folder_obj, name=dest_vm, spec=clone_spec
-        )
+        task = self.vm_obj.Clone(folder=folder_obj, name=dest_vm, spec=clone_spec)
         return task
 
     @staticmethod
@@ -644,9 +635,7 @@ class ConfigVM(object):
 
         """
 
-        self.logger.info(
-            "Adding PCI device {0} for {1}".format(pci, self.vm_obj.name)
-        )
+        self.logger.info("Adding PCI device {0} for {1}".format(pci, self.vm_obj.name))
         extra_config_key1 = "pciPassthru.64bitMMIOSizeGB"
         extra_config_key2 = "pciPassthru.use64bitMMIO"
         if mmio_size is None:
@@ -663,8 +652,7 @@ class ConfigVM(object):
             )
         else:
             self.logger.info(
-                "Good. VM {0} has UEFI "
-                "installation.".format(self.vm_obj.name)
+                "Good. VM {0} has UEFI " "installation.".format(self.vm_obj.name)
             )
         sys_id = vm_status.pci_id_sys_id_passthru()
         backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
@@ -676,9 +664,7 @@ class ConfigVM(object):
         )
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
-        dev_config_spec.operation = (
-            vim.vm.device.VirtualDeviceSpec.Operation.add
-        )
+        dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [dev_config_spec]
         tasks.append(self.vm_obj.ReconfigVM_Task(spec=config_spec))
@@ -703,9 +689,7 @@ class ConfigVM(object):
         )
         pci_obj = vm_status.pci_obj(pci)
         dev_config_spec = vim.VirtualDeviceConfigSpec()
-        dev_config_spec.operation = (
-            vim.vm.device.VirtualDeviceSpec.Operation.remove
-        )
+        dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
         dev_config_spec.device = pci_obj
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [dev_config_spec]
@@ -724,9 +708,7 @@ class ConfigVM(object):
         """
 
         config_spec = vim.vm.ConfigSpec()
-        self.logger.info(
-            "Adding/Updating extra config: {0} = {1}".format(entry, value)
-        )
+        self.logger.info("Adding/Updating extra config: {0} = {1}".format(entry, value))
         opt = vim.option.OptionValue()
         opt.key = entry
         opt.value = value
@@ -764,15 +746,12 @@ class ConfigVM(object):
         """
 
         self.logger.info(
-            "Adding vGPU {0} for "
-            "VM {1}".format(vgpu_profile, self.vm_obj.name)
+            "Adding vGPU {0} for " "VM {1}".format(vgpu_profile, self.vm_obj.name)
         )
         backing = vim.VirtualPCIPassthroughVmiopBackingInfo(vgpu=vgpu_profile)
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
-        dev_config_spec.operation = (
-            vim.vm.device.VirtualDeviceSpec.Operation.add
-        )
+        dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [dev_config_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
@@ -794,9 +773,7 @@ class ConfigVM(object):
         vm_status = GetVM(self.vm_obj)
         vgpu_obj = vm_status.vgpu_obj(vgpu_profile)
         dev_config_spec = vim.VirtualDeviceConfigSpec()
-        dev_config_spec.operation = (
-            vim.vm.device.VirtualDeviceSpec.Operation.remove
-        )
+        dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
         dev_config_spec.device = vgpu_obj
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [dev_config_spec]
@@ -841,25 +818,17 @@ class ConfigVM(object):
             program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
             program_spec.programPath = "/bin/echo"
             program_spec.arguments = copy_content
-            pid = process_manager.StartProgramInGuest(
-                self.vm_obj, auth, program_spec
-            )
+            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
             assert pid > 0
             program_spec.programPath = "/bin/sh"
             log_file = "/var/log/vhpc_toolkit.log"
-            execute_content = (
-                os.path.basename(script) + " 2>&1 | tee " + log_file
-            )
+            execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
             program_spec.arguments = execute_content
-            pid = process_manager.StartProgramInGuest(
-                self.vm_obj, auth, program_spec
-            )
+            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
             assert pid > 0
             self.logger.info(
                 "Script {0} is being executed in VM {1} guest OS "
-                "and PID is {2}".format(
-                    os.path.basename(script), self.vm_obj.name, pid
-                )
+                "and PID is {2}".format(os.path.basename(script), self.vm_obj.name, pid)
             )
         except IOError:
             self.logger.error("Can not open script {0}".format(script))
@@ -1023,9 +992,7 @@ class ConfigDatacenter(object):
 
         """
 
-        for network_obj in GetDatacenter(
-            self.datacenter_obj
-        ).network_resources():
+        for network_obj in GetDatacenter(self.datacenter_obj).network_resources():
             if network_obj.name == dvs_name:
                 self.logger.info("DVS {0} already exists".format(dvs_name))
                 return
@@ -1049,9 +1016,7 @@ class ConfigDatacenter(object):
                         uplinks.append(pnic_spec)
             host_cfg.backing.pnicSpec = uplinks
             host_cfgs.append(host_cfg)
-        uplink_port_policy = (
-            vim.DistributedVirtualSwitch.NameArrayUplinkPortPolicy()
-        )
+        uplink_port_policy = vim.DistributedVirtualSwitch.NameArrayUplinkPortPolicy()
         uplnk_port_order = []
         for i in range(num_uplinks):
             name = "uplink%d" % (i + 1)
@@ -1174,4 +1139,3 @@ class ConfigCluster(object):
         """
 
         pass
-

@@ -8,14 +8,12 @@
 #  separate copyright notices and license terms. Your use of these
 # subcomponents is subject to the terms and conditions of the subcomponent's
 # license, as noted in the LICENSE file.
-# SPDX-License-Identifier: Apache-2.0 
-
+# SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
-
 import argparse
-from distutils.util import strtobool
 import os
 import sys
+from distutils.util import strtobool
 
 sys.tracebacklimit = None
 CMD_KEY = "command"
@@ -29,12 +27,10 @@ def get_main_parser():
 		ArgumentParser object: hold all necessary command line info to pass
 
 	"""
-    
+
     from vhpc_toolkit.version import __version__
-    
-    main_parser = argparse.ArgumentParser(
-        description="Configuring vHPC environment"
-    )
+
+    main_parser = argparse.ArgumentParser(description="Configuring vHPC environment")
     main_parser.add_argument(
         "--debug",
         required=False,
@@ -43,9 +39,7 @@ def get_main_parser():
         help="print debug messages",
     )
     main_parser.add_argument(
-        "--version",
-        action="version",
-        version="vhpc_toolkit version %s" % __version__,
+        "--version", action="version", version="vhpc_toolkit version %s" % __version__,
     )
     return main_parser
 
@@ -65,7 +59,7 @@ def get_view_parser():
     )
     return view_parser
 
-    
+
 def get_clone_parser():
     subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
     clone_parser = subparser.add_parser(
@@ -190,9 +184,7 @@ def get_clone_parser():
 def get_destroy_parser():
     subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
     destroy_parser = subparser.add_parser(
-        "destroy",
-        help="Destroy VM(s)",
-        formatter_class=argparse.RawTextHelpFormatter,
+        "destroy", help="Destroy VM(s)", formatter_class=argparse.RawTextHelpFormatter,
     )
     destroy_group = destroy_parser.add_mutually_exclusive_group(required=True)
     destroy_group.add_argument(
@@ -207,12 +199,11 @@ def get_destroy_parser():
         action="store",
         default=None,
         type=str,
-        help="Name of the file containing a list of VMs,"
-        " one per line to destroy",
+        help="Name of the file containing a list of VMs," " one per line to destroy",
     )
     return destroy_parser
-    
-    
+
+
 def get_power_parser():
     subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
     power_parser = subparser.add_parser(
@@ -439,8 +430,8 @@ def get_network_cfg_parser():
         " VM name will be used as guest hostname",
     )
     return network_cfg_parser
-    
-    
+
+
 def get_post_parser():
     subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
     post_parser = subparser.add_parser(
@@ -506,12 +497,8 @@ def get_passthru_parser():
         help="Add/Remove (large) PCI device(s) in Passthrough mode",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    passthru_group1 = passthru_parser.add_mutually_exclusive_group(
-        required=True
-    )
-    passthru_group2 = passthru_parser.add_mutually_exclusive_group(
-        required=False
-    )
+    passthru_group1 = passthru_parser.add_mutually_exclusive_group(required=True)
+    passthru_group2 = passthru_parser.add_mutually_exclusive_group(required=False)
     passthru_group1.add_argument(
         "--vm",
         action="store",
@@ -535,9 +522,7 @@ def get_passthru_parser():
     passthru_group2.add_argument(
         "--remove", action="store_true", help="Remove device(s)"
     )
-    passthru_group2.add_argument(
-        "--add", action="store_true", help="Add device(s)"
-    )
+    passthru_group2.add_argument("--add", action="store_true", help="Add device(s)")
     passthru_parser.add_argument(
         "--device",
         action="store",
@@ -686,9 +671,7 @@ def get_vgpu_parser():
     vgpu_group2.add_argument(
         "--remove", action="store_true", help="Remove vGPU profile"
     )
-    vgpu_group2.add_argument(
-        "--add", action="store_true", help="Add vGPU profile"
-    )
+    vgpu_group2.add_argument("--add", action="store_true", help="Add vGPU profile")
     vgpu_parser.add_argument(
         "--profile",
         action="store",
@@ -711,9 +694,7 @@ def get_svs_parser():
         "--create", action="store_true", help="Create a standard virtual switch"
     )
     svs_group1.add_argument(
-        "--destroy",
-        action="store_true",
-        help="Destroy a standard virtual switch",
+        "--destroy", action="store_true", help="Destroy a standard virtual switch",
     )
     svs_parser.add_argument(
         "--host",
@@ -721,8 +702,7 @@ def get_svs_parser():
         required=True,
         nargs="+",
         type=str,
-        help="Name of the ESXi host on which to create a standard virtual "
-        "switch",
+        help="Name of the ESXi host on which to create a standard virtual " "switch",
     )
     svs_parser.add_argument(
         "--name",
@@ -747,8 +727,8 @@ def get_svs_parser():
         "this standard virtual switch",
     )
     return svs_parser
-    
-    
+
+
 def get_dvs_parser():
     subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
     dvs_parser = subparser.add_parser(
@@ -758,14 +738,10 @@ def get_dvs_parser():
     )
     dvs_group1 = dvs_parser.add_mutually_exclusive_group(required=True)
     dvs_group1.add_argument(
-        "--create",
-        action="store_true",
-        help="Create a distributed virtual switch",
+        "--create", action="store_true", help="Create a distributed virtual switch",
     )
     dvs_group1.add_argument(
-        "--destroy",
-        action="store_true",
-        help="Destroy a distributed virtual switch",
+        "--destroy", action="store_true", help="Destroy a distributed virtual switch",
     )
     dvs_parser.add_argument(
         "--name",
@@ -779,7 +755,7 @@ def get_dvs_parser():
         action="store",
         type=str,
         help="Name of the datacenter to create the distributed virtual "
-             "switch. Note that all hosts need to be in the same datacenter.",
+        "switch. Note that all hosts need to be in the same datacenter.",
     )
     dvs_parser.add_argument(
         "--host",
@@ -852,9 +828,7 @@ def get_cluster_parser():
         formatter_class=argparse.RawTextHelpFormatter,
     )
     cluster_group = cluster_parser.add_mutually_exclusive_group(required=True)
-    cluster_group.add_argument(
-        "--create", action="store_true", help="Create a cluster"
-    )
+    cluster_group.add_argument("--create", action="store_true", help="Create a cluster")
     cluster_group.add_argument(
         "--destroy", action="store_true", help="Destroy a cluster"
     )
@@ -891,4 +865,3 @@ def find_conf_file(file):
         print("[ERROR] Couldn't find the file %s" % file)
         raise SystemExit
     return conf_file
-
