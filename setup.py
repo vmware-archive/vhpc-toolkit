@@ -32,7 +32,7 @@ setup(
         "configparser==3.5.0",
         "pyvim==0.0.20",
         "pyvmomi>=6.5",
-        "PyYAML==3.12",
+        "PyYAML==5.1",
         "texttable==0.8.8",
         "textwrap3==0.9.1",
     ],
