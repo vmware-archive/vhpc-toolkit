@@ -202,7 +202,7 @@ class Shell(cmd.Cmd):
     def do_svs(self, arg):
         try:
             ops = self.get_ops("svs", arg)
-            ops.vgpu_cli()
+            ops.svs_cli()
         except SystemExit:
             return
 
