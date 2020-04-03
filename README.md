@@ -107,7 +107,7 @@ available operations, e.g.:
 
 ```bash
 ./vhpc_toolkit
-vCenter password: (enter your vCenter passoword)
+vCenter password: (enter your vCenter password)
 Welcome to the vHPC Toolkit Shell. Type help or ? to list commands. Type exit to exit the shell.
 
 vhpc_toolkit> help
