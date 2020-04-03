@@ -344,9 +344,9 @@ def get_network_parser():
     network_parser.add_argument(
         "--port_group",
         action="store",
-        default=None,
-        required=True,
-        nargs="+",
+        default="VM Network",
+        # nargs="+",
+        required=False,
         type=str,
         help="Port group for the network adapter to add/remove",
     )
@@ -372,8 +372,8 @@ def get_network_cfg_parser():
     network_cfg_parser.add_argument(
         "--port_group",
         action="store",
-        default="False",
-        required=True,
+        default="VM Network",
+        required=False,
         type=str,
         help="Number of the network adapter on which to configure network",
     )

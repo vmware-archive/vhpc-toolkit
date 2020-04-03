@@ -770,30 +770,8 @@ class GetVM(object):
         """
 
         network_obj = None
-        network_type = None
-        port_group_key = None
-        for network in self.vm_obj.network:
-            if network.name != network_name:
-                continue
-            if isinstance(network, vim.Network):
-                network_type = "svs_pg"
-            if isinstance(network, vim.DistributedVirtualPortgroup):
-                port_group_key = network.key
-                network_type = "dvs_pg"
-        if network_type is None:
-            return None
         for dev in self.vm_obj.config.hardware.device:
-            if (
-                network_type == "svs_pg"
-                and isinstance(dev, device_type)
-                and dev.deviceInfo.summary == network_name
-            ):
-                network_obj = dev
-            elif (
-                network_type == "dvs_pg"
-                and isinstance(dev, device_type)
-                and dev.backing.port.portgroupKey == port_group_key
-            ):
+            if isinstance(dev, device_type) and dev.backing.deviceName == network_name:
                 network_obj = dev
         return network_obj
 
