@@ -345,8 +345,8 @@ def get_network_parser():
         "--port_group",
         action="store",
         default="VM Network",
+        required=True,
         # nargs="+",
-        required=False,
         type=str,
         help="Port group for the network adapter to add/remove",
     )
@@ -373,9 +373,9 @@ def get_network_cfg_parser():
         "--port_group",
         action="store",
         default="VM Network",
-        required=False,
+        required=True,
         type=str,
-        help="Number of the network adapter on which to configure network",
+        help="Name of network adapter on which to configure network. Default: VM Network",
     )
     network_config_group.add_argument(
         "--is_dhcp", action="store_true", help="Use DHCP for this network"
