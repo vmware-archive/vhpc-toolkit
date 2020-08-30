@@ -17,7 +17,7 @@ from pyVmomi import vim
 from pyVmomi import vmodl
 from textwrap3 import TextWrapper
 
-from vhpc_toolkit import connect
+from vhpc_toolkit import get_args
 from vhpc_toolkit import log
 from vhpc_toolkit.cluster import Check
 from vhpc_toolkit.cluster import Cluster
@@ -25,6 +25,7 @@ from vhpc_toolkit.config_objs import ConfigDatacenter
 from vhpc_toolkit.config_objs import ConfigDVS
 from vhpc_toolkit.config_objs import ConfigHost
 from vhpc_toolkit.config_objs import ConfigVM
+from vhpc_toolkit.connect import Connect
 from vhpc_toolkit.get_objs import GetClone
 from vhpc_toolkit.get_objs import GetDatacenter
 from vhpc_toolkit.get_objs import GetHost
@@ -41,11 +42,23 @@ class Operations(object):
 
     """
 
-    def __init__(self, content, **kwargs):
-        # get all operation configs and vCenter retrieved objects
-        self.cfg = connect.get_global_config(kwargs)
-        self.content = content
+    def __init__(self, **kwargs):
+        # get all operation configurations
+        self.cfg, vcenter_cfg = get_args.get_global_config(kwargs)
+
+        # connect to vCenter and retrieve service content
+        self.content = Connect().connect_vcenter(
+            server=vcenter_cfg["server"],
+            username=vcenter_cfg["username"],
+            password=vcenter_cfg["password"],
+            port=int(vcenter_cfg["port"]),
+            is_vault=vcenter_cfg.get("vault", False),
+            vault_secret_path=vcenter_cfg.get("vault_secret_path", None),
+        )
+
+        # retrieve vCenter managed objects
         self.objs = GetObjects(self.content)
+
         # set logging level
         if self.cfg["debug"]:
             self.logger = log.my_logger(

@@ -11,13 +11,12 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import atexit
-import getpass
 import os
 import ssl
-from distutils.util import strtobool
 
-import yaml
+import hvac
 
+from vhpc_toolkit import log
 
 try:
     from pyVim.connect import SmartConnect, Disconnect
@@ -25,135 +24,84 @@ except ModuleNotFoundError:
     from pyvim.connect import SmartConnect, Disconnect
 
 
-def connect(host, username, password, port, keyfile=None, certfile=None):
-    """ connect to vcenter and retrieve content
-
-    Args:
-        host (str):  name or IP of vCenter
-        username (str): username of vCenter
-        password (str): password of vCenter
-        port (int): port number of vCenter
-        keyfile (str): private vCenter keyfile
-        certfile (str): certificate of vCenter
-
-    Returns:
-        ServiceContent: The properties of ServiceInstance,
-                        which manages root object of vCenter inventory.
-
+class Connect(object):
+    """
+    Connect to vCenter via credentials stored in Vault
+    Alternative unsecured way is also provided.
     """
 
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-    try:
-        si = SmartConnect(
-            host=host,
-            user=username,
-            pwd=password,
-            port=port,
-            sslContext=context,
-            keyFile=keyfile,
-            certFile=certfile,
-        )
-        content = si.content
-    except Exception:
-        print("[ERROR] Could not connect to vCenter")
-        raise SystemExit
-    atexit.register(Disconnect, si)
-    return content
+    def __init__(self):
+        self.logger = log.my_logger(name=self.__class__.__name__)
 
+    def connect_vcenter(
+        self, server, username, password, port, is_vault, vault_secret_path
+    ):
+        """ connect to vcenter and retrieve content
 
-def get_global_config(kwargs):
-    """
+        Args:
+            server (str):  name or IP of vCenter
+            username (str): username of vCenter
+            password (str): password of vCenter
+            port (int): port number of vCenter
+            is_vault (bool): whether the key has been encrypted by HashiCorp
+                             Vault (https://www.vaultproject.io/)
+            vault_secret_path(str): the secret path in vault, should be
+                                    provided by user if they use Vault way to
+                                    store their credentials
 
-    Args:
-        kwargs: namespace of config parameters
+        Returns:
+            ServiceContent: The properties of ServiceInstance,
+                            which manages root object of vCenter inventory.
 
-    Returns:
-        dict: which contains global config properties,
-    """
+        """
 
-    global_config = {}
-    for key, value in kwargs.items():
-        if value is not None:
-            global_config[key] = value
-    return global_config
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+        if is_vault:
+            client = self.connect_vault()
+            try:
+                creds = client.secrets.kv.v2.read_secret_version(
+                    path=vault_secret_path
+                )["data"]["data"]
+            except Exception as e:
+                print("[ERROR] Error retrieving vault secrets: %s" % e)
+                raise SystemExit
+            server = creds[server]
+            username = creds[username]
+            password = creds[password]
+        else:
+            self.logger.warning(
+                "Connecting to vCenter using unencrypted " "credentials"
+            )
+        try:
+            si = SmartConnect(
+                host=server, user=username, pwd=password, port=port, sslContext=context,
+            )
+            content = si.content
+        except Exception as e:
+            print("[ERROR] Error connecting to vCenter: %s" % e)
+            raise SystemExit
+        atexit.register(Disconnect, si)
+        return content
 
+    def connect_vault(self):
+        """ connect to VAULT using VAULT_ADDR and VAULT_TOKEN env variables
 
-def get_vcenter_config():
-    vcenter_config = {}
-    vcenter_file = _find_vcenter_conf_file("vCenter.conf")
-    try:
-        f = open(vcenter_file, "r")
-        loader = yaml.load(f, Loader=yaml.BaseLoader)
-        vcenter_config.update(loader)
-        f.close()
-    except (OSError, TypeError):
-        print("*** Not able to read vCenter server and username from config " "file.")
-        raise SystemExit
-    return check_vcenter_config(vcenter_config)
+        Args: None
+        Returns: VAULT client object
 
+        """
 
-def check_vcenter_config(vcenter_config):
-    """
-
-    Args:
-        vcenter_config: the vCenter config dictionary
-
-    Returns:
-        dict: vCenter_config dict after checking and completing with some
-        defaults
-
-    """
-
-    from vhpc_toolkit.cluster import Check
-
-    if not Check().check_kv(vcenter_config, "server"):
-        print("*** Please provide vCenter server in config file.")
-        raise SystemExit
-    if not Check().check_kv(vcenter_config, "username"):
-        print("*** Please provide vCenter username in config file")
-        raise SystemExit
-    if not Check().check_kv(vcenter_config, "port"):
-        vcenter_config["port"] = 443  # vCenter default port
-    if not Check().check_kv(vcenter_config, "password"):
-        vcenter_config["password"] = getpass.getpass("vCenter password: ")
-    if Check().check_kv(vcenter_config, "validate_certs"):
-        vcenter_config["validate_certs"] = strtobool(vcenter_config["validate_certs"])
-    else:
-        vcenter_config["validate_certs"] = False
-    if not Check().check_kv(vcenter_config, "certfile"):
-        vcenter_config["certfile"] = None
-    if not Check().check_kv(vcenter_config, "keyfile"):
-        vcenter_config["keyfile"] = None
-    return vcenter_config
-
-
-def _find_vcenter_conf_file(file):
-    """ locate the vcenter conf file
-
-    Args:
-        file (str): vcenter conf file
-
-    Returns:
-        Full path of the vcenter conf file if located (str)
-
-    """
-
-    from os.path import expanduser
-
-    default_conf_dir = "../config"
-    default_conf_dir = os.path.abspath(default_conf_dir)
-    default_conf_file = "%s/%s" % (default_conf_dir, file)
-    home_conf_dir = expanduser("~") + "/vhpc_toolkit"
-    home_conf_dir = os.path.abspath(home_conf_dir)
-    home_conf_file = "%s/%s" % (home_conf_dir, file)
-
-    if os.path.isfile(home_conf_file):
-        conf_file = home_conf_file
-    elif os.path.isfile(default_conf_file):
-        conf_file = default_conf_file
-    else:
-        raise SystemExit(
-            "Couldn't find %s under %s or "
-            "%s" % (file, default_conf_dir, home_conf_dir)
-        )
-    return conf_file
+        url = os.environ["VAULT_ADDR"]
+        token = os.environ["VAULT_TOKEN"]
+        if not url or not token:
+            raise SystemExit(
+                "Failed to connect to vault. "
+                "Please set '`VAULT_ADDR` and `VAULT_TOKEN` in your "
+                "environment.'"
+            )
+        try:
+            client = hvac.Client(url=url, token=token)
+        except Exception as e:
+            self.logger.error("Error connecting to vault: %s" % e)
+            raise SystemExit
+        return client

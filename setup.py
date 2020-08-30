@@ -15,11 +15,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="vhpc_toolkit",
-    version="0.1.0",
+    version="0.2.0",
     description="A toolkit for virtualized high performance computing",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="xx",
+    url="https://github.com/vmware/vhpc-toolkit",
     author="Na Zhang",
     author_email="nkuzhangna@gmail.com",
     license="Apache 2.0",
@@ -32,8 +32,9 @@ setup(
         "configparser==3.5.0",
         "pyvim==0.0.20",
         "pyvmomi>=6.5",
-        "PyYAML==3.12",
+        "PyYAML==5.1.2",
         "texttable==0.8.8",
         "textwrap3==0.9.1",
+        "hvac>=0.10.5",
     ],
 )

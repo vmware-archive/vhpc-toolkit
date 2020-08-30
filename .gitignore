@@ -20,9 +20,12 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# pyCharm 
+# pyCharm
 .idea
 
 # OS X
 .DS_Store
 *.orig
+
+# Run logs
+vhpc_toolkit*.log

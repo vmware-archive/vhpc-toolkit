@@ -11,26 +11,28 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import argparse
+import distutils.util
 import os
 import sys
-from distutils.util import strtobool
+
+import yaml
 
 sys.tracebacklimit = None
 CMD_KEY = "command"
 
 
-def get_main_parser():
+def get_args():
     """ leverage argparse -- Python parser for command-line options for
-							 passing arguments
+                             passing arguments
 
-	Returns:
-		ArgumentParser object: hold all necessary command line info to pass
+    Returns:
+        ArgumentParser object: hold all necessary command line info to pass
 
-	"""
+    """
 
     from vhpc_toolkit.version import __version__
 
-    main_parser = argparse.ArgumentParser(description="Configuring vHPC environment")
+    main_parser = argparse.ArgumentParser(description="Configuring vHPC environment",)
     main_parser.add_argument(
         "--debug",
         required=False,
@@ -41,12 +43,8 @@ def get_main_parser():
     main_parser.add_argument(
         "--version", action="version", version="vhpc_toolkit version %s" % __version__,
     )
-    return main_parser
-
-
-def get_view_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    view_parser = subparser.add_parser(
+    subparsers = main_parser.add_subparsers(dest=CMD_KEY)
+    view_parser = subparsers.add_parser(
         "view",
         help="View the vCenter object names",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -57,12 +55,7 @@ def get_view_parser():
         help="Basic view plus networking view (virtual switches and "
         "networking adapters)",
     )
-    return view_parser
-
-
-def get_clone_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    clone_parser = subparser.add_parser(
+    clone_parser = subparsers.add_parser(
         "clone",
         help="Clone VM(s) via Full Clone or Linked Clone",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -178,12 +171,7 @@ def get_clone_parser():
         help="Number of CPUs for the cloned VM(s). \n"
         "If omitted, it will be the same as the template VM.",
     )
-    return clone_parser
-
-
-def get_destroy_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    destroy_parser = subparser.add_parser(
+    destroy_parser = subparsers.add_parser(
         "destroy", help="Destroy VM(s)", formatter_class=argparse.RawTextHelpFormatter,
     )
     destroy_group = destroy_parser.add_mutually_exclusive_group(required=True)
@@ -201,12 +189,7 @@ def get_destroy_parser():
         type=str,
         help="Name of the file containing a list of VMs," " one per line to destroy",
     )
-    return destroy_parser
-
-
-def get_power_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    power_parser = subparser.add_parser(
+    power_parser = subparsers.add_parser(
         "power",
         help="Power on/off VM(s)",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -230,12 +213,7 @@ def get_power_parser():
     )
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
-    return power_parser
-
-
-def get_cpumem_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    cpumem_parser = subparser.add_parser(
+    cpumem_parser = subparsers.add_parser(
         "cpumem",
         help="Reconfigure CPU/memory for VM(s)",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -293,7 +271,7 @@ def get_cpumem_parser():
         required=False,
         default=None,
         action="store",
-        type=strtobool,
+        type=distutils.util.strtobool,
         help="Whether to reserve memory.\n"
         "Reserve memory: y, yes, t, true, or 1. \n"
         "Not reserve memory: n, no, f, false, or 0.\n",
@@ -303,20 +281,18 @@ def get_cpumem_parser():
         required=False,
         default=None,
         action="store",
-        type=strtobool,
+        type=distutils.util.strtobool,
         help="Whether to reserve CPU. \n"
         "Reserve CPU: y, yes, t, true, or 1. \n"
         "Not reserve CPU: n, no, f, false, or 0.",
     )
-    return cpumem_parser
-
-
-def get_network_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    network_parser = subparser.add_parser(
+    network_parser = subparsers.add_parser(
         "network",
         help="Add/Remove network adapter(s) for VM(s)",
         formatter_class=argparse.RawTextHelpFormatter,
+    )
+    network_config_parser = subparsers.add_parser(
+        "network_cfg", help="Configure network(s) for VM(s)"
     )
     network_group1 = network_parser.add_mutually_exclusive_group(required=True)
     network_group2 = network_parser.add_mutually_exclusive_group(required=True)
@@ -344,21 +320,12 @@ def get_network_parser():
     network_parser.add_argument(
         "--port_group",
         action="store",
-        default="VM Network",
         required=True,
-        # nargs="+",
+        nargs="+",
         type=str,
         help="Port group for the network adapter to add/remove",
     )
-    return network_parser
-
-
-def get_network_cfg_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    network_cfg_parser = subparser.add_parser(
-        "network_cfg", help="Configure network(s) for VM(s)"
-    )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--vm",
         action="store",
         default=None,
@@ -366,16 +333,15 @@ def get_network_cfg_parser():
         required=True,
         help="Name of the VM on which to configure network",
     )
-    network_config_group = network_cfg_parser.add_mutually_exclusive_group(
+    network_config_group = network_config_parser.add_mutually_exclusive_group(
         required=True
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--port_group",
         action="store",
-        default="VM Network",
         required=True,
         type=str,
-        help="Name of network adapter on which to configure network. Default: VM Network",
+        help="Number of the network adapter on which to configure network",
     )
     network_config_group.add_argument(
         "--is_dhcp", action="store_true", help="Use DHCP for this network"
@@ -387,7 +353,7 @@ def get_network_cfg_parser():
         type=str,
         help="Static IP address if not use DHCP",
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--netmask",
         action="store",
         default=None,
@@ -395,7 +361,7 @@ def get_network_cfg_parser():
         type=str,
         help="Netmask",
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--gateway",
         action="store",
         default=None,
@@ -403,7 +369,7 @@ def get_network_cfg_parser():
         type=str,
         help="Gateway",
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--dns",
         action="store",
         default=None,
@@ -412,7 +378,7 @@ def get_network_cfg_parser():
         nargs="+",
         help="DNS server(s)",
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--domain",
         action="store",
         default=None,
@@ -420,7 +386,7 @@ def get_network_cfg_parser():
         type=str,
         help="Domain name",
     )
-    network_cfg_parser.add_argument(
+    network_config_parser.add_argument(
         "--guest_hostname",
         action="store",
         default=None,
@@ -429,12 +395,7 @@ def get_network_cfg_parser():
         help="Hostname of Guest OS. If omitted,"
         " VM name will be used as guest hostname",
     )
-    return network_cfg_parser
-
-
-def get_post_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    post_parser = subparser.add_parser(
+    post_parser = subparsers.add_parser(
         "post",
         help="Execute post script(s) in guest OS",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -487,12 +448,7 @@ def get_post_parser():
         default=False,
         help="Wait for the script execution finish",
     )
-    return post_parser
-
-
-def get_passthru_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    passthru_parser = subparser.add_parser(
+    passthru_parser = subparsers.add_parser(
         "passthru",
         help="Add/Remove (large) PCI device(s) in Passthrough mode",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -540,12 +496,7 @@ def get_passthru_parser():
         help="64-bit MMIO size in GB for PCI device with large BARs. "
         "Default: %(default)s.",
     )
-    return passthru_parser
-
-
-def get_sriov_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    sriov_parser = subparser.add_parser(
+    sriov_parser = subparsers.add_parser(
         "sriov",
         help="Add/remove single root I/O virtualization (SR-IOV) device(s)",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -590,12 +541,7 @@ def get_sriov_parser():
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
-    return sriov_parser
-
-
-def get_pvrdma_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    pvrdma_parser = subparser.add_parser(
+    pvrdma_parser = subparsers.add_parser(
         "pvrdma",
         help="Add/Remove PVRDMA (Paravirtual RDMA) device(s)",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -636,12 +582,7 @@ def get_pvrdma_parser():
         type=str,
         help="Name of distributed virtual switch which could enable PVRDMA",
     )
-    return pvrdma_parser
-
-
-def get_vgpu_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    vgpu_parser = subparser.add_parser(
+    vgpu_parser = subparsers.add_parser(
         "vgpu",
         help="Add/Remove vGPU device in SharedPassthru mode",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -679,12 +620,7 @@ def get_vgpu_parser():
         type=str,
         help="Profile of the vGPU, for example: grid_p100-4q",
     )
-    return vgpu_parser
-
-
-def get_svs_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    svs_parser = subparser.add_parser(
+    svs_parser = subparsers.add_parser(
         "svs",
         help="Create/destroy a standard virtual switch",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -726,12 +662,7 @@ def get_svs_parser():
         help="Name of virtual port group to be created within "
         "this standard virtual switch",
     )
-    return svs_parser
-
-
-def get_dvs_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    dvs_parser = subparser.add_parser(
+    dvs_parser = subparsers.add_parser(
         "dvs",
         help="Create/destroy a distributed virtual switch",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -781,12 +712,7 @@ def get_dvs_parser():
         help="Name of virtual port group to be created "
         "within this distributed virtual switch",
     )
-    return dvs_parser
-
-
-def get_latency_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    latency_parser = subparser.add_parser(
+    latency_parser = subparsers.add_parser(
         "latency",
         help="Configure/Check latency sensitivity",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -817,12 +743,7 @@ def get_latency_parser():
     latency_parser.add_argument(
         "--check", action="store_true", help="Check Latency Sensitivity level"
     )
-    return latency_parser
-
-
-def get_cluster_parser():
-    subparser = get_main_parser().add_subparsers(dest=CMD_KEY)
-    cluster_parser = subparser.add_parser(
+    cluster_parser = subparsers.add_parser(
         "cluster",
         help="Create/Destroy vHPC cluster based on cluster configuration file",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -839,10 +760,41 @@ def get_cluster_parser():
         default=None,
         help="Name of the cluster configuration file",
     )
-    return cluster_parser
+    return main_parser
 
 
-def find_conf_file(file):
+def _find_vcenter_conf_file(file):
+    """ locate the vcenter conf file
+
+    Args:
+        file (str): vcenter conf file
+
+    Returns:
+        Full path of the vcenter conf file if located (str)
+
+    """
+
+    from os.path import expanduser
+
+    home_conf_dir = expanduser("~") + "/vhpc_toolkit"
+    home_conf_dir = os.path.abspath(home_conf_dir)
+    home_conf_file = "%s/%s" % (home_conf_dir, file)
+    default_conf_dir = "../config"
+    default_conf_dir = os.path.abspath(default_conf_dir)
+    default_conf_file = "%s/%s" % (default_conf_dir, file)
+    if os.path.isfile(home_conf_file):
+        conf_file = home_conf_file
+    elif os.path.isfile(default_conf_file):
+        conf_file = default_conf_file
+    else:
+        raise SystemExit(
+            "Couldn't find %s under %s or "
+            "%s" % (file, default_conf_dir, home_conf_dir)
+        )
+    return conf_file
+
+
+def find_script_conf_file(file):
     """ locate the cluster conf file
 
     Args:
@@ -858,10 +810,73 @@ def find_conf_file(file):
     )
     default_conf_file = "%s/%s" % (default_conf_dir, file)
     if os.path.isfile(file):
-        conf_file = os.path.abspath(file)
+        conf_file = file
     elif os.path.isfile(default_conf_file):
-        conf_file = os.path.abspath(default_conf_file)
+        conf_file = default_conf_file
     else:
-        print("[ERROR] Couldn't find the file %s" % file)
-        raise SystemExit
+        raise SystemExit("Couldn't find script file %s" % file)
     return conf_file
+
+
+def get_global_config(kwargs):
+    """
+
+    Args:
+        kwargs: namespace of config parameters
+
+    Returns:
+        dict1, dict2: dict1 contains global config properties,
+        dict2 contains vcenter credentials
+
+    """
+
+    global_config = {}
+    for key, value in kwargs.items():
+        if value is not None:
+            global_config[key] = value
+
+    vcenter_config = {}
+    vcenter_file = _find_vcenter_conf_file("vCenter.conf")
+    try:
+        f = open(vcenter_file, "r")
+        loader = yaml.safe_load(f)
+        vcenter_config.update(loader)
+        f.close()
+    except OSError:
+        raise SystemExit(
+            "Unable to read {0} file under config folder".format(vcenter_file)
+        )
+    return global_config, check_vcenter_config(vcenter_config)
+
+
+def check_vcenter_config(vcenter_config):
+    """
+
+    Args:
+        vcenter_config: the vCenter config dictionary
+
+    Returns:
+        dict: vcenter_config dict after checking
+
+    """
+
+    from vhpc_toolkit.cluster import Check
+
+    check = Check()
+    check.check_kv(vcenter_config, "server", required=True)
+    check.check_kv(vcenter_config, "username", required=True)
+    if not check.check_kv(vcenter_config, "port"):
+        vcenter_config["port"] = 443  # vCenter default port
+    # It will be not convenient to prompt password.
+    # Just leave this option in case people need it.
+    if not check.check_kv(vcenter_config, "password"):
+        print(
+            "If you want to enable automation and skip being prompted "
+            "for password for every operation, you can consider "
+            "leveraging Vault and putting password key in vCenter.conf. "
+            "Checking README.md Security Section for more details."
+        )
+        import getpass
+
+        vcenter_config["password"] = getpass.getpass("vCenter password: ")
+    return vcenter_config

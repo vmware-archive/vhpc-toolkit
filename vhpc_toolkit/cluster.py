@@ -38,7 +38,7 @@ class Cluster(object):
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
-        cluster_file = get_args.find_conf_file(self.file)
+        cluster_file = get_args.find_script_conf_file(self.file)
         try:
             self.cfg_parser.read(cluster_file)
         except Exception as e:

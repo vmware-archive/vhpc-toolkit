@@ -8,7 +8,7 @@ or a set of VMs with the toolkit. This section describes some of those additiona
 `clone` operation supports cloning a VM or a set of VMs: 
 
 ```
-vhpc_toolkit> clone -h
+./vhpc_toolkit clone -h
 usage: vhpc_toolkit clone [-h] (--vm VM | --file FILE) [--linked] --template
                           TEMPLATE [--datacenter DATACENTER]
                           [--vm_folder VM_FOLDER] [--cluster CLUSTER]
@@ -59,7 +59,7 @@ The operation supports adding and removing PCI devices for a VM or a set of
 VMs: 
 
 ```
-vhpc_toolkit> passthru -h
+./vhpc_toolkit passthru -h
 usage: vhpc_toolkit passthru [-h] (--vm VM | --file FILE) [--query]
                          [--remove | --add] [--device DEVICE [DEVICE ...]]
                          [--mmio_size MMIO_SIZE]
@@ -114,7 +114,7 @@ to a Virtual Machine](https://tinyurl.com/yboullgw).
 It supports add/remove NVIDIA GRID vGPU for a VM or a set of VMs. 
 
 ```
-vhpc_toolkit> vgpu -h
+./vhpc_toolkit vgpu -h
 usage: vhpc_toolkit vgpu [-h] (--vm VM | --file FILE) [--query]
                          [--remove | --add] [--profile PROFILE]
 
@@ -131,7 +131,7 @@ optional arguments:
 For example, adding a `grid_p100-4q` vGPU profile into VM `hpc-vgpu-vm-01`: 
  
 ```bash
-vhpc_toolkit> vgpu --add --profile grid_p100-4q --vm hpc-vgpu-vm-01
+./vhpc_toolkit vgpu --add --profile grid_p100-4q --vm hpc-vgpu-vm-01
 ```
 
 #### Configure PVRDMA 
@@ -152,7 +152,7 @@ This toolkit can help you create a DVS with uplinks mapped from host RDMA
 NICs and assign a PVRDMA adapter for a VM or a set of VMs. 
 
 ```bash 
-vhpc_toolkit> pvrdma -h
+./vhpc_toolkit pvrdma -h
 usage: vhpc_toolkit pvrdma [-h] (--vm VM | --file FILE) (--add | --remove)
                            --pvrdma_port_group PVRDMA_PORT_GROUP
                            [--dvs_name DVS_NAME]
@@ -174,10 +174,10 @@ NICs (`vmnic5`), then create a port group (`pvrdma-pg `) within
 this DVS and assign the port group as PVRDMA adapter type to a VM: 
 
 ```
-vhpc_toolkit> dvs --create --name pvrdma-dvs --pnic vmnic5 --host RoCE-host-01 
+./vhpc_toolkit dvs --create --name pvrdma-dvs --pnic vmnic5 --host RoCE-host-01 
 RoCE-host-02 --port_group pvrdma-pg
 
-vhpc_toolkit> pvrdma --add --pvrdma_port_group pvrdma-pg --vm hpc-pvrdma-vm-01
+./vhpc_toolkit pvrdma --add --pvrdma_port_group pvrdma-pg --vm hpc-pvrdma-vm-01
 --dvs_name pvrdma-dvs
 ```
 
@@ -209,7 +209,7 @@ This operation helps you automate [Assign a Virtual Function as SR-IOV
 Passthrough Adapter to a Virtual Machine](https://tinyurl.com/y7kevbyv)
 
 ```
-vhpc_toolkit> sriov -h
+./vhpc_toolkit sriov -h
 usage: vhpc_toolkit sriov [-h] (--vm VM | --file FILE) [--query]
                       [--add | --remove] [--sriov_port_group SRIOV_PORT_GROUP]
                       [--pf PF]
@@ -238,10 +238,10 @@ Passthrough network
 adapter: 
 
 ```
-vhpc_toolkit> svs --create --host RoCE-host-01 --name sriov-svs --pnic vmnic4 
+./vhpc_toolkit svs --create --host RoCE-host-01 --name sriov-svs --pnic vmnic4 
 --port_group sriov-pg
  
-vhpc_toolkit> sriov --add --vm hpc-sriov-vm-01 --sriov_port_group sriov-pg 
+./vhpc_toolkit sriov --add --vm hpc-sriov-vm-01 --sriov_port_group sriov-pg 
   --pf 0000:af:00.0
 ```
                     
@@ -253,7 +253,7 @@ an NFS file system. VMware Tools must be running in the guest OS to use
 this toolkit operation.
 
 ```
-vhpc_toolkit> post -h
+./vhpc_toolkit post -h
 usage: vhpc_toolkit post [-h] (--vm VM | --file FILE) --script SCRIPT [SCRIPT ...]
                      [--guest_username GUEST_USERNAME]
                      [--guest_password GUEST_PASSWORD]
@@ -274,7 +274,7 @@ optional arguments:
 e.g. post execute `install_cuda.sh` script in `hpc-gpu-vm-01` VM: 
 
 ```
-vhpc_toolkit> post --vm hpc-gpu-vm-01 --guest_username vmware --script ../examples/post-scripts/install_cuda.sh 
+./vhpc_toolkit post --vm hpc-gpu-vm-01 --guest_username vmware --script ../examples/post-scripts/install_cuda.sh 
 ```
 
 It will prompt you guest OS password for executing the script. 
@@ -293,7 +293,7 @@ This operation supports configuring Latency Sensitivity for a VM or a set of
  VMs. 
 
 ``` 
-vhpc_toolkit> latency -h
+./vhpc_toolkit latency -h
 usage: vhpc_toolkit latency [-h] (--vm VM | --file FILE) [--level LEVEL]
                             [--check]
 
@@ -308,7 +308,7 @@ optional arguments:
 e.g. configure latency sensitivity `high` for VMs defined a file (`vms`): 
 
 ```
-vhpc_toolkit> latency --level high --file vms 
+./vhpc_toolkit latency --level high --file vms 
 ```
 where file `vms` has a list of VMs  
 ```
