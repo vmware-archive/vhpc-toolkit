@@ -302,11 +302,13 @@ class ConfigVM(object):
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
-    def add_sriov_adapter(self, network_obj, pf_obj):
+    def add_sriov_adapter(self, network_obj, pf_obj, dvs_obj):
         """ Add a network adapter with SR-IOV adapter type for a VM
             Adding SR-IOV adapter requires a back-up physical adapter.
 
         Args:
+            dvs_obj (vim.dvs.VmwareDistributedVirtualSwitch):
+                                        distributed virtual switch object type
             network_obj (vim.Network): network object accessible
                                            by either hosts or virtual machines
             pf_obj (vim.host.PciDevice): a PCI object type describes info
@@ -329,10 +331,18 @@ class ConfigVM(object):
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = network_obj
-        nic_spec.device.backing.deviceName = network_obj.name
-        nic_spec.device.backing.useAutoDetect = False
+        if dvs_obj :        
+            nic_spec.device.backing = (
+                vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
+            )
+            nic_spec.device.backing.port = vim.dvs.PortConnection(
+                switchUuid=dvs_obj.summary.uuid, portgroupKey=network_obj.config.key
+            )
+        else:
+            nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+            nic_spec.device.backing.network = network_obj
+            nic_spec.device.backing.deviceName = network_obj.name
+            nic_spec.device.backing.useAutoDetect = False
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True

@@ -1255,11 +1255,15 @@ class Operations(object):
         """
 
         tasks = []
+        dvs_obj = []
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         host_obj = self.objs.get_host_by_vm(vm_obj)
         vm_update = ConfigVM(vm_obj)
         Check().check_kv(vm_cfg, "pf", required=True)
         Check().check_kv(vm_cfg, "sriov_port_group", required=True)
+        if (Check().check_kv(vm_cfg, "dvs_name")) :
+            dvs_name = vm_cfg["dvs_name"]
+            dvs_obj = self.objs.get_dvs(dvs_name)
         pf = vm_cfg["pf"]
         pf_obj = GetHost(host_obj).pci_obj(pf)
         pg = vm_cfg["sriov_port_group"]
@@ -1271,7 +1275,7 @@ class Operations(object):
                 "Find physical function {0} for VM {1} "
                 "and this physical function is SR-IOV capable".format(pf, vm_obj.name)
             )
-            tasks.append(vm_update.add_sriov_adapter(pg_obj, pf_obj))
+            tasks.append(vm_update.add_sriov_adapter(pg_obj, pf_obj, dvs_obj))
         else:
             self.logger.error(
                 "This physical function is not SR-IOV capable. " "Skipping"
