@@ -536,6 +536,13 @@ def get_args():
         help="Name of port group which could enable SR-IOV adapter type",
     )
     sriov_parser.add_argument(
+        "--dvs_name",
+        action="store",
+        type=str,
+        help="Name of distributed virtual switch which could enable SR-IOV",
+    )
+
+    sriov_parser.add_argument(
         "--pf",
         action="store",
         type=str,
