@@ -1255,15 +1255,16 @@ class Operations(object):
         """
 
         tasks = []
-        dvs_obj = []
+        dvs_obj = None
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         host_obj = self.objs.get_host_by_vm(vm_obj)
         vm_update = ConfigVM(vm_obj)
         Check().check_kv(vm_cfg, "pf", required=True)
         Check().check_kv(vm_cfg, "sriov_port_group", required=True)
-        if (Check().check_kv(vm_cfg, "dvs_name")) :
+        if Check().check_kv(vm_cfg, "dvs_name"):
             dvs_name = vm_cfg["dvs_name"]
             dvs_obj = self.objs.get_dvs(dvs_name)
+            self.logger.info("Found dvs {0}".format(dvs_name))
         pf = vm_cfg["pf"]
         pf_obj = GetHost(host_obj).pci_obj(pf)
         pg = vm_cfg["sriov_port_group"]

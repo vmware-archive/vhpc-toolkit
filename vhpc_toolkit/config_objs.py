@@ -331,7 +331,7 @@ class ConfigVM(object):
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        if dvs_obj :        
+        if dvs_obj:
             nic_spec.device.backing = (
                 vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
             )
@@ -339,7 +339,9 @@ class ConfigVM(object):
                 switchUuid=dvs_obj.summary.uuid, portgroupKey=network_obj.config.key
             )
         else:
-            nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+            nic_spec.device.backing = (
+                vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+            )
             nic_spec.device.backing.network = network_obj
             nic_spec.device.backing.deviceName = network_obj.name
             nic_spec.device.backing.useAutoDetect = False
@@ -379,7 +381,8 @@ class ConfigVM(object):
 
         """
 
-        self.remove_network_adapter(network_obj)
+        task = self.remove_network_adapter(network_obj)
+        return task
 
     def add_pvrdma(self, dvs_obj, network_obj, label="pvRDMA Network Adapter"):
         """ Add a network adapter with pvrdma adapter type for a VM
