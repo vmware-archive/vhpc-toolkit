@@ -48,7 +48,7 @@ e.g. Using linked clone to clone a VM `vhpc_vm_01` based on template
 `vhpc_clone` and customize its CPU and memory configurations: 
 
 ```
-vhpc_toolkit> clone --template vhpc_clone --datacenter HPC_Datacenter --cluster 
+./vhpc_toolkit clone --template vhpc_clone --datacenter HPC_Datacenter --cluster 
 COMPUTE_GPU_Cluster --datastore COMPUTE01_vsanDatastore --memory 8 --cpu 8 
 --vm vhpc_vm_01 --linked 
 ```
@@ -103,7 +103,7 @@ default. <br />
 Add GPU device `0000:84:00.0` to VM `hpc-gpu-vm-01` in Passthrough mode: 
 
 ```  
-vhpc_toolkit> passthru --add --device 0000:84:00.0 --vm hpc-gpu-vm-01
+./vhpc_toolkit passthru --add --device 0000:84:00.0 --vm hpc-gpu-vm-01
 ```
 
 #### Configure NVIDIA vGPU (GPU Shared Passthrough)
