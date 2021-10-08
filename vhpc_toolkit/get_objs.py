@@ -245,7 +245,7 @@ class GetObjects(object):
 
         vm_obj = self.get_obj([vim.VirtualMachine], vm_name)
         if vm_obj:
-            self.logger.info("Found vm {0}".format(vm_name))
+            self.logger.debug("Found vm {0}".format(vm_name))
             return vm_obj
         else:
             self.logger.error("Cannot find vm {0}".format(vm_name))
@@ -666,6 +666,16 @@ class GetVM(object):
         """
 
         return self.vm_obj.config.cpuAllocation.shares.shares
+
+    def cores_per_socket(self):
+        """
+
+        Returns:
+            int: The cores per socket for VM
+
+        """
+
+        return self.vm_obj.config.hardware.numCoresPerSocket
 
     def memory_shares(self):
         """

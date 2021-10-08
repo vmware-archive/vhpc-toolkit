@@ -92,6 +92,21 @@ class ConfigVM(object):
         config_spec.cpuAllocation = shares_alloc
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
+    def cores_per_socket(self, cores_per_socket):
+        """Configure cores per socket for a VM
+
+        Args:
+            shares (int): Cores per Socket to be configured
+
+        Returns:
+            Task
+
+        """
+        assert cores_per_socket >= 0
+        config_spec = vim.vm.ConfigSpec()
+        config_spec.numCoresPerSocket = cores_per_socket
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
     def memory_shares(self, shares):
         """ Configure memory shares for a VM
 

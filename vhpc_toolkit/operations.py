@@ -436,6 +436,18 @@ class Operations(object):
                 self.logger.info(
                     "No change of memory size for VM {0}".format(vm_obj.name)
                 )
+        if Check().check_kv(vm_cfg, "cores_per_socket"):
+            cores_per_socket = vm_cfg["cores_per_socket"]
+            if GetVM(vm_obj).cores_per_socket() != cores_per_socket:
+                self.logger.info(
+                    "Creating cores per socket re-configure "
+                    "task for VM {0}".format(vm_obj.name)
+                )
+                tasks.append(ConfigVM(vm_obj).cores_per_socket(cores_per_socket))
+            else:
+                self.logger.info(
+                    "No change of cores per socket for VM {0}".format(vm_obj.name)
+                )
         return tasks
 
     def _get_cpu_shares_task(self, vm_cfg):

@@ -259,6 +259,14 @@ def get_args():
         help="Shares of CPUs for VM(s)",
     )
     cpumem_parser.add_argument(
+        "--cores_per_socket",
+        action="store",
+        required=False,
+        default=None,
+        type=int,
+        help="Cores per socket for VM(s)",
+    )
+    cpumem_parser.add_argument(
         "--memory_shares",
         action="store",
         required=False,
