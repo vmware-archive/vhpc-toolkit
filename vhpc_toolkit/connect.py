@@ -36,7 +36,7 @@ class Connect(object):
     def connect_vcenter(
         self, server, username, password, port, is_vault, vault_secret_path
     ):
-        """ connect to vcenter and retrieve content
+        """connect to vcenter and retrieve content
 
         Args:
             server (str):  name or IP of vCenter
@@ -74,7 +74,11 @@ class Connect(object):
             )
         try:
             si = SmartConnect(
-                host=server, user=username, pwd=password, port=port, sslContext=context,
+                host=server,
+                user=username,
+                pwd=password,
+                port=port,
+                sslContext=context,
             )
             content = si.content
         except Exception as e:
@@ -84,7 +88,7 @@ class Connect(object):
         return content
 
     def connect_vault(self):
-        """ connect to VAULT using VAULT_ADDR and VAULT_TOKEN env variables
+        """connect to VAULT using VAULT_ADDR and VAULT_TOKEN env variables
 
         Args: None
         Returns: VAULT client object

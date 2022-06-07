@@ -35,7 +35,7 @@ class GetObjects(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def get_container_view(self, vimtype):
-        """ Get the container view by managed object types
+        """Get the container view by managed object types
 
         Args:
             vimtype ([str]): a list of types to get container view
@@ -52,7 +52,7 @@ class GetObjects(object):
         return container.view
 
     def get_obj(self, vimtype, name):
-        """ Get the managed object by name
+        """Get the managed object by name
 
         Args:
             vimtype ([str]): the list of managed types to get container view
@@ -75,7 +75,7 @@ class GetObjects(object):
         return obj
 
     def get_datacenter(self, datacenter_name=None, _exit=True):
-        """ Get the datacenter managed object by name
+        """Get the datacenter managed object by name
 
         Args:
             datacenter_name (str): the name of datacenter to get
@@ -98,7 +98,7 @@ class GetObjects(object):
                 return None
 
     def get_folder(self, folder_name, _exit=True):
-        """ Get the folder managed object by name
+        """Get the folder managed object by name
 
         Args:
             folder_name (str): the name of folder to get
@@ -121,7 +121,7 @@ class GetObjects(object):
                 return None
 
     def get_cluster(self, cluster_name, _exit=True):
-        """ Get the cluster managed object by name
+        """Get the cluster managed object by name
 
         Args:
             cluster_name (str): the name of cluster to get
@@ -144,7 +144,7 @@ class GetObjects(object):
                 return None
 
     def get_host(self, host_name, _exit=True):
-        """ Get the host managed object by name
+        """Get the host managed object by name
 
         Args:
             host_name (str): the name of host to get
@@ -167,7 +167,7 @@ class GetObjects(object):
                 return None
 
     def get_host_by_vm(self, vm_obj):
-        """ Get the host managed object by vm
+        """Get the host managed object by vm
 
         Args:
             vm_obj (vim.VirtualMachine)
@@ -185,7 +185,7 @@ class GetObjects(object):
                 return host_obj
 
     def get_datastore(self, datastore_name, _exit=True):
-        """ Get the host managed object by name
+        """Get the host managed object by name
 
         Args:
             datastore_name (str): the name of datastore to get
@@ -208,7 +208,7 @@ class GetObjects(object):
                 return None
 
     def get_resource_pool(self, resource_pool_name, _exit=True):
-        """ Get the resource pool managed object by name
+        """Get the resource pool managed object by name
 
         Args:
             resource_pool_name (str): the name of resource pool to get
@@ -233,7 +233,7 @@ class GetObjects(object):
                 return None
 
     def get_vm(self, vm_name, _exit=True):
-        """ Get the VM managed object by name
+        """Get the VM managed object by name
 
         Args:
             vm_name (str): the name of VM to get
@@ -255,7 +255,7 @@ class GetObjects(object):
                 return None
 
     def get_network(self, network_name, _exit=True):
-        """ Get the network managed object by name
+        """Get the network managed object by name
 
         Args:
             network_name (str): the name of network to get
@@ -278,7 +278,7 @@ class GetObjects(object):
                 return None
 
     def get_dvs(self, dvs_name, _exit=True):
-        """ Get the distributed virtual switch (DVS) managed object by name
+        """Get the distributed virtual switch (DVS) managed object by name
 
         Args:
             dvs_name (str): the name of DVS to get
@@ -394,7 +394,7 @@ class GetCluster(object):
         self.cluster_obj = cluster_obj
 
     def is_drs(self):
-        """ query DRS status
+        """query DRS status
 
         Returns:
             bool: True if DRS is enabled otherwise False
@@ -422,7 +422,7 @@ class GetHost(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def pci_obj(self, pci):
-        """ Get HostPciDevice object
+        """Get HostPciDevice object
 
         Args:
             pci (str): The name ID of this PCI, composed of "bus:slot.function"
@@ -442,7 +442,7 @@ class GetHost(object):
         return None
 
     def pci_ids(self):
-        """ Get a list of available PCI device IDs on this host
+        """Get a list of available PCI device IDs on this host
 
         Returns:
             list: a list of PCI IDs if there are PCI devices on this host
@@ -452,7 +452,7 @@ class GetHost(object):
         return [device.id for device in self.host_obj.hardware.pciDevice]
 
     def network_obj(self, network):
-        """ Locate a Network on the host
+        """Locate a Network on the host
 
         Args:
             network (str): The name of the network to locate
@@ -479,7 +479,7 @@ class GetHost(object):
         return network_obj
 
     def shared_passthru_vgpu_types(self):
-        """ get the shared passthrough GPU types on the host
+        """get the shared passthrough GPU types on the host
 
         Returns:
             Array: Array of shared passthru GPU types
@@ -489,7 +489,7 @@ class GetHost(object):
         return self.host_obj.config.sharedPassthruGpuTypes
 
     def pnics(self):
-        """ get all physical adapters on the host
+        """get all physical adapters on the host
 
         Returns:
             [vim.host.PhysicalNic]: a list of the physical network adapters
@@ -500,7 +500,7 @@ class GetHost(object):
         return self.host_obj.configManager.networkSystem.networkInfo.pnic
 
     def vswitch(self):
-        """ get virtual switches on the host
+        """get virtual switches on the host
 
         Returns:
                 [HostVirtualSwitch]:  a list of virtual switches of the host
@@ -510,7 +510,7 @@ class GetHost(object):
         return self.host_obj.configManager.networkSystem.networkInfo.vswitch
 
     def cpu_mhz_per_core(self):
-        """ get cpu mhz per core for a host
+        """get cpu mhz per core for a host
 
         Returns:
             int: MHz per core on the host
@@ -992,7 +992,7 @@ class GetVM(object):
         return pci_id_sys_id
 
     def extra_config(self, config_key):
-        """ Query the extra config value with given config key
+        """Query the extra config value with given config key
 
         Args:
             config_key (str): the config key to query config value
@@ -1009,7 +1009,7 @@ class GetVM(object):
         return None
 
     def uefi(self):
-        """ Check UEFI installation
+        """Check UEFI installation
 
         Returns:
             bool: True if VM is UEFI installed, False otherwise
@@ -1019,7 +1019,7 @@ class GetVM(object):
         return True if self.vm_obj.config.firmware == "efi" else False
 
     def pci_obj(self, pci):
-        """ Get PciDevice object
+        """Get PciDevice object
 
         Args:
             pci (str): The name ID of this PCI, composed of "bus:slot.function"
@@ -1042,7 +1042,7 @@ class GetVM(object):
         return None
 
     def sriov_obj(self, pf):
-        """ Get SR-IOV device object
+        """Get SR-IOV device object
 
         Args:
             pf (str): the name ID of this SR-IOV, composed of
@@ -1066,7 +1066,7 @@ class GetVM(object):
         return None
 
     def vgpu_obj(self, vgpu_profile):
-        """ Get vGPU object
+        """Get vGPU object
 
         Args:
             vgpu_profile (str): the vGPU profile

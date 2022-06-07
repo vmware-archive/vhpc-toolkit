@@ -21,7 +21,7 @@ FORMAT = "%(asctime)s %(name)s [%(levelname)s] %(message)s"
 
 
 def my_logger(name=" ", log_level=logging.INFO, log_file=LOG_FILE):
-    """ get logger for logging
+    """get logger for logging
 
     Args:
         name (str): the name of this logger

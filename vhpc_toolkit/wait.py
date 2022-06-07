@@ -57,7 +57,7 @@ class VMGetWait(object):
         self.logger.error("Couldn't get IP address for VM {0}".format(self.vm_obj.name))
 
     def wait_for_vmtools(self):
-        """ check vmtools status
+        """check vmtools status
 
         Returns:
             bool: if VM Tool is running, else raise exit.
@@ -151,7 +151,7 @@ class GetWait(object):
                     pass
 
     def wait_for_procs(self, proc_mng, procs, sleep=1):
-        """ wait a list of processes to finish in guest OS
+        """wait a list of processes to finish in guest OS
 
         Args:
             proc_mng (guestOperationsManager.processManager)

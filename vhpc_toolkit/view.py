@@ -35,7 +35,7 @@ class View(object):
 
     @staticmethod
     def _view_wrapper(fill_content, indentation):
-        """ print out the wrapped output with TextWrapper
+        """print out the wrapped output with TextWrapper
 
         Args:
                 fill_content (str): the content for printing
@@ -50,7 +50,7 @@ class View(object):
         print(text_wrapper.fill(fill_content))
 
     def view_compute_resource(self):
-        """ view compute resources
+        """view compute resources
 
         Returns:
                 None
@@ -79,7 +79,7 @@ class View(object):
                 View(entity, next_level).view_compute_resource()
 
     def view_network_resource(self):
-        """ view networking resources
+        """view networking resources
 
         Returns:
                 None

@@ -11,10 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import argparse
-import distutils.util
 import os
 import sys
 
+import distutils.util
 import yaml
 
 sys.tracebacklimit = None
@@ -22,7 +22,7 @@ CMD_KEY = "command"
 
 
 def get_args():
-    """ leverage argparse -- Python parser for command-line options for
+    """leverage argparse -- Python parser for command-line options for
                              passing arguments
 
     Returns:
@@ -32,7 +32,9 @@ def get_args():
 
     from vhpc_toolkit.version import __version__
 
-    main_parser = argparse.ArgumentParser(description="Configuring vHPC environment",)
+    main_parser = argparse.ArgumentParser(
+        description="Configuring vHPC environment",
+    )
     main_parser.add_argument(
         "--debug",
         required=False,
@@ -41,7 +43,9 @@ def get_args():
         help="print debug messages",
     )
     main_parser.add_argument(
-        "--version", action="version", version="vhpc_toolkit version %s" % __version__,
+        "--version",
+        action="version",
+        version="vhpc_toolkit version %s" % __version__,
     )
     subparsers = main_parser.add_subparsers(dest=CMD_KEY)
     view_parser = subparsers.add_parser(
@@ -172,7 +176,9 @@ def get_args():
         "If omitted, it will be the same as the template VM.",
     )
     destroy_parser = subparsers.add_parser(
-        "destroy", help="Destroy VM(s)", formatter_class=argparse.RawTextHelpFormatter,
+        "destroy",
+        help="Destroy VM(s)",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     destroy_group = destroy_parser.add_mutually_exclusive_group(required=True)
     destroy_group.add_argument(
@@ -645,7 +651,9 @@ def get_args():
         "--create", action="store_true", help="Create a standard virtual switch"
     )
     svs_group1.add_argument(
-        "--destroy", action="store_true", help="Destroy a standard virtual switch",
+        "--destroy",
+        action="store_true",
+        help="Destroy a standard virtual switch",
     )
     svs_parser.add_argument(
         "--host",
@@ -684,10 +692,14 @@ def get_args():
     )
     dvs_group1 = dvs_parser.add_mutually_exclusive_group(required=True)
     dvs_group1.add_argument(
-        "--create", action="store_true", help="Create a distributed virtual switch",
+        "--create",
+        action="store_true",
+        help="Create a distributed virtual switch",
     )
     dvs_group1.add_argument(
-        "--destroy", action="store_true", help="Destroy a distributed virtual switch",
+        "--destroy",
+        action="store_true",
+        help="Destroy a distributed virtual switch",
     )
     dvs_parser.add_argument(
         "--name",
@@ -779,7 +791,7 @@ def get_args():
 
 
 def _find_vcenter_conf_file(file):
-    """ locate the vcenter conf file
+    """locate the vcenter conf file
 
     Args:
         file (str): vcenter conf file
@@ -810,7 +822,7 @@ def _find_vcenter_conf_file(file):
 
 
 def find_script_conf_file(file):
-    """ locate the cluster conf file
+    """locate the cluster conf file
 
     Args:
         file (str): cluster conf file

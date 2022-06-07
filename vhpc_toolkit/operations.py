@@ -11,8 +11,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import logging
-from distutils.util import strtobool
 
+from distutils.util import strtobool
 from pyVmomi import vim
 from pyVmomi import vmodl
 from textwrap3 import TextWrapper
@@ -68,7 +68,7 @@ class Operations(object):
             self.logger = log.my_logger(name=self.__class__.__name__)
 
     def view_cli(self):
-        """ view vCenter objects
+        """view vCenter objects
 
         Returns:
             None
@@ -92,7 +92,7 @@ class Operations(object):
                     View(entity, cur_level=1).view_network_resource()
 
     def clone_cli(self):
-        """ clone VMs
+        """clone VMs
 
         Returns:
             None
@@ -234,7 +234,7 @@ class Operations(object):
             raise SystemExit
 
     def destroy_cli(self):
-        """ destroy VMs
+        """destroy VMs
 
         Returns:
             None
@@ -318,7 +318,8 @@ class Operations(object):
             cpumem_reser_tasks.extend(self._get_cpumem_reser_tasks(vm_cfg))
         if cpumem_reser_tasks:
             GetWait().wait_for_tasks(
-                cpumem_reser_tasks, task_name="Configure CPU/memory reservation",
+                cpumem_reser_tasks,
+                task_name="Configure CPU/memory reservation",
             )
 
     def _cpumem_cluster(self, vm_cfgs, *keys):
@@ -744,7 +745,7 @@ class Operations(object):
         return tasks
 
     def network_cfg_cli(self):
-        """ Configure network properties for VM(s)
+        """Configure network properties for VM(s)
 
         Returns:
             None
@@ -757,7 +758,7 @@ class Operations(object):
             GetWait().wait_for_tasks(tasks, task_name="Configure network properties")
 
     def _network_cfg_cluster(self, vm_cfgs, *keys):
-        """ Configure network properties for VM(s)
+        """Configure network properties for VM(s)
             (defined in cluster conf file)
 
         Args:
@@ -832,7 +833,7 @@ class Operations(object):
         return task
 
     def post_cli(self):
-        """ Execute post scripts for VM(s)
+        """Execute post scripts for VM(s)
 
         Returns:
             None
@@ -900,7 +901,7 @@ class Operations(object):
         return procs
 
     def latency_cli(self):
-        """ Configure latency sensitivity for VM(s)
+        """Configure latency sensitivity for VM(s)
 
         Returns:
             None
@@ -914,7 +915,7 @@ class Operations(object):
             self._latency_high(vm_cfgs)
 
     def _latency_cluster(self, vm_cfgs, key):
-        """ Configure latency sensitivity for VM(s)
+        """Configure latency sensitivity for VM(s)
             (defined in a cluster conf file)
 
         Args:
@@ -1144,8 +1145,7 @@ class Operations(object):
 
     @staticmethod
     def is_valid_mmio_size(num):
-        """check MMIO size setting is valid
-        """
+        """check MMIO size setting is valid"""
 
         return num > 0 and ((num & (num - 1)) == 0)
 
@@ -1181,7 +1181,7 @@ class Operations(object):
         return tasks
 
     def sriov_cli(self):
-        """ Configure device in SR-IOV mode for VM
+        """Configure device in SR-IOV mode for VM
 
         Returns:
             None
@@ -1206,7 +1206,7 @@ class Operations(object):
                 GetWait().wait_for_tasks(tasks, task_name="Remove SR-IOV device(s)")
 
     def _sriov_cluster(self, vm_cfgs, *keys):
-        """ Configure device in SR-IOV mode for VM(s)
+        """Configure device in SR-IOV mode for VM(s)
             (defined in cluster conf file)
 
         Args:
@@ -1226,7 +1226,7 @@ class Operations(object):
             GetWait().wait_for_tasks(tasks, task_name="Add SR-IOV device(s)")
 
     def _query_sriov(self, vm_cfg):
-        """ query available SR-IOV devices for a VM
+        """query available SR-IOV devices for a VM
 
         Args:
                 vm_cfg (dict): a dict contains VM config info
@@ -1613,7 +1613,7 @@ class Operations(object):
             self._destroy_svs(self.cfg)
 
     def _create_svs(self, svs_cfg):
-        """ create a standard virtual switch. Note that the API for
+        """create a standard virtual switch. Note that the API for
             adding/destroying svs doesn't return Task to track
 
         Args:
@@ -1660,7 +1660,7 @@ class Operations(object):
                     self.logger.error("Caught vmodl fault: " + error.msg)
 
     def _destroy_svs(self, svs_cfg):
-        """ destroy a standard virtual switch. Note that the API for
+        """destroy a standard virtual switch. Note that the API for
             adding/destroying svs doesn't return Task to track
 
         Args:
@@ -1790,7 +1790,7 @@ class Operations(object):
         GetWait().wait_for_tasks([task], task_name="Destroy distributed virtual switch")
 
     def cluster(self):
-        """ Cluster creation/destroy based on the definition from cluster conf
+        """Cluster creation/destroy based on the definition from cluster conf
             file
 
         Returns:

@@ -46,7 +46,7 @@ class ConfigVM(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def memory(self, memory_mb):
-        """ Configure memory size for a VM
+        """Configure memory size for a VM
 
         Args:
             memory_mb (int): memory size in MB to be configured
@@ -61,7 +61,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpus(self, num_of_cpus):
-        """ Configure number of CPUs for a VM
+        """Configure number of CPUs for a VM
 
         Args:
             num_of_cpus (int): number of CPUs to be configured
@@ -76,7 +76,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_shares(self, shares):
-        """ Configure CPU shares for a VM
+        """Configure CPU shares for a VM
 
         Args:
             shares (int): CPU shares to be configured
@@ -108,7 +108,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def memory_shares(self, shares):
-        """ Configure memory shares for a VM
+        """Configure memory shares for a VM
 
         Args:
             shares (int): memory shares to be configured
@@ -126,7 +126,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def memory_reservation(self, reser=0):
-        """ Configure memory reservation for a VM
+        """Configure memory reservation for a VM
 
         Args:
             reser (int): 0 (clear reservation) or
@@ -149,7 +149,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_reservation(self, host_cpu_mhz=None, reser=0):
-        """ Configure CPU reservation for a VM
+        """Configure CPU reservation for a VM
 
         Args:
             host_cpu_mhz (int): if to reser, host_cpu_mhz must have a value
@@ -173,7 +173,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_hotadd(self, enable_hotadd=True):
-        """ Enable/disable CPU hotadd
+        """Enable/disable CPU hotadd
 
         Args:
             enable_hotadd (bool)
@@ -188,7 +188,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def mem_hotadd(self, enable_hotadd=True):
-        """ Enable/disable memory hotadd
+        """Enable/disable memory hotadd
 
         Args:
             enable_hotadd (bool)
@@ -203,7 +203,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def power_on(self):
-        """ Power on VM
+        """Power on VM
 
         Returns:
             Task
@@ -213,7 +213,7 @@ class ConfigVM(object):
         return self.vm_obj.PowerOn()
 
     def power_off(self):
-        """ Power off VM
+        """Power off VM
 
         Returns:
             Task
@@ -223,7 +223,7 @@ class ConfigVM(object):
         return self.vm_obj.PowerOff()
 
     def latency(self, level):
-        """ Configure Latency Sensitivity for a VM
+        """Configure Latency Sensitivity for a VM
 
         Args:
             level (str): the Latency Sensitivity Level,
@@ -249,7 +249,7 @@ class ConfigVM(object):
             return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def destroy(self):
-        """ Destroy a VM
+        """Destroy a VM
 
         Returns:
             Task
@@ -259,7 +259,7 @@ class ConfigVM(object):
         return self.vm_obj.Destroy()
 
     def add_network_adapter(self, network_obj):
-        """ Add a network adapter for a VM
+        """Add a network adapter for a VM
             The device spec uses vim.vm.device.VirtualVmxnet3() by default,
             which is recommended for best performance.
 
@@ -295,7 +295,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_network_adapter(self, network_obj):
-        """ Remove a network adapter for a VM
+        """Remove a network adapter for a VM
 
         Args:
             network_obj (vim.Network): network object accessible by either
@@ -318,7 +318,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def add_sriov_adapter(self, network_obj, pf_obj, dvs_obj):
-        """ Add a network adapter with SR-IOV adapter type for a VM
+        """Add a network adapter with SR-IOV adapter type for a VM
             Adding SR-IOV adapter requires a back-up physical adapter.
 
         Args:
@@ -369,7 +369,7 @@ class ConfigVM(object):
         )
         nic_spec.device.allowGuestOSMtuChange = False
         # convert decimal to hex for the device ID of physical adapter
-        device_id = hex(pf_obj.deviceId % 2 ** 16).lstrip("0x")
+        device_id = hex(pf_obj.deviceId % 2**16).lstrip("0x")
         sys_id = GetVM(self.vm_obj).pci_id_sys_id_sriov()
         backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
             deviceId=device_id,
@@ -384,7 +384,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_sriov_adapter(self, network_obj):
-        """ Remove a SR-IOV network adapter for a VM.
+        """Remove a SR-IOV network adapter for a VM.
             Same as removing a regular network adapter
 
         Args:
@@ -400,7 +400,7 @@ class ConfigVM(object):
         return task
 
     def add_pvrdma(self, dvs_obj, network_obj, label="pvRDMA Network Adapter"):
-        """ Add a network adapter with pvrdma adapter type for a VM
+        """Add a network adapter with pvrdma adapter type for a VM
                 Adding pvrdma adapter requires a port group from a DVS, which
                 has uplinks mapped from host RDMA NICS.
 
@@ -445,7 +445,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_pvrdma(self, network_obj):
-        """ Remove a PVRDMA network adapter for a VM. Basically same as
+        """Remove a PVRDMA network adapter for a VM. Basically same as
             removing a regular network adapter
 
         Args:
@@ -461,7 +461,7 @@ class ConfigVM(object):
     def config_networking(
         self, network_obj, ip, netmask, gateway, domain, dns, guest_hostname
     ):
-        """ Configure network properties for a VM
+        """Configure network properties for a VM
 
         Args:
             network_obj (vim.Network): network object accessible
@@ -508,7 +508,7 @@ class ConfigVM(object):
         return self.vm_obj.Customize(spec=custom_spec)
 
     def enable_fork_parent(self):
-        """ Enable fork parent for a VM
+        """Enable fork parent for a VM
 
         Returns:
             None
@@ -518,7 +518,7 @@ class ConfigVM(object):
         self.vm_obj.EnableForkParent()
 
     def disable_fork_parent(self):
-        """ Disable fork parent for a VM
+        """Disable fork parent for a VM
 
         Returns:
                 Task
@@ -537,7 +537,7 @@ class ConfigVM(object):
         cpu,
         mem,
     ):
-        """ Clone a VM via full clone
+        """Clone a VM via full clone
 
         Args:
             dest_vm_name (str): Name of destination VM
@@ -575,7 +575,7 @@ class ConfigVM(object):
     def linked_clone(
         self, dest_vm, host_obj, folder_obj, resource_pool_obj, cpu, mem, power_on=True
     ):
-        """ Clone a VM via linked clone
+        """Clone a VM via linked clone
 
         Args:
             dest_vm (str): Name of destination VM
@@ -627,7 +627,7 @@ class ConfigVM(object):
 
     @staticmethod
     def _find_nearest_power_of_two(x):
-        """ find nearest of power of two for a given int number
+        """find nearest of power of two for a given int number
 
         Args:
             x (int)
@@ -640,7 +640,7 @@ class ConfigVM(object):
         return 1 << (x - 1).bit_length()
 
     def add_pci(self, pci, host_obj, vm_update, vm_status, mmio_size):
-        """ Add a PCI device for a VM.
+        """Add a PCI device for a VM.
             If a PCI device has large BARs, it requires 64bit MMIO
             support and large enough MMIO mapping space. This method will add
             these two configurations by default and check uEFI installation.
@@ -671,7 +671,7 @@ class ConfigVM(object):
         tasks = []
         pci_obj = GetHost(host_obj).pci_obj(pci)
         # Convert decimal to hex for the device ID of PCI device
-        device_id = hex(pci_obj.deviceId % 2 ** 16).lstrip("0x")
+        device_id = hex(pci_obj.deviceId % 2**16).lstrip("0x")
         if not vm_status.uefi():
             self.logger.warning(
                 "VM {0} is not installed with UEFI. "
@@ -701,7 +701,7 @@ class ConfigVM(object):
         return tasks
 
     def remove_pci(self, pci, vm_status):
-        """ Remove a PCI device from a VM
+        """Remove a PCI device from a VM
 
         Args:
             pci (str): pci ID of the PCI device
@@ -724,7 +724,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def add_extra(self, entry, value):
-        """ Add an extra advanced vmx entry for a VM
+        """Add an extra advanced vmx entry for a VM
 
         Args:
             entry (str): extra config key
@@ -744,7 +744,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_extra(self, entry):
-        """ Add an extra advanced vmx entry from a VM
+        """Add an extra advanced vmx entry from a VM
 
         Args:
             entry (str): extra config key
@@ -763,7 +763,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def add_vgpu(self, vgpu_profile):
-        """ Add a vGPU profile for a VM
+        """Add a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be added into a VM
@@ -785,7 +785,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_vgpu(self, vgpu_profile):
-        """ Remove a vGPU profile for a VM
+        """Remove a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be removed from a VM
@@ -808,7 +808,7 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def execute_script(self, process_manager, script, username, password):
-        """ Execute a post script for a VM
+        """Execute a post script for a VM
             First copy local script content to remote VM
             Then execute the script in remote VM
             Only works for Linux system
@@ -892,7 +892,7 @@ class ConfigHost(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def create_svs(self, svs_name, vmnic, num_ports=8):
-        """ Create a standard virtual switch
+        """Create a standard virtual switch
             It calls AddVirtualSwitch method from HostNetworkSystem. It
             doesn't return a Task to track
 
@@ -916,7 +916,7 @@ class ConfigHost(object):
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
 
     def destroy_svs(self, svs_name):
-        """ Destroy a standard virtual switch
+        """Destroy a standard virtual switch
 
         Args:
             svs_name (str): The name of SVS to be destroyed
@@ -933,7 +933,7 @@ class ConfigHost(object):
         host_network_obj.RemoveVirtualSwitch(vswitchName=svs_name)
 
     def create_pg_in_svs(self, svs_name, pg_name, vlan_id=0):
-        """ Create a Port Group within standard virtual switch
+        """Create a Port Group within standard virtual switch
 
         Args:
             svs_name (str): The name of SVS to create a port group
@@ -962,7 +962,7 @@ class ConfigHost(object):
         host_network_obj.AddPortGroup(portgrp=pg_spec)
 
     def destroy_pg(self, pg_name):
-        """ Destroy a Port Group from a Host
+        """Destroy a Port Group from a Host
 
         Args:
             pg_name (str): The name of port group to be destroyed
@@ -1001,7 +1001,7 @@ class ConfigDatacenter(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4):
-        """ Create a distributed virtual switch within the datacenter
+        """Create a distributed virtual switch within the datacenter
 
         Args:
             host_vmnics (dict): A dictionary storing {host_obj: vmnics}
@@ -1100,7 +1100,7 @@ class ConfigDVS(object):
         self.dvs_obj = dvs_obj
 
     def create_pg_in_dvs(self, dvs_pg_name, num_ports=1):
-        """ Create a port group in the DVS.
+        """Create a port group in the DVS.
 
         Args:
             dvs_pg_name (str): the port group name to be created
@@ -1121,7 +1121,7 @@ class ConfigDVS(object):
         return task
 
     def destroy_dvs(self):
-        """ Destroy the DVS
+        """Destroy the DVS
 
         Returns:
             Task
@@ -1149,7 +1149,7 @@ class ConfigCluster(object):
         self.cluster_obj = cluster_obj
 
     def enable_drs(self):
-        """ enable DRS for the cluster
+        """enable DRS for the cluster
 
         Todo:
            To be implemented
@@ -1159,7 +1159,7 @@ class ConfigCluster(object):
         pass
 
     def disable_drs(self):
-        """ disable DRS for the cluster
+        """disable DRS for the cluster
 
         Todo:
            To be implemented

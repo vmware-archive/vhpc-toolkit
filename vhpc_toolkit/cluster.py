@@ -13,9 +13,9 @@
 import configparser
 import itertools
 import re
-from distutils.util import strtobool
 from operator import itemgetter
 
+from distutils.util import strtobool
 from texttable import Texttable
 
 from vhpc_toolkit import get_args
@@ -139,7 +139,7 @@ class Cluster(object):
             raise SystemExit
 
     def _unfold_range_svs_dvs(self, cfg):
-        """ Pass the cfg dict and scan the range key(s).
+        """Pass the cfg dict and scan the range key(s).
             If range is defined, unfold range,
             e.g. {key: value{1:10}} will become {key: [value1, value2,
             .. value10]}
@@ -304,7 +304,7 @@ class Cluster(object):
         return range_unfold, range_mark
 
     def _unfold_range_vm_section(self, cfg):
-        """ Pass the cfg dict and scan the range keys.
+        """Pass the cfg dict and scan the range keys.
             If ranges are defined, unfold range.
             For VM section, other than VM name, several keys are supported for
             range definition. The return is different from _SVS_ or _DVS_
@@ -350,12 +350,14 @@ class Cluster(object):
             # if it has scatter range, unfold it
             if scatter_mark:
                 range_unfold[range_key] = self._scatter_mapping(
-                    pivot_range_unfold[pivot], scatter_unfold[range_key],
+                    pivot_range_unfold[pivot],
+                    scatter_unfold[range_key],
                 )
             # if it has bunch range, unfold it
             if bunch_mark:
                 range_unfold[range_key] = self._bunch_mapping(
-                    pivot_range_unfold[pivot], bunch_unfold[range_key],
+                    pivot_range_unfold[pivot],
+                    bunch_unfold[range_key],
                 )
         # map the range key's range to pivot range ('vm')
         for idx, value in enumerate(pivot_range_unfold[pivot]):
@@ -372,8 +374,7 @@ class Cluster(object):
 
     @staticmethod
     def _plot_range(range_dicts):
-        """plot range results
-        """
+        """plot range results"""
 
         table = Texttable()
         table_rows = []
@@ -389,8 +390,7 @@ class Cluster(object):
         print("\n")
 
     def _confirm_range(self):
-        """Prompt user to confirm range definition
-        """
+        """Prompt user to confirm range definition"""
 
         confirm = input(
             "[ACTION] For the range definition, " "is this mapping what you expected? "
@@ -590,8 +590,7 @@ class Check(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def check_kv(self, dict_to_check, key, none_check=True, required=False):
-        """check key value existence
-        """
+        """check key value existence"""
         if key in dict_to_check and dict_to_check[key]:
             return True
         if key in dict_to_check and not none_check:
