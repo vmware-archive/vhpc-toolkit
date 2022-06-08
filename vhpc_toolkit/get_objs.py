@@ -740,11 +740,7 @@ class GetVM(object):
             bool: True if the VM has full reservation
 
         """
-
-        if self.cpu_reser() == int(self.cpu() * host_cpu_mhz):
-            return True
-        else:
-            return False
+        return self.cpu_reser() == int(self.cpu() * host_cpu_mhz)
 
     def cpu_reser(self):
         """
