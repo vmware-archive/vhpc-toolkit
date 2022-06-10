@@ -86,19 +86,27 @@ class View(object):
 
         """
 
-        if not isinstance(
-            self.view_entity, vim.DistributedVirtualPortgroup
-        ) and not isinstance(self.view_entity, vim.DistributedVirtualSwitch):
-            self._view_wrapper(
-                "|-:%s" % self.view_entity.name, self.cur_level * 2 * " "
-            )
         if isinstance(self.view_entity, vim.DistributedVirtualSwitch):
             self._view_wrapper(
-                "|-+:%s [DistributedVirtualSwitch]" % self.view_entity.name,
+                "|-+:%s [DVS]" % self.view_entity.name,
                 self.cur_level * 2 * " ",
             )
             for pg in self.view_entity.portgroup:
                 self._view_wrapper(
-                    "|-:%s [DistributedVirtualPortgroup]" % pg.name,
+                    "|-:%s [Portgroup]" % pg.name,
                     (self.cur_level * 2 + 2) * " ",
                 )
+        elif isinstance(self.view_entity, vim.Network) and not isinstance(
+            self.view_entity, vim.DistributedVirtualPortgroup
+        ):
+            self._view_wrapper(
+                "|-:%s [Netowrk]" % self.view_entity.name, self.cur_level * 2 * " "
+            )
+        elif isinstance(self.view_entity, vim.Folder):
+            self._view_wrapper(
+                "|-+:%s [Folder]" % self.view_entity.name, self.cur_level * 2 * " "
+            )
+            next_level = self.cur_level + 1
+            # print("Number of child %s" % len(self.view_entity.childEntity))
+            for entity in self.view_entity.childEntity:
+                View(entity, next_level).view_network_resource()
