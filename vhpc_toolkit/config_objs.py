@@ -276,23 +276,55 @@ class ConfigVM(object):
 
         """
 
+        dvs = network_obj.config.distributedVirtualSwitch
+        port_key = self._search_port(dvs, network_obj.key)
+        port = self._port_find(dvs, port_key)
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualVmxnet3()
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = network_obj
-        nic_spec.device.backing.deviceName = network_obj.name
-        nic_spec.device.backing.useAutoDetect = False
+        nic_spec.device.backing = (
+            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
+        )
+        nic_spec.device.backing.port = vim.dvs.PortConnection()
+        nic_spec.device.backing.port.portgroupKey = port.portgroupKey
+        nic_spec.device.backing.port.switchUuid = port.dvsUuid
+        nic_spec.device.backing.port.portKey = port.key
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True
         nic_spec.device.connectable.allowGuestControl = True
+        nic_spec.device.connectable.status = "untried"
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
+
+    def _search_port(self, dvs, portgroupkey):
+        """
+        Find port by port group key
+        """
+        search_portkey = []
+        criteria = vim.dvs.PortCriteria()
+        criteria.connected = False
+        criteria.inside = True
+        criteria.portgroupKey = portgroupkey
+        ports = dvs.FetchDVPorts(criteria)
+        for port in ports:
+            search_portkey.append(port.key)
+        return search_portkey[0]
+
+    def _port_find(self, dvs, key):
+        """
+        Find port by port key
+        """
+        obj = None
+        ports = dvs.FetchDVPorts()
+        for port in ports:
+            if port.key == key:
+                obj = port
+        return obj
 
     def remove_network_adapter(self, network_obj):
         """Remove a network adapter for a VM
