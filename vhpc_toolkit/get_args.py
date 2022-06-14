@@ -48,6 +48,29 @@ def get_args():
         version="vhpc_toolkit version %s" % __version__,
     )
     subparsers = main_parser.add_subparsers(dest=CMD_KEY)
+
+    get_vm_config_parser = subparsers.add_parser(
+        "get_vm_config",
+        help="View the performance metrics of the VM",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    get_vm_config_parser.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM whose performance metrics should be fetched",
+    )
+    get_vm_config_parser.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the operation",
+    )
+
     view_parser = subparsers.add_parser(
         "view",
         help="View the vCenter object names",

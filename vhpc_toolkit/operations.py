@@ -1989,3 +1989,37 @@ class Operations(object):
                     self._destroy_dvs(cl_config)
             else:
                 self.logger.info("Not destroying any distributed virtual switches")
+
+    def get_vm_config_cli(self) -> None:
+        vm_cfgs = self._extract_file(self.cfg)
+        for vm_cfg in vm_cfgs:
+            self._print_vm_config(vm_cfg["vm"])
+
+    def _print_vm_config(self, vm_name: str) -> None:
+        """
+        This function prints the performance metrics of the vm using the vm name provided
+
+        Args:
+            vm_name: Name of the VM for which you want the performance metrics printed
+        Returns:
+            None
+        """
+        vm_object: vim.VirtualMachine = self.objs.get_vm(vm_name)
+        vm_summary_config = vm_object.summary.config
+        vm_details = {
+            "Name": vm_summary_config.name,
+            "vCPU": vm_summary_config.numCpu,
+            "CPU Reservation": f"{vm_summary_config.cpuReservation} MHz",
+            "CPU Limit": vm_object.config.cpuAllocation.limit,
+            "Memory Size": f"{round(vm_summary_config.memorySizeMB / 1024.0, 2)} GB",
+            "Memory Reservation": f"{round(vm_object.config.memoryAllocation.reservation / 1024.0, 2)} GB",
+            "Memory Limit": f"{vm_object.config.memoryAllocation.limit}",
+            "Latency Sensitivity": [
+                config.latencySensitivity.level.name
+                for config in vm_object.config.vcpuConfig
+            ],
+        }
+        print("--------------------")
+        for performance_metric, value in vm_details.items():
+            print(f"{performance_metric}  :  {value}")
+        print("--------------------")
