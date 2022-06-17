@@ -55,14 +55,18 @@ def get_args():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    get_vm_config_parser.add_argument(
+    get_vm_config_group1 = get_vm_config_parser.add_mutually_exclusive_group(
+        required=True
+    )
+
+    get_vm_config_group1.add_argument(
         "--vm",
         action="store",
         default=None,
         type=str,
         help="Name of the VM whose performance metrics should be fetched",
     )
-    get_vm_config_parser.add_argument(
+    get_vm_config_group1.add_argument(
         "--file",
         action="store",
         default=None,

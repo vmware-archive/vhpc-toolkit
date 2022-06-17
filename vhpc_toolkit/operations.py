@@ -2014,10 +2014,7 @@ class Operations(object):
             "Memory Size": f"{round(vm_summary_config.memorySizeMB / 1024.0, 2)} GB",
             "Memory Reservation": f"{round(vm_object.config.memoryAllocation.reservation / 1024.0, 2)} GB",
             "Memory Limit": f"{vm_object.config.memoryAllocation.limit}",
-            "Latency Sensitivity": [
-                config.latencySensitivity.level.name
-                for config in vm_object.config.vcpuConfig
-            ],
+            "Latency Sensitivity": vm_object.config.latencySensitivity.level,
         }
         print("--------------------")
         for performance_metric, value in vm_details.items():
