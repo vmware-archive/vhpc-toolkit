@@ -484,6 +484,21 @@ def get_args():
         help="Name of the file containing a list of VMs, "
         "one per line, to perform the passthrough operation",
     )
+    passthru_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to perform the passthrough operation",
+    )
+    passthru_group1.add_argument(
+        "--host-file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to perform the passthrough operation",
+    )
     passthru_parser.add_argument(
         "--query",
         action="store_true",

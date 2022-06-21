@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import os
+from typing import List
 
 from pyVmomi import vim
 from pyVmomi import vmodl
@@ -221,6 +222,34 @@ class ConfigVM(object):
         """
 
         return self.vm_obj.PowerOff()
+
+    def change_secure_boot(self, enabled=True) -> vim.Task:
+        """
+        This function can enable or disable secure boot
+
+        Args:
+            enabled: Whether secure boot should be enabled or not
+
+        Returns: Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        config_spec.bootOptions.efiSecureBootEnabled = enabled
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
+    def change_vm_affinity_capability(self, affinity: List[int] = []):
+        """
+        This function changes the scheduling affinity for the VM
+
+        Args:
+            affinity: List of nodes that may be used by the VM. If no argument is given, the existing affinity option is cleared
+
+        Returns: Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        config_spec.cpuAffinity.affinitySet = affinity
+        return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def latency(self, level):
         """Configure Latency Sensitivity for a VM
