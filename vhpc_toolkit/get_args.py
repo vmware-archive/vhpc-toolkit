@@ -64,7 +64,7 @@ def get_args():
         action="store",
         default=None,
         type=str,
-        help="Name of the VM whose performance metrics should be fetched",
+        help="Name of the VM whose performance related settings should be fetched",
     )
     get_vm_config_group1.add_argument(
         "--file",

@@ -1997,10 +1997,10 @@ class Operations(object):
 
     def _print_vm_config(self, vm_name: str) -> None:
         """
-        This function prints the performance metrics of the vm using the vm name provided
+        This function prints the performance related settings of the vm using the vm name provided
 
         Args:
-            vm_name: Name of the VM for which you want the performance metrics printed
+            vm_name: Name of the VM for which you want the performance related settings printed
         Returns:
             None
         """
@@ -2010,13 +2010,13 @@ class Operations(object):
             "Name": vm_summary_config.name,
             "vCPU": vm_summary_config.numCpu,
             "CPU Reservation": f"{vm_summary_config.cpuReservation} MHz",
-            "CPU Limit": vm_object.config.cpuAllocation.limit,
+            "CPU Limit": f"{0 if vm_object.config.cpuAllocation.limit == -1 else vm_object.config.cpuAllocation.limit} MHz",
             "Memory Size": f"{round(vm_summary_config.memorySizeMB / 1024.0, 2)} GB",
             "Memory Reservation": f"{round(vm_object.config.memoryAllocation.reservation / 1024.0, 2)} GB",
-            "Memory Limit": f"{vm_object.config.memoryAllocation.limit}",
+            "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit)/1024.0, 2)} GB",
             "Latency Sensitivity": vm_object.config.latencySensitivity.level,
         }
         print("--------------------")
-        for performance_metric, value in vm_details.items():
-            print(f"{performance_metric}  :  {value}")
+        for performance_related_setting, value in vm_details.items():
+            print(f"{performance_related_setting}  :  {value}")
         print("--------------------")
