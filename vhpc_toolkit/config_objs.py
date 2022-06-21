@@ -234,7 +234,9 @@ class ConfigVM(object):
 
         """
         config_spec = vim.vm.ConfigSpec()
-        config_spec.bootOptions.efiSecureBootEnabled = enabled
+        boot_option = vim.vm.BootOptions()
+        boot_option.efiSecureBootEnabled = enabled
+        config_spec.bootOptions = boot_option
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def change_vm_affinity_capability(self, affinity: List[int] = []):

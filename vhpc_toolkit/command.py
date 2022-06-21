@@ -57,3 +57,5 @@ def command():
         ops.latency_cli()
     elif ops.cfg[CMD_KEY] == "cluster":
         ops.cluster()
+    elif ops.cfg[CMD_KEY] == "secure_boot":
+        ops.secure_boot_cli()

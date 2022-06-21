@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import logging
+from typing import List
 
 from distutils.util import strtobool
 from pyVmomi import vim
@@ -644,6 +645,48 @@ class Operations(object):
                 tasks.append(task)
             else:
                 self.logger.info("VM {0} is already in power off state".format(vm))
+        return tasks
+
+    def secure_boot_cli(self):
+        """
+        Turn on or off secure boot for VMs
+
+        Returns:
+            None
+        """
+
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+        if self.cfg["on"]:
+            tasks = self.__get_secure_boot_tasks(vms, True)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot on")
+        if self.cfg["off"]:
+            tasks = self.__get_secure_boot_tasks(vms, False)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot off")
+
+    def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
+        """
+        Enable secure boot for vms
+        Args:
+            vms: List of vm names
+            enabled: Whether to enable secure boot or not
+
+        Returns:
+            List of task objects
+
+        """
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    "VM {0} is turned on. So cannot enable secure boot. Please turn off and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(ConfigVM(vm_obj).change_secure_boot(enabled=enabled))
+
         return tasks
 
     def network_cli(self):

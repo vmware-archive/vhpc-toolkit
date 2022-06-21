@@ -219,6 +219,34 @@ def get_args():
     )
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
+
+    secure_boot_parser = subparsers.add_parser(
+        "secure_boot",
+        help="Secure boot on/off VM(s)",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    secure_boot_group1 = secure_boot_parser.add_mutually_exclusive_group(required=True)
+    secure_boot_group2 = secure_boot_parser.add_mutually_exclusive_group(required=True)
+    secure_boot_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to perform the secure boot operation",
+    )
+    secure_boot_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the secure boot operation",
+    )
+    secure_boot_group2.add_argument("--on", action="store_true", help="Secure boot on")
+    secure_boot_group2.add_argument(
+        "--off", action="store_true", help="Secure boot off"
+    )
+
     cpumem_parser = subparsers.add_parser(
         "cpumem",
         help="Reconfigure CPU/memory for VM(s)",
