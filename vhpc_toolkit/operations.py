@@ -2005,16 +2005,17 @@ class Operations(object):
             None
         """
         vm_object: vim.VirtualMachine = self.objs.get_vm(vm_name)
-        vm_summary_config = vm_object.summary.config
+        vm = GetVM(vm_object)
         vm_details = {
-            "Name": vm_summary_config.name,
-            "vCPU": vm_summary_config.numCpu,
-            "CPU Reservation": f"{vm_summary_config.cpuReservation} MHz",
+            "Name": vm.vm_name(),
+            "vCPU": vm.cpu(),
+            "CPU Reservation": f"{vm.cpu_reser()} MHz",
             "CPU Limit": f"{0 if vm_object.config.cpuAllocation.limit == -1 else vm_object.config.cpuAllocation.limit} MHz",
-            "Memory Size": f"{round(vm_summary_config.memorySizeMB / 1024.0, 2)} GB",
-            "Memory Reservation": f"{round(vm_object.config.memoryAllocation.reservation / 1024.0, 2)} GB",
+            "Memory Size": f"{round(vm.memory() / 1024.0, 2)} GB",
+            "Memory Reservation": f"{round(vm.memory_reser() / 1024.0, 2)} GB",
             "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit)/1024.0, 2)} GB",
-            "Latency Sensitivity": vm_object.config.latencySensitivity.level,
+            "Latency Sensitivity": vm.latency(),
+            "CPU Cores Per Socket": vm.cores_per_socket(),
         }
         print("--------------------")
         for performance_related_setting, value in vm_details.items():
