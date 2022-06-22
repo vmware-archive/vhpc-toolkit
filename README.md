@@ -93,7 +93,12 @@ cd vhpc-toolkit
 virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
-python setup.py install
+pip install vhpc_toolkit
+```
+
+If you want to actively modify the toolkit, it is recommended to install it in "develop" mode
+```bash
+pip install -e vhpc_toolkit
 ```
 
 ### Secure Setup via Vault 

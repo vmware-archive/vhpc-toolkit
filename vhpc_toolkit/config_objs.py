@@ -239,7 +239,7 @@ class ConfigVM(object):
         config_spec.bootOptions = boot_option
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
-    def change_vm_affinity_capability(self, affinity: List[int] = []):
+    def change_vm_affinity_capability(self, affinity: List[int]) -> vim.Task:
         """
         This function changes the scheduling affinity for the VM
 
@@ -250,7 +250,9 @@ class ConfigVM(object):
 
         """
         config_spec = vim.vm.ConfigSpec()
-        config_spec.cpuAffinity.affinitySet = affinity
+        affinity_info = vim.vm.AffinityInfo()
+        affinity_info.affinitySet = affinity
+        config_spec.cpuAffinity = affinity_info
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def latency(self, level):
