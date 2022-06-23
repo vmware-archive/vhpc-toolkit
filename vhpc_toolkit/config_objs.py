@@ -240,7 +240,7 @@ class ConfigVM(object):
         config_spec.bootOptions = boot_option
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
-    def change_vm_affinity_capability(self, affinity: List[int]) -> vim.Task:
+    def change_vm_scheduling_affinity(self, affinity: List[int]) -> vim.Task:
         """
         This function changes the scheduling affinity for the VM
 

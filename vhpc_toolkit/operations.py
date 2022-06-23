@@ -718,7 +718,7 @@ class Operations(object):
                 "Please turn it off and try again".format(vm_name)
             )
         else:
-            task = ConfigVM(vm_obj).change_vm_affinity_capability(affinity)
+            task = ConfigVM(vm_obj).change_vm_scheduling_affinity(affinity)
             GetWait().wait_for_tasks([task], task_name="Change VM affinity")
 
     def _network_cluster(self, vm_cfgs, *keys):
