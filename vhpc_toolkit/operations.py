@@ -10,6 +10,7 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+import json
 import logging
 
 from distutils.util import strtobool
@@ -2006,6 +2007,72 @@ class Operations(object):
         """
         vm_object: vim.VirtualMachine = self.objs.get_vm(vm_name)
         vm = GetVM(vm_object)
+
+        existing_pci_ids = vm.existing_pci_ids()
+        # Get PCI devices attached to the current VM
+        attached_direct_passthru_devices = []
+        for passthru_device in vm.avail_pci_info():
+            if passthru_device[2] in existing_pci_ids:
+                device_name, vendor_name, device_id, system_id = passthru_device
+                attached_direct_passthru_devices.append(
+                    {
+                        "Device Name": f"{vendor_name} - {device_name}",
+                        "Mac Address": device_id,
+                    }
+                )
+
+        # Get SRIOV devices to the current VM
+        attached_sriov_devices = []
+        existing_sriov_ids = vm.existing_sriov_ids()
+
+        for sriov_device in vm.avail_sriov_info():
+            if sriov_device[4] in existing_sriov_ids:
+                (
+                    pnic,
+                    virtual_function,
+                    device_name,
+                    vendor_name,
+                    device_id,
+                    system_id,
+                ) = sriov_device
+                attached_sriov_devices.append(
+                    {
+                        "PNIC": pnic,
+                        "Virtual Function": virtual_function,
+                        "Device Name": f"{vendor_name} - {device_name}",
+                        "Mac Address": device_id,
+                    }
+                )
+
+        attached_pvrmda_devices = []
+
+        for network_object in vm.device_objs_all():
+            if isinstance(network_object, vim.vm.device.VirtualSriovEthernetCard):
+                for attached_sriov_device in attached_sriov_devices:
+                    if (
+                        attached_sriov_device["Mac Address"]
+                        == network_object.macAddress
+                    ):
+                        attached_sriov_device.update(
+                            {"Label": network_object.deviceInfo.label}
+                        )
+            if isinstance(network_object, vim.vm.device.VirtualVmxnet3Vrdma):
+                attached_pvrmda_devices.append(
+                    {
+                        "Mac Address": network_object.macAddress,
+                        "Label": network_object.deviceInfo.label,
+                    }
+                )
+            if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough):
+                for attached_direct_passthru_device in attached_direct_passthru_devices:
+                    if (
+                        attached_direct_passthru_device["Mac Address"]
+                        == network_object.macAddress
+                    ):
+                        attached_direct_passthru_device.update(
+                            {"Label": network_object.deviceInfo.label}
+                        )
+
         vm_details = {
             "Name": vm.vm_name(),
             "vCPU": vm.cpu(),
@@ -2016,8 +2083,12 @@ class Operations(object):
             "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit)/1024.0, 2)} GB",
             "Latency Sensitivity": vm.latency(),
             "CPU Cores Per Socket": vm.cores_per_socket(),
+            "PCI Devices": {
+                "Passthrough": attached_direct_passthru_devices,
+                "SRIOV": attached_sriov_devices,
+                "PVRDMA": attached_pvrmda_devices,
+            },
         }
-        print("--------------------")
-        for performance_related_setting, value in vm_details.items():
-            print(f"{performance_related_setting}  :  {value}")
-        print("--------------------")
+        print("-----------------------------------------")
+        print(json.dumps(vm_details, indent=4))
+        print("-----------------------------------------")
