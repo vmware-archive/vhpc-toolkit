@@ -247,6 +247,104 @@ def get_args():
         "--off", action="store_true", help="Secure boot off"
     )
 
+    def affinity_array(string):
+        affinity_list = []
+        split_ranges = string.split(",")
+        for affinity in split_ranges:
+            # If the given affinity element is not a range, then parse it to integer
+            if "-" not in affinity:
+                if not affinity.isdigit():
+                    raise argparse.ArgumentTypeError(
+                        "Each affinity element must be a valid integer"
+                    )
+                else:
+                    affinity_list.append(int(affinity))
+            else:
+                affinity_range = affinity.split("-")
+                if len(affinity_range != 2):
+                    raise argparse.ArgumentTypeError(
+                        "Each argument range must have only 2 elements"
+                    )
+                if not affinity_range[0].isdigit() or affinity_range[1].isdigit():
+                    raise argparse.ArgumentTypeError(
+                        "Each affinity element must be a valid integer"
+                    )
+                # Convert the range to integer list
+                affinity_list.extend(
+                    map(int, list(range(affinity_range[0], affinity_range[1])))
+                )
+        return affinity_list
+
+    vm_affinity_parser = subparsers.add_parser(
+        "vm_scheduling_affinity",
+        help="Change VM scheduling affinity",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    vm_affinity_group1 = vm_affinity_parser.add_mutually_exclusive_group(required=True)
+    vm_affinity_group2 = vm_affinity_parser.add_mutually_exclusive_group(required=True)
+
+    vm_affinity_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to reconfigure scheduling affinity",
+    )
+    vm_affinity_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs, one per line,"
+        " to reconfigure vm scheduling affinity",
+    )
+
+    vm_affinity_group2.add_argument(
+        "--affinity",
+        action="store",
+        default=[],
+        type=affinity_array,
+        help="Use '-' for ranges and ',' to separate values."
+        "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
+    )
+
+    numa_affinity_parser = subparsers.add_parser(
+        "numa_affinity",
+        help="Change NUMA node affinity",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    numa_affinity_group1 = numa_affinity_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    numa_affinity_group2 = numa_affinity_parser.add_mutually_exclusive_group(
+        required=True
+    )
+
+    numa_affinity_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to NUMA node affinity",
+    )
+    numa_affinity_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs, one per line,"
+        " to reconfigure NUMA node affinity",
+    )
+
+    numa_affinity_group2.add_argument(
+        "--affinity",
+        action="store",
+        default=[],
+        type=affinity_array,
+        help="Use '-' for ranges and ',' to separate values."
+        "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
+    )
+
     cpumem_parser = subparsers.add_parser(
         "cpumem",
         help="Reconfigure CPU/memory for VM(s)",

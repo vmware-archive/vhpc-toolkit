@@ -2043,3 +2043,25 @@ class Operations(object):
                     self._destroy_dvs(cl_config)
             else:
                 self.logger.info("Not destroying any distributed virtual switches")
+
+    def vm_scheduling_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            tasks.append(
+                ConfigVM(vm_obj).change_vm_scheduling_affinity(self.cfg["affinity"])
+            )
+
+        GetWait().wait_for_tasks(tasks, task_name="Set VM scheduling affinity")
+
+    def numa_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            tasks.append(ConfigVM(vm_obj).change_numa_affinity(self.cfg["affinity"]))
+
+        GetWait().wait_for_tasks(tasks, task_name="Set NUMA node affinity")

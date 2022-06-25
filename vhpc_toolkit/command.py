@@ -59,3 +59,7 @@ def command():
         ops.cluster()
     elif ops.cfg[CMD_KEY] == "secure_boot":
         ops.secure_boot_cli()
+    elif ops.cfg[CMD_KEY] == "vm_scheduling_affinity":
+        pass
+    elif ops.cfg[CMD_KEY] == "numa_affinity":
+        pass
