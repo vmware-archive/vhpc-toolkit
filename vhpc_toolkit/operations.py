@@ -2017,7 +2017,7 @@ class Operations(object):
                 attached_direct_passthru_devices.append(
                     {
                         "Device Name": f"{vendor_name} - {device_name}",
-                        "Mac Address": device_id,
+                        "Device ID": device_id,
                     }
                 )
 
@@ -2040,7 +2040,7 @@ class Operations(object):
                         "PNIC": pnic,
                         "Virtual Function": virtual_function,
                         "Device Name": f"{vendor_name} - {device_name}",
-                        "Mac Address": device_id,
+                        "Device ID": device_id,
                     }
                 )
 
@@ -2049,24 +2049,21 @@ class Operations(object):
         for network_object in vm.device_objs_all():
             if isinstance(network_object, vim.vm.device.VirtualSriovEthernetCard):
                 for attached_sriov_device in attached_sriov_devices:
-                    if (
-                        attached_sriov_device["Mac Address"]
-                        == network_object.macAddress
-                    ):
+                    if attached_sriov_device["Device ID"] == network_object.macAddress:
                         attached_sriov_device.update(
                             {"Label": network_object.deviceInfo.label}
                         )
             if isinstance(network_object, vim.vm.device.VirtualVmxnet3Vrdma):
                 attached_pvrmda_devices.append(
                     {
-                        "Mac Address": network_object.macAddress,
+                        "Device ID": network_object.macAddress,
                         "Label": network_object.deviceInfo.label,
                     }
                 )
             if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough):
                 for attached_direct_passthru_device in attached_direct_passthru_devices:
                     if (
-                        attached_direct_passthru_device["Mac Address"]
+                        attached_direct_passthru_device["Device ID"]
                         == network_object.macAddress
                     ):
                         attached_direct_passthru_device.update(
