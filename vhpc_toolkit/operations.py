@@ -2059,9 +2059,18 @@ class Operations(object):
                             {"Label": network_object.deviceInfo.label}
                         )
             if isinstance(network_object, vim.vm.device.VirtualVmxnet3Vrdma):
+                network_adapter_names = [
+                    vm_network.name
+                    for vm_network in vm_object.network
+                    if hasattr(vm_network, "key")
+                    and vm_network.key == network_object.backing.port.portgroupKey
+                ]
+                network_adapter_name = (
+                    network_adapter_names[0] if network_adapter_names else "N/A"
+                )
                 attached_pvrmda_devices.append(
                     {
-                        "Device ID": network_object.macAddress,
+                        "Adapter Name": network_adapter_name,
                         "Label": network_object.deviceInfo.label,
                     }
                 )
@@ -2084,7 +2093,7 @@ class Operations(object):
             "CPU Limit": f"{0 if vm_object.config.cpuAllocation.limit == -1 else vm_object.config.cpuAllocation.limit} MHz",
             "Memory Size": f"{round(vm.memory() / 1024.0, 2)} GB",
             "Memory Reservation": f"{round(vm.memory_reser() / 1024.0, 2)} GB",
-            "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit)/1024.0, 2)} GB",
+            "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit) / 1024.0, 2)} GB",
             "Latency Sensitivity": vm.latency(),
             "CPU Cores Per Socket": vm.cores_per_socket(),
             "PCI Devices": {
