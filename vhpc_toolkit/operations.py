@@ -2079,13 +2079,13 @@ class Operations(object):
         vm_details = {
             "Name": vm.vm_name(),
             "vCPU": vm.cpu(),
+            "CPU Cores Per Socket": vm.cores_per_socket(),
             "CPU Reservation": f"{vm.cpu_reser()} MHz",
             "CPU Limit": f"{0 if vm_object.config.cpuAllocation.limit == -1 else vm_object.config.cpuAllocation.limit} MHz",
             "Memory Size": f"{round(vm.memory() / 1024.0, 2)} GB",
             "Memory Reservation": f"{round(vm.memory_reser() / 1024.0, 2)} GB",
             "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit) / 1024.0, 2)} GB",
             "Latency Sensitivity": vm.latency(),
-            "CPU Cores Per Socket": vm.cores_per_socket(),
             "PCI Devices": {
                 "Passthrough": attached_direct_passthru_devices,
                 "SRIOV": attached_sriov_devices,
