@@ -2047,9 +2047,14 @@ class Operations(object):
         attached_pvrmda_devices = []
 
         for network_object in vm.device_objs_all():
-            if isinstance(network_object, vim.vm.device.VirtualSriovEthernetCard):
+            if isinstance(
+                network_object, vim.vm.device.VirtualSriovEthernetCard
+            ) and hasattr(network_object, "sriovBacking"):
                 for attached_sriov_device in attached_sriov_devices:
-                    if attached_sriov_device["Device ID"] == network_object.macAddress:
+                    if (
+                        attached_sriov_device["Device ID"]
+                        == network_object.sriovBacking.physicalFunctionBacking.id
+                    ):
                         attached_sriov_device.update(
                             {"Label": network_object.deviceInfo.label}
                         )
@@ -2060,11 +2065,13 @@ class Operations(object):
                         "Label": network_object.deviceInfo.label,
                     }
                 )
-            if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough):
+            if isinstance(
+                network_object, vim.vm.device.VirtualPCIPassthrough
+            ) and hasattr(network_object.backing, "id"):
                 for attached_direct_passthru_device in attached_direct_passthru_devices:
                     if (
                         attached_direct_passthru_device["Device ID"]
-                        == network_object.macAddress
+                        == network_object.backing.id
                     ):
                         attached_direct_passthru_device.update(
                             {"Label": network_object.deviceInfo.label}
