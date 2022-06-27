@@ -60,6 +60,6 @@ def command():
     elif ops.cfg[CMD_KEY] == "secure_boot":
         ops.secure_boot_cli()
     elif ops.cfg[CMD_KEY] == "vm_scheduling_affinity":
-        pass
+        ops.vm_scheduling_affinity_cli()
     elif ops.cfg[CMD_KEY] == "numa_affinity":
-        pass
+        ops.numa_affinity_cli()

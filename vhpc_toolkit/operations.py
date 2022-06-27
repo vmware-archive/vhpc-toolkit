@@ -2050,9 +2050,16 @@ class Operations(object):
         tasks = []
         for vm in vms:
             vm_obj = self.objs.get_vm(vm)
-            tasks.append(
-                ConfigVM(vm_obj).change_vm_scheduling_affinity(self.cfg["affinity"])
-            )
+            if GetVM(vm_obj).is_power_on():
+                self.logger.error(
+                    "Could not change affinity for VM {0}. Please power off VM and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(
+                    ConfigVM(vm_obj).change_vm_scheduling_affinity(self.cfg["affinity"])
+                )
 
         GetWait().wait_for_tasks(tasks, task_name="Set VM scheduling affinity")
 

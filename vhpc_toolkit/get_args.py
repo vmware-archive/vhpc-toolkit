@@ -249,6 +249,7 @@ def get_args():
 
     def affinity_array(string):
         affinity_list = []
+        string = string.replace(" ", "")
         split_ranges = string.split(",")
         for affinity in split_ranges:
             # If the given affinity element is not a range, then parse it to integer
@@ -261,17 +262,19 @@ def get_args():
                     affinity_list.append(int(affinity))
             else:
                 affinity_range = affinity.split("-")
-                if len(affinity_range != 2):
+                if len(affinity_range) != 2:
                     raise argparse.ArgumentTypeError(
                         "Each argument range must have only 2 elements"
                     )
-                if not affinity_range[0].isdigit() or affinity_range[1].isdigit():
+                if not (affinity_range[0].isdigit() and affinity_range[1].isdigit()):
                     raise argparse.ArgumentTypeError(
                         "Each affinity element must be a valid integer"
                     )
+                elif int(affinity_range[1]) < int(affinity_range[0]):
+                    raise argparse.ArgumentTypeError("Affinity range must be valid")
                 # Convert the range to integer list
                 affinity_list.extend(
-                    map(int, list(range(affinity_range[0], affinity_range[1])))
+                    list(range(int(affinity_range[0]), int(affinity_range[1]) + 1))
                 )
         return affinity_list
 
