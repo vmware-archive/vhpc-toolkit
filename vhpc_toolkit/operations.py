@@ -2059,18 +2059,8 @@ class Operations(object):
                             {"Label": network_object.deviceInfo.label}
                         )
             if isinstance(network_object, vim.vm.device.VirtualVmxnet3Vrdma):
-                network_adapter_names = [
-                    vm_network.name
-                    for vm_network in vm_object.network
-                    if hasattr(vm_network, "key")
-                    and vm_network.key == network_object.backing.port.portgroupKey
-                ]
-                network_adapter_name = (
-                    network_adapter_names[0] if network_adapter_names else "N/A"
-                )
                 attached_pvrmda_devices.append(
                     {
-                        "Adapter Name": network_adapter_name,
                         "Label": network_object.deviceInfo.label,
                     }
                 )
