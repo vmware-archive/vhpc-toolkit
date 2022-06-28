@@ -645,7 +645,11 @@ class GetVM(object):
 
         """
 
-        return self.vm_obj.config.latencySensitivity.level
+        return (
+            self.vm_obj.config.latencySensitivity.level
+            if self.vm_obj.config.latencySensitivity is not None
+            else "-"
+        )
 
     def cpu(self):
         """
