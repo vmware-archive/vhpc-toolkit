@@ -1989,3 +1989,16 @@ class Operations(object):
                     self._destroy_dvs(cl_config)
             else:
                 self.logger.info("Not destroying any distributed virtual switches")
+
+    def passthru_host_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(self._extract_file(self.cfg))
+
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).toggle_pci_device_availability(
+                self.cfg["device_id"], "on" in self.cfg
+            )

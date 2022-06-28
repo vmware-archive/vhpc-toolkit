@@ -1132,6 +1132,41 @@ class ConfigDVS(object):
         return task
 
 
+class ConfigHost:
+    def __init__(self, host_obj: vim.HostSystem):
+        self.host_obj = host_obj
+        self.logger = log.my_logger(name=self.__class__.__name__)
+
+    def toggle_pci_device_availability(self, pci_device_id: str, available=True):
+        """
+        Change availability of the passthrough device on a host
+        Args:
+            pci_device_id: The device ID of the passthrough device
+            available: Whether the device should be enabled for the host or not
+
+        Returns:
+            None
+        """
+        passthru_object = self.host_obj.configManager.pciPassthruSystem
+        try:
+            passthru_config = vim.host.PciPassthruConfig()
+            passthru_config.id = pci_device_id
+            passthru_config.passthruEnabled = available
+            passthru_object.UpdatePassthruConfig([passthru_config])
+            self.logger.info(
+                f"Successfully {'enabled' if available else 'disabled'} "
+                f"pci device {pci_device_id} on host {self.host_obj.name}"
+            )
+        except vim.fault.HostConfigFault:
+            self.logger.error(
+                "Error trying to toggle passthrough device availability. Please make sure configuration is correct"
+            )
+        except vmodl.RuntimeFault:
+            self.logger.error(
+                "Runtime error when trying to change passthru device availability.Please try again later"
+            )
+
+
 class ConfigCluster(object):
     """
     A class for configuring cluster properties
