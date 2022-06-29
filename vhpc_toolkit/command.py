@@ -59,3 +59,5 @@ def command():
         ops.cluster()
     elif ops.cfg[CMD_KEY] == "passthru_host":
         ops.passthru_host_cli()
+    elif ops.cfg[CMD_KEY] == "get_vm_config":
+        ops.get_vm_config_cli()
