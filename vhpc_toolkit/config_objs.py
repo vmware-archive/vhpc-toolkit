@@ -1150,7 +1150,7 @@ class ConfigHost:
         passthru_object = self.host_obj.configManager.pciPassthruSystem
         try:
             passthru_config = vim.host.PciPassthruConfig()
-            passthru_config.id = pci_device_id
+            passthru_config.id = pci_device_id.lower()
             passthru_config.passthruEnabled = available
             passthru_object.UpdatePassthruConfig([passthru_config])
             self.logger.info(

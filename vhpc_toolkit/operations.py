@@ -2000,5 +2000,5 @@ class Operations(object):
         for host in hosts:
             host_obj = self.objs.get_host(host)
             ConfigHost(host_obj).toggle_pci_device_availability(
-                self.cfg["device_id"], "on" in self.cfg
+                self.cfg["device_id"], bool(self.cfg["on"])
             )
