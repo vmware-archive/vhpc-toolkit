@@ -272,7 +272,10 @@ class ConfigVM(object):
 
         """
         if numa_node is None:
-            return self.add_extra("numa.nodeAffinity", ",".join(map(str, affinity)))
+            if not affinity:
+                return self.remove_extra("numa.nodeAffinity")
+            else:
+                return self.add_extra("numa.nodeAffinity", ",".join(map(str, affinity)))
         else:
             return self.add_extra(
                 f"numa.{numa_node}.affinity", ",".join(map(str, affinity))

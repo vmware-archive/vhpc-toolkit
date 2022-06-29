@@ -277,6 +277,8 @@ def get_args():
     def affinity_array(string):
         affinity_list = []
         string = string.replace(" ", "")
+        if not string:
+            return []
         split_ranges = string.split(",")
         for affinity in split_ranges:
             # If the given affinity element is not a range, then parse it to integer
