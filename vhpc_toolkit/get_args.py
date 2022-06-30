@@ -249,7 +249,7 @@ def get_args():
 
     secure_boot_parser = subparsers.add_parser(
         "secure_boot",
-        help="Secure boot on/off VM(s)",
+        help="Turn secure boot on/off VM(s)",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     secure_boot_group1 = secure_boot_parser.add_mutually_exclusive_group(required=True)
@@ -290,7 +290,20 @@ def get_args():
                 else:
                     affinity_list.append(int(affinity))
             else:
+                step_length = 1
+                if ":" in affinity:
+                    step_length = affinity.split(":")
+                    if len(step_length) != 2:
+                        raise argparse.ArgumentTypeError("Step length is invalid")
+                    step_length = step_length[1]
+                    if not step_length.isdigit():
+                        raise argparse.ArgumentTypeError(
+                            "Step length is invalid. It has to be an integer"
+                        )
+                    step_length = int(step_length)
+                    affinity = affinity.split(":")[0]
                 affinity_range = affinity.split("-")
+
                 if len(affinity_range) != 2:
                     raise argparse.ArgumentTypeError(
                         "Each argument range must have only 2 elements"
@@ -303,7 +316,13 @@ def get_args():
                     raise argparse.ArgumentTypeError("Affinity range must be valid")
                 # Convert the range to integer list
                 affinity_list.extend(
-                    list(range(int(affinity_range[0]), int(affinity_range[1]) + 1))
+                    list(
+                        range(
+                            int(affinity_range[0]),
+                            int(affinity_range[1]) + 1,
+                            step_length,
+                        )
+                    )
                 )
         return affinity_list
 
@@ -357,7 +376,7 @@ def get_args():
         action="store",
         default=None,
         type=str,
-        help="Name of the VM on which to NUMA node affinity",
+        help="Name of the VM on which to change NUMA node affinity",
     )
     numa_affinity_group1.add_argument(
         "--file",
