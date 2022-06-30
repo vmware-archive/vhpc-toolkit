@@ -98,7 +98,9 @@ pip install vhpc_toolkit
 
 If you want to actively modify the toolkit, it is recommended to install it in "develop" mode
 ```bash
-pip install -e vhpc_toolkit
+pip install -e <folder_with_setup.py>
+# If setup.py is in current folder
+pip install -e .
 ```
 
 ### Secure Setup via Vault 
