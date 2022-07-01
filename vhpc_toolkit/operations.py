@@ -2064,14 +2064,17 @@ class Operations(object):
                         "Label": network_object.deviceInfo.label,
                     }
                 )
-            if isinstance(
-                network_object, vim.vm.device.VirtualPCIPassthrough
-            ) and hasattr(network_object.backing, "id"):
+            if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough) and (
+                hasattr(network_object.backing, "id")
+                or hasattr(network_object.backing, "assignedId")
+            ):
+                backing_id = (
+                    getattr(network_object.backing, "id")
+                    if hasattr(network_object.backing, "id")
+                    else getattr(network_object.backing, "assignedId")
+                )
                 for attached_direct_passthru_device in attached_direct_passthru_devices:
-                    if (
-                        attached_direct_passthru_device["Device ID"]
-                        == network_object.backing.id
-                    ):
+                    if attached_direct_passthru_device["Device ID"] == backing_id:
                         attached_direct_passthru_device.update(
                             {"Label": network_object.deviceInfo.label}
                         )
