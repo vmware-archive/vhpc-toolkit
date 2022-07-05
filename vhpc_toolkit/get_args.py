@@ -327,7 +327,7 @@ def get_args():
         return affinity_list
 
     vm_affinity_parser = subparsers.add_parser(
-        "vm_scheduling_affinity",
+        "vm_sched_affinity",
         help="Change VM scheduling affinity",
         formatter_class=argparse.RawTextHelpFormatter,
     )
