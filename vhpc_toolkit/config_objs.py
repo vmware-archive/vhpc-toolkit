@@ -683,12 +683,19 @@ class ConfigVM(object):
                 "Good. VM {0} has UEFI " "installation.".format(self.vm_obj.name)
             )
         sys_id = vm_status.pci_id_sys_id_passthru()
-        backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
-            deviceId=device_id,
-            id=pci_obj.id,
-            systemId=sys_id[pci_obj.id],
-            vendorId=pci_obj.vendorId,
-            deviceName=pci_obj.deviceName,
+
+        # backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
+        #     deviceId=device_id,
+        #     id=pci_obj.id,
+        #     systemId=sys_id[pci_obj.id],
+        #     vendorId=pci_obj.vendorId,
+        #     deviceName=pci_obj.deviceName,
+        # )
+        allowed_device = vim.VirtualPCIPassthroughAllowedDevice(
+            deviceId=pci_obj.deviceId, vendorId=pci_obj.vendorId
+        )
+        backing = vim.VirtualPCIPassthroughDynamicBackingInfo(
+            allowedDevice=[allowed_device]
         )
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
