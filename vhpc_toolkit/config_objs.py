@@ -769,11 +769,12 @@ class ConfigVM(object):
         config_spec.extraConfig = [opt]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
-    def add_vgpu(self, vgpu_profile):
+    def add_vgpu(self, vgpu_profile, migration_supported: bool = False):
         """Add a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be added into a VM
+            migration_supported: Whether to support migration or not
 
         Returns:
             Task
@@ -783,7 +784,9 @@ class ConfigVM(object):
         self.logger.info(
             "Adding vGPU {0} for " "VM {1}".format(vgpu_profile, self.vm_obj.name)
         )
-        backing = vim.VirtualPCIPassthroughVmiopBackingInfo(vgpu=vgpu_profile)
+        backing = vim.VirtualPCIPassthroughVmiopBackingInfo(
+            vgpu=vgpu_profile, migrateSupported=migration_supported
+        )
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
         dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
