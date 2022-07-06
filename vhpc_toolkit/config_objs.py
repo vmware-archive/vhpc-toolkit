@@ -96,7 +96,7 @@ class ConfigVM(object):
         """Configure cores per socket for a VM
 
         Args:
-            shares (int): Cores per Socket to be configured
+            cores_per_socket (int): Cores per Socket to be configured
 
         Returns:
             Task
@@ -901,7 +901,9 @@ class ConfigHost(object):
         self.host_obj = host_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_svs(self, svs_name, vmnic, num_ports=8):
+    def create_svs(
+        self, svs_name: str, vmnic: str, num_ports: int = 8, mtu: int = 9000
+    ):
         """Create a standard virtual switch
             It calls AddVirtualSwitch method from HostNetworkSystem. It
             doesn't return a Task to track
@@ -910,6 +912,7 @@ class ConfigHost(object):
             svs_name (str): The name of SVS to be created.
             vmnic (str): The name of physical adapter to create the SVS
             num_ports (int): number of ports for the SVS
+            mtu: MTU for the SVS
 
         Returns:
             None
@@ -921,6 +924,7 @@ class ConfigHost(object):
 
         svs = vim.host.VirtualSwitch.Specification()
         svs.numPorts = num_ports
+        svs.mtu = mtu
         svs.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[vmnic])
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
@@ -988,6 +992,35 @@ class ConfigHost(object):
 
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemovePortGroup(pgName=pg_name)
+
+    def toggle_pci_device_availability(self, pci_device_id: str, available=True):
+        """
+        Change availability of the passthrough device on a host
+        Args:
+            pci_device_id: The device ID of the passthrough device
+            available: Whether the device should be enabled for the host or not
+
+        Returns:
+            None
+        """
+        passthru_object = self.host_obj.configManager.pciPassthruSystem
+        try:
+            passthru_config = vim.host.PciPassthruConfig()
+            passthru_config.id = pci_device_id.lower()
+            passthru_config.passthruEnabled = available
+            passthru_object.UpdatePassthruConfig([passthru_config])
+            self.logger.info(
+                f"Successfully {'enabled' if available else 'disabled'} "
+                f"pci device {pci_device_id} on host {self.host_obj.name}"
+            )
+        except vim.fault.HostConfigFault:
+            self.logger.error(
+                "Error trying to toggle passthrough device availability. Please make sure configuration is correct"
+            )
+        except vmodl.RuntimeFault:
+            self.logger.error(
+                "Runtime error when trying to change passthru device availability.Please try again later"
+            )
 
 
 class ConfigDatacenter(object):
@@ -1140,41 +1173,6 @@ class ConfigDVS(object):
 
         task = self.dvs_obj.Destroy_Task()
         return task
-
-
-class ConfigHost:
-    def __init__(self, host_obj: vim.HostSystem):
-        self.host_obj = host_obj
-        self.logger = log.my_logger(name=self.__class__.__name__)
-
-    def toggle_pci_device_availability(self, pci_device_id: str, available=True):
-        """
-        Change availability of the passthrough device on a host
-        Args:
-            pci_device_id: The device ID of the passthrough device
-            available: Whether the device should be enabled for the host or not
-
-        Returns:
-            None
-        """
-        passthru_object = self.host_obj.configManager.pciPassthruSystem
-        try:
-            passthru_config = vim.host.PciPassthruConfig()
-            passthru_config.id = pci_device_id.lower()
-            passthru_config.passthruEnabled = available
-            passthru_object.UpdatePassthruConfig([passthru_config])
-            self.logger.info(
-                f"Successfully {'enabled' if available else 'disabled'} "
-                f"pci device {pci_device_id} on host {self.host_obj.name}"
-            )
-        except vim.fault.HostConfigFault:
-            self.logger.error(
-                "Error trying to toggle passthrough device availability. Please make sure configuration is correct"
-            )
-        except vmodl.RuntimeFault:
-            self.logger.error(
-                "Runtime error when trying to change passthru device availability.Please try again later"
-            )
 
 
 class ConfigCluster(object):
