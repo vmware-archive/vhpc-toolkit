@@ -929,6 +929,44 @@ class ConfigHost(object):
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
 
+    def modify_sriov(
+        self,
+        pnic_location: str,
+        num_virtual_functions: int = None,
+        enable_sriov: bool = True,
+    ):
+        """
+        Function to enable/disable SRIOV and/or change the number of virtual functions on vmnics of a host.
+        Number of virtual functions argument is skipped if user is trying to disable SRIOV
+        Args:
+            pnic_location: Location of the NIC which supports SRIOV in format xxxx:xx:xx.x
+            num_virtual_functions: Number of virtual functions to set for the NIC
+            enable_sriov: Whether to enable or disable SRIOV for the NIC
+
+        Returns:
+
+        """
+        config = vim.host.SriovConfig()
+        config.sriovEnabled = enable_sriov
+        if enable_sriov and num_virtual_functions:
+            config.numVirtualFunction = num_virtual_functions
+        config.id = pnic_location
+        try:
+            self.host_obj.configManager.pciPassthruSystem.UpdatePassthruConfig(
+                config=[config]
+            )
+            self.logger.info(
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {pnic_location}"
+            )
+        except vim.fault.HostConfigFault:
+            self.logger.error(
+                f"Trying to set illegal configuration for network with location: {pnic_location}"
+            )
+        except vmodl.RuntimeFault:
+            self.logger.error(
+                f"Error when changing configuration for network with location: {pnic_location}. Please try again later"
+            )
+
     def destroy_svs(self, svs_name):
         """Destroy a standard virtual switch
 
