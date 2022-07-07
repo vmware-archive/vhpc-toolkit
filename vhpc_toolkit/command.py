@@ -57,3 +57,5 @@ def command():
         ops.latency_cli()
     elif ops.cfg[CMD_KEY] == "cluster":
         ops.cluster()
+    elif ops.cfg[CMD_KEY] == "modify_sriov":
+        ops.modify_host_sriov_cli()

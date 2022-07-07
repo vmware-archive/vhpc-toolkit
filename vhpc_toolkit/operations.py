@@ -1989,3 +1989,11 @@ class Operations(object):
                     self._destroy_dvs(cl_config)
             else:
                 self.logger.info("Not destroying any distributed virtual switches")
+
+    def modify_host_sriov_cli(self):
+        host_cfgs = self._extract_file(self.cfg)
+        hosts = [host_cfg["host"] for host_cfg in host_cfgs]
+        for host in hosts:
+            ConfigHost(self.objs.get_host(host)).modify_sriov(
+                self.cfg["location"], self.cfg.get("num_func"), bool(self.cfg["on"])
+            )

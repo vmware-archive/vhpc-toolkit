@@ -562,6 +562,56 @@ def get_args():
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
+
+    modify_sriov_parser = subparsers.add_parser(
+        "modify_sriov",
+        help="Modify SR-IOV properties on host(s)",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    modify_sriov_group1 = modify_sriov_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    modify_sriov_group2 = modify_sriov_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    modify_sriov_group3 = modify_sriov_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    modify_sriov_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to perform the modify SR-IOV operation",
+    )
+    modify_sriov_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to perform the modify SR-IOV operation",
+    )
+    modify_sriov_group2.add_argument(
+        "--location",
+        action="store",
+        default=None,
+        type=str,
+        help="Location of the pnic in format xxxx:xx:xx.x",
+    )
+    modify_sriov_group3.add_argument(
+        "--on", action="store_true", help="Turn on SR-IOV mode for pnic on host(s)"
+    )
+    modify_sriov_group3.add_argument(
+        "--off", action="store_true", help="Turn off SR-IOV mode for pnic on host(s)"
+    )
+    modify_sriov_parser.add_argument(
+        "--num_func",
+        action="store",
+        type=int,
+        help="Number of virtual functions. This is only set if you are turning SR-IOV mode on",
+    )
+
     pvrdma_parser = subparsers.add_parser(
         "pvrdma",
         help="Add/Remove PVRDMA (Paravirtual RDMA) device(s)",
