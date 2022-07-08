@@ -230,7 +230,9 @@ class GetObjects(object):
         host_name: str = None,
         cluster_name: str = None,
     ):
-        """Get the resource pool managed object by name
+        """Get the resource pool managed object by name. If there is conflict in resource pool name, it will try to
+        get the resource pool belonging to the destination host, or the destination cluster in that order. Otherwise,
+        it will get a random resource pool with the name
 
         Args:
             resource_pool_name (str): the name of resource pool to get
