@@ -97,7 +97,7 @@ class ConfigVM(object):
         """Configure cores per socket for a VM
 
         Args:
-            shares (int): Cores per Socket to be configured
+            cores_per_socket (int): Cores per Socket to be configured
 
         Returns:
             Task

@@ -358,6 +358,11 @@ def get_args():
         help="Use '-' for ranges and ',' to separate values."
         "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
     )
+    vm_affinity_group2.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear the scheduling affinity settings for the VM(s)",
+    )
 
     numa_affinity_parser = subparsers.add_parser(
         "numa_affinity",
@@ -394,6 +399,11 @@ def get_args():
         type=affinity_array,
         help="Use '-' for ranges and ',' to separate values."
         "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
+    )
+    numa_affinity_group2.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear the NUMA affinity settings for the VM(s)",
     )
 
     cpumem_parser = subparsers.add_parser(
@@ -659,21 +669,6 @@ def get_args():
         default=None,
         type=str,
         help="Name of the file containing a list of VMs, "
-        "one per line, to perform the passthrough operation",
-    )
-    passthru_group1.add_argument(
-        "--host",
-        action="store",
-        default=None,
-        type=str,
-        help="Name of the host on which to perform the passthrough operation",
-    )
-    passthru_group1.add_argument(
-        "--host-file",
-        action="store",
-        default=None,
-        type=str,
-        help="Name of the file containing a list of hosts, "
         "one per line, to perform the passthrough operation",
     )
     passthru_parser.add_argument(

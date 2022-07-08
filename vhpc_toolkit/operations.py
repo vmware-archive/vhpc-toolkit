@@ -711,17 +711,6 @@ class Operations(object):
             if tasks:
                 GetWait().wait_for_tasks(tasks, task_name="Remove network adapter(s)")
 
-    def change_affinity_cli(self, vm_name, affinity):
-        vm_obj = self.objs.get_vm(vm_name)
-        if GetVM(vm_obj).is_power_on():
-            self.logger.error(
-                "Cannot change affinity state of VM {0} when it is running. "
-                "Please turn it off and try again".format(vm_name)
-            )
-        else:
-            task = ConfigVM(vm_obj).change_vm_scheduling_affinity(affinity)
-            GetWait().wait_for_tasks([task], task_name="Change VM affinity")
-
     def _network_cluster(self, vm_cfgs, *keys):
         """Add/Remove network adapters for VM(s) (defined in cluster conf file)
 
@@ -2153,6 +2142,11 @@ class Operations(object):
     def vm_scheduling_affinity_cli(self):
         vm_cfgs = self._extract_file(self.cfg)
         vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
         tasks = []
         for vm in vms:
             vm_obj = self.objs.get_vm(vm)
@@ -2172,6 +2166,11 @@ class Operations(object):
     def numa_affinity_cli(self):
         vm_cfgs = self._extract_file(self.cfg)
         vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
         tasks = []
         for vm in vms:
             vm_obj = self.objs.get_vm(vm)
