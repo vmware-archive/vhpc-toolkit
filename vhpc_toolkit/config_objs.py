@@ -979,6 +979,30 @@ class ConfigHost(object):
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemovePortGroup(pgName=pg_name)
 
+    def change_power_policy(self, power_policy):
+        power_system = self.host_obj.configManager.powerSystem
+        capabilities = power_system.capability
+        power_policy_key = [
+            capability.key
+            for capability in capabilities
+            if capability.name == power_policy
+        ]
+        if power_policy_key:
+            try:
+                power_system.ConfigurePowerPolicy(key=power_policy_key[0])
+            except vim.fault.HostConfigFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}."
+                )
+            except vmodl.RuntimeFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}. Please try again later"
+                )
+        else:
+            self.logger.warning(
+                f"Could not find the power policy {power_policy} for host {self.host_obj.name}"
+            )
+
 
 class ConfigDatacenter(object):
     """
