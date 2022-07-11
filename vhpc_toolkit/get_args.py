@@ -345,8 +345,8 @@ def get_args():
         action="store",
         default=[],
         type=affinity_array,
-        help="Use '-' for ranges and ',' to separate values."
-        "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
+        help="Use ':' for separating ranges and steps, and ',' to separate values.\n"
+        "For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12",
     )
     vm_affinity_group2.add_argument(
         "--clear",
@@ -387,8 +387,8 @@ def get_args():
         action="store",
         default=[],
         type=affinity_array,
-        help="Use '-' for ranges and ',' to separate values."
-        "For example,0, 2, 4-7 would indicate processors 0, 2, 4, 5, 6 and 7",
+        help="Use ':' for separating ranges and steps, and ',' to separate values.\n"
+        "For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12",
     )
     numa_affinity_group2.add_argument(
         "--clear",

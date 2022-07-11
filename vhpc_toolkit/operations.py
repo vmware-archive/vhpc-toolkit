@@ -681,7 +681,7 @@ class Operations(object):
             vm_obj = self.objs.get_vm(vm)
             if GetVM(vm_obj).is_power_on():
                 self.logger.info(
-                    "VM {0} is turned on. So cannot enable secure boot. Please turn off and try again".format(
+                    "VM {0} is turned on. So cannot change secure boot. Please turn off and try again".format(
                         vm
                     )
                 )
