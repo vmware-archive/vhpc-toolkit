@@ -282,7 +282,7 @@ def get_args():
         split_ranges = string.split(",")
         for affinity in split_ranges:
             # If the given affinity element is not a range, then parse it to integer
-            if "-" not in affinity:
+            if ":" not in affinity:
                 if not affinity.isdigit():
                     raise argparse.ArgumentTypeError(
                         "Each affinity element must be a valid integer"
@@ -290,25 +290,15 @@ def get_args():
                 else:
                     affinity_list.append(int(affinity))
             else:
-                step_length = 1
-                if ":" in affinity:
-                    step_length = affinity.split(":")
-                    if len(step_length) != 2:
-                        raise argparse.ArgumentTypeError("Step length is invalid")
-                    step_length = step_length[1]
-                    if not step_length.isdigit():
-                        raise argparse.ArgumentTypeError(
-                            "Step length is invalid. It has to be an integer"
-                        )
-                    step_length = int(step_length)
-                    affinity = affinity.split(":")[0]
-                affinity_range = affinity.split("-")
-
-                if len(affinity_range) != 2:
+                affinity_range = affinity.split(":")
+                if len(affinity_range) not in {2, 3}:
                     raise argparse.ArgumentTypeError(
-                        "Each argument range must have only 2 elements"
+                        "Argument range must have valid number of elements"
                     )
-                if not (affinity_range[0].isdigit() and affinity_range[1].isdigit()):
+
+                step_length = 1 if len(affinity_range) == 2 else affinity_range[2]
+
+                if not all([affinity.isdigit() for affinity in affinity_range]):
                     raise argparse.ArgumentTypeError(
                         "Each affinity element must be a valid integer"
                     )
