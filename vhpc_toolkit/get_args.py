@@ -296,7 +296,7 @@ def get_args():
                         "Argument range must have valid number of elements"
                     )
 
-                step_length = 1 if len(affinity_range) == 2 else affinity_range[2]
+                step_length = 1 if len(affinity_range) == 2 else int(affinity_range[2])
 
                 if not all([affinity.isdigit() for affinity in affinity_range]):
                     raise argparse.ArgumentTypeError(
