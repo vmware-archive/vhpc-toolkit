@@ -207,19 +207,46 @@ class GetObjects(object):
             else:
                 return None
 
-    def get_resource_pool(self, resource_pool_name, _exit=True):
-        """Get the resource pool managed object by name
+    def _get_resource_pool_from_host_or_cluster(
+        self, resource_pool_name, host_name=None, cluster_name=None
+    ):
+        cluster_obj = None
+        if host_name:
+            cluster_obj = self.get_host(host_name).parent
+        elif cluster_name:
+            cluster_obj = self.get_cluster(cluster_name)
+
+        if cluster_obj:
+            for resource_pool in cluster_obj.resourcePool.resourcePool:
+                if resource_pool.name == resource_pool_name:
+                    return resource_pool
+
+        return self.get_obj([vim.ResourcePool], resource_pool_name)
+
+    def get_resource_pool(
+        self,
+        resource_pool_name,
+        _exit=True,
+        host_name: str = None,
+        cluster_name: str = None,
+    ):
+        """Get the resource pool managed object by name. If there is conflict in resource pool name, it will try to
+        get the resource pool belonging to the destination host, or the destination cluster in that order. Otherwise,
+        it will get a random resource pool with the name
 
         Args:
             resource_pool_name (str): the name of resource pool to get
+            host_name: Name of the host if resource pool belongs to a specific host
+            cluster_name: Name of the cluster to which the resource pool belongs to
             _exit (bool)
 
         Returns:
             vim.ResourcePool if exists
 
         """
-
-        resource_pool_obj = self.get_obj([vim.ResourcePool], resource_pool_name)
+        resource_pool_obj = self._get_resource_pool_from_host_or_cluster(
+            resource_pool_name, host_name=host_name, cluster_name=cluster_name
+        )
         if resource_pool_obj:
             self.logger.info("Resource pool: {0}".format(resource_pool_obj.name))
             return resource_pool_obj
@@ -1171,18 +1198,21 @@ class GetClone(GetObjects):
                 )
             )
 
-        if cluster_name:
-            self.dest_cluster_obj = self.get_cluster(cluster_name)
-        else:
-            self.dest_cluster_obj = self.dest_datacenter_obj.hostFolder.childEntity[0]
-
         if resource_pool_name:
-            self.dest_resource_pool_obj = self.get_resource_pool(resource_pool_name)
+            self.dest_resource_pool_obj = self.get_resource_pool(
+                resource_pool_name, host_name=host_name, cluster_name=cluster_name
+            )
         else:
             self.dest_resource_pool_obj = None
             self.logger.info(
                 "No resource pool specified. Will use default resource pool."
             )
+
+        if cluster_name:
+            self.dest_cluster_obj = self.get_cluster(cluster_name)
+        else:
+            self.dest_cluster_obj = self.dest_datacenter_obj.hostFolder.childEntity[0]
+
         if host_name:
             self.dest_host_obj = self.get_host(host_name)
         elif GetCluster(self.dest_cluster_obj).is_drs():
