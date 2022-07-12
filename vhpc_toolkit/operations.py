@@ -10,7 +10,9 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+import json
 import logging
+from typing import List
 
 from distutils.util import strtobool
 from pyVmomi import vim
@@ -644,6 +646,48 @@ class Operations(object):
                 tasks.append(task)
             else:
                 self.logger.info("VM {0} is already in power off state".format(vm))
+        return tasks
+
+    def secure_boot_cli(self):
+        """
+        Turn on or off secure boot for VMs
+
+        Returns:
+            None
+        """
+
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+        if self.cfg["on"]:
+            tasks = self.__get_secure_boot_tasks(vms, True)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot on")
+        if self.cfg["off"]:
+            tasks = self.__get_secure_boot_tasks(vms, False)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot off")
+
+    def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
+        """
+        Enable secure boot for vms
+        Args:
+            vms: List of vm names
+            enabled: Whether to enable secure boot or not
+
+        Returns:
+            List of task objects
+
+        """
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    "VM {0} is turned on. So cannot change secure boot. Please turn off and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(ConfigVM(vm_obj).change_secure_boot(enabled=enabled))
+
         return tasks
 
     def network_cli(self):
@@ -1989,6 +2033,159 @@ class Operations(object):
                     self._destroy_dvs(cl_config)
             else:
                 self.logger.info("Not destroying any distributed virtual switches")
+
+    def get_vm_config_cli(self) -> None:
+        vm_cfgs = self._extract_file(self.cfg)
+        for vm_cfg in vm_cfgs:
+            self._print_vm_config(vm_cfg["vm"])
+
+    def _print_vm_config(self, vm_name: str) -> None:
+        """
+        This function prints the performance related settings of the vm using the vm name provided
+
+        Args:
+            vm_name: Name of the VM for which you want the performance related settings printed
+        Returns:
+            None
+        """
+        vm_object: vim.VirtualMachine = self.objs.get_vm(vm_name)
+        vm = GetVM(vm_object)
+
+        existing_pci_ids = vm.existing_pci_ids()
+        # Get PCI devices attached to the current VM
+        attached_direct_passthru_devices = []
+        for passthru_device in vm.avail_pci_info():
+            if passthru_device[2] in existing_pci_ids:
+                device_name, vendor_name, device_id, system_id = passthru_device
+                attached_direct_passthru_devices.append(
+                    {
+                        "Device Name": f"{vendor_name} - {device_name}",
+                        "Device ID": device_id,
+                    }
+                )
+
+        # Get SRIOV devices to the current VM
+        attached_sriov_devices = []
+        existing_sriov_ids = vm.existing_sriov_ids()
+
+        for sriov_device in vm.avail_sriov_info():
+            if sriov_device[4] in existing_sriov_ids:
+                (
+                    pnic,
+                    virtual_function,
+                    device_name,
+                    vendor_name,
+                    device_id,
+                    system_id,
+                ) = sriov_device
+                attached_sriov_devices.append(
+                    {
+                        "PNIC": pnic,
+                        "Virtual Function": virtual_function,
+                        "Device Name": f"{vendor_name} - {device_name}",
+                        "Device ID": device_id,
+                    }
+                )
+
+        attached_pvrmda_devices = []
+
+        for network_object in vm.device_objs_all():
+            if isinstance(
+                network_object, vim.vm.device.VirtualSriovEthernetCard
+            ) and hasattr(network_object, "sriovBacking"):
+                for attached_sriov_device in attached_sriov_devices:
+                    if (
+                        attached_sriov_device["Device ID"]
+                        == network_object.sriovBacking.physicalFunctionBacking.id
+                    ):
+                        attached_sriov_device.update(
+                            {"Label": network_object.deviceInfo.label}
+                        )
+            if isinstance(network_object, vim.vm.device.VirtualVmxnet3Vrdma):
+                attached_pvrmda_devices.append(
+                    {
+                        "Label": network_object.deviceInfo.label,
+                    }
+                )
+            if isinstance(
+                network_object, vim.vm.device.VirtualPCIPassthrough
+            ) and hasattr(network_object.backing, "id"):
+                for attached_direct_passthru_device in attached_direct_passthru_devices:
+                    if (
+                        attached_direct_passthru_device["Device ID"]
+                        == network_object.backing.id
+                    ):
+                        attached_direct_passthru_device.update(
+                            {"Label": network_object.deviceInfo.label}
+                        )
+
+        vm_details = {
+            "Name": vm.vm_name(),
+            "vCPU": vm.cpu(),
+            "CPU Cores Per Socket": vm.cores_per_socket(),
+            "CPU Reservation": f"{vm.cpu_reser()} MHz",
+            "CPU Limit": f"{0 if vm_object.config.cpuAllocation.limit == -1 else vm_object.config.cpuAllocation.limit} MHz",
+            "Memory Size": f"{round(vm.memory() / 1024.0, 2)} GB",
+            "Memory Reservation": f"{round(vm.memory_reser() / 1024.0, 2)} GB",
+            "Memory Limit": f"{round((0 if vm_object.config.memoryAllocation.limit == -1 else vm_object.config.memoryAllocation.limit) / 1024.0, 2)} GB",
+            "Latency Sensitivity": vm.latency(),
+            "PCI Devices": {
+                "Passthrough": attached_direct_passthru_devices,
+                "SRIOV": attached_sriov_devices,
+                "PVRDMA": attached_pvrmda_devices,
+            },
+        }
+        print("-----------------------------------------")
+        print(json.dumps(vm_details, indent=4))
+        print("-----------------------------------------")
+
+    def vm_scheduling_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.error(
+                    "Could not change affinity for VM {0}. Please power off VM and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(
+                    ConfigVM(vm_obj).change_vm_scheduling_affinity(self.cfg["affinity"])
+                )
+
+        GetWait().wait_for_tasks(tasks, task_name="Set VM scheduling affinity")
+
+    def numa_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.error(
+                    "Could not change NUMA affinity for VM {0}. Please power off VM and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(
+                    ConfigVM(vm_obj).change_numa_affinity(self.cfg["affinity"])
+                )
+
+        GetWait().wait_for_tasks(tasks, task_name="Set NUMA node affinity")
 
     def modify_host_sriov_cli(self):
         hosts = []

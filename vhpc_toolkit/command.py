@@ -57,5 +57,13 @@ def command():
         ops.latency_cli()
     elif ops.cfg[CMD_KEY] == "cluster":
         ops.cluster()
+    elif ops.cfg[CMD_KEY] == "get_vm_config":
+        ops.get_vm_config_cli()
+    elif ops.cfg[CMD_KEY] == "secure_boot":
+        ops.secure_boot_cli()
+    elif ops.cfg[CMD_KEY] == "vm_sched_affinity":
+        ops.vm_scheduling_affinity_cli()
+    elif ops.cfg[CMD_KEY] == "numa_affinity":
+        ops.numa_affinity_cli()
     elif ops.cfg[CMD_KEY] == "modify_sriov":
         ops.modify_host_sriov_cli()
