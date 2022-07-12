@@ -247,6 +247,39 @@ def get_args():
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
 
+    power_policy_parser = subparsers.add_parser(
+        "power_policy",
+        help="Change the power policy for the host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    power_policy_group1 = power_policy_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    power_policy_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host whose power policy must be changed",
+    )
+    power_policy_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of host(s),"
+        " one per line, to perform the change power policy operation",
+    )
+    power_policy_parser.add_argument(
+        "--policy",
+        action="store",
+        type=int,
+        help="The power policy to change it to. Specify the corresponding index for the power policy\n"
+        "1 - High Performance (static), 2 - Balanced (dynamic), 3- Low Power (low), 4 - Custom (custom)",
+        required=True,
+        choices=[1, 2, 3, 4],
+    )
+
     secure_boot_parser = subparsers.add_parser(
         "secure_boot",
         help="Turn secure boot on/off VM(s)",

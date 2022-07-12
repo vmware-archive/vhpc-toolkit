@@ -1063,7 +1063,7 @@ class ConfigHost(object):
                 )
         else:
             self.logger.warning(
-                f"Could not find the power policy {power_policy} for host {self.host_obj.name}"
+                f"Could not find the power policy {power_policy_key} for host {self.host_obj.name}"
             )
 
 

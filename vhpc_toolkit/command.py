@@ -65,3 +65,5 @@ def command():
         ops.vm_scheduling_affinity_cli()
     elif ops.cfg[CMD_KEY] == "numa_affinity":
         ops.numa_affinity_cli()
+    elif ops.cfg[CMD_KEY] == "power_policy":
+        ops.power_policy_cli()

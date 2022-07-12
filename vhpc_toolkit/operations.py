@@ -583,6 +583,16 @@ class Operations(object):
             tasks = self._get_poweroff_tasks(vms)
             GetWait().wait_for_tasks(tasks, task_name="Power off")
 
+    def power_policy_cli(self):
+        hosts = []
+        if self.cfg["host"]:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(self._extract_file(self.cfg))
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).change_power_policy(self.cfg["policy"])
+
     def _power_cluster(self, vm_cfgs, key):
         """Power on or off VMs (defined in cluster conf file)
 
