@@ -819,16 +819,6 @@ def get_args():
         help="Profile of the vGPU, for example: grid_p100-4q",
     )
 
-    def valid_mtu(string):
-        if not string.isdigit():
-            raise argparse.ArgumentTypeError(
-                "MTU must be a valid integer in the range 1280-9000"
-            )
-        integer = int(string)
-        if integer <= 1280 or integer >= 9000:
-            raise argparse.ArgumentTypeError("MTU must be in the range 1280-9000")
-        return integer
-
     svs_parser = subparsers.add_parser(
         "svs",
         help="Create/destroy a standard virtual switch",
@@ -876,7 +866,7 @@ def get_args():
     svs_parser.add_argument(
         "--mtu",
         action="store",
-        type=valid_mtu,
+        type=int,
         help="Max MTU to be set on the SVS. This argument is optional",
         required=False,
     )
@@ -937,7 +927,7 @@ def get_args():
     dvs_parser.add_argument(
         "--mtu",
         action="store",
-        type=valid_mtu,
+        type=int,
         help="Max MTU to be set on the DVS. This argument is optional",
         required=False,
     )
