@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import os
+from typing import List
 
 from pyVmomi import vim
 from pyVmomi import vmodl
@@ -96,7 +97,7 @@ class ConfigVM(object):
         """Configure cores per socket for a VM
 
         Args:
-            shares (int): Cores per Socket to be configured
+            cores_per_socket (int): Cores per Socket to be configured
 
         Returns:
             Task
@@ -221,6 +222,64 @@ class ConfigVM(object):
         """
 
         return self.vm_obj.PowerOff()
+
+    def change_secure_boot(self, enabled=True) -> vim.Task:
+        """
+        This function can enable or disable secure boot
+
+        Args:
+            enabled: Whether secure boot should be enabled or not
+
+        Returns:
+            Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        boot_option = vim.vm.BootOptions()
+        boot_option.efiSecureBootEnabled = enabled
+        config_spec.bootOptions = boot_option
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
+    def change_vm_scheduling_affinity(self, affinity: List[int]) -> vim.Task:
+        """
+        This function changes the scheduling affinity for the VM
+
+        Args:
+            affinity: List of nodes that may be used by the VM. If no argument is given, the existing affinity option is cleared
+
+        Returns:
+            Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        affinity_info = vim.vm.AffinityInfo()
+        affinity_info.affinitySet = affinity
+        config_spec.cpuAffinity = affinity_info
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
+    def change_numa_affinity(
+        self, affinity: List[int], numa_node: str = None
+    ) -> vim.Task:
+        """
+        Change the NUMA node affinity
+
+        Args:
+            affinity: Constrain VM resource scheduling to these numa nodes
+            numa_node: Use this to specify a NUMA node for a specific virtual NUMA node on a VM
+
+        Returns:
+            Task
+
+        """
+        if numa_node is None:
+            if not affinity:
+                return self.remove_extra("numa.nodeAffinity")
+            else:
+                return self.add_extra("numa.nodeAffinity", ",".join(map(str, affinity)))
+        else:
+            return self.add_extra(
+                f"numa.{numa_node}.affinity", ",".join(map(str, affinity))
+            )
 
     def latency(self, level):
         """Configure Latency Sensitivity for a VM
