@@ -1991,8 +1991,17 @@ class Operations(object):
                 self.logger.info("Not destroying any distributed virtual switches")
 
     def modify_host_sriov_cli(self):
-        host_cfgs = self._extract_file(self.cfg)
-        hosts = [host_cfg["host"] for host_cfg in host_cfgs]
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
         for host in hosts:
             ConfigHost(self.objs.get_host(host)).modify_sriov(
                 self.cfg["location"], self.cfg.get("num_func"), bool(self.cfg["on"])
