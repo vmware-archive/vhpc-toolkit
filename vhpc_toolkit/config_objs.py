@@ -989,7 +989,7 @@ class ConfigHost(object):
             enable_sriov: Whether to enable or disable SRIOV for the NIC
 
         Returns:
-
+            None
         """
         config = vim.host.SriovConfig()
         config.sriovEnabled = enable_sriov
@@ -1001,15 +1001,15 @@ class ConfigHost(object):
                 config=[config]
             )
             self.logger.info(
-                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {pnic_location}"
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {pnic_location} on host {self.host_obj.name}"
             )
         except vim.fault.HostConfigFault:
             self.logger.error(
-                f"Trying to set illegal configuration for network with location: {pnic_location}"
+                f"Trying to set illegal configuration for network with location: {pnic_location} on host {self.host_obj.name}"
             )
         except vmodl.RuntimeFault:
             self.logger.error(
-                f"Error when changing configuration for network with location: {pnic_location}. Please try again later"
+                f"Error when changing configuration for network with location: {pnic_location} on host {self.host_obj.name}. Please try again later"
             )
 
     def destroy_svs(self, svs_name):
