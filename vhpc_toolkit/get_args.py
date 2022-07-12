@@ -712,6 +712,13 @@ def get_args():
         help="Name of virtual port group to be created within "
         "this standard virtual switch",
     )
+    svs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="Max MTU to be set on the SVS. This argument is optional",
+        required=False,
+    )
     dvs_parser = subparsers.add_parser(
         "dvs",
         help="Create/destroy a distributed virtual switch",
@@ -765,6 +772,13 @@ def get_args():
         required=False,
         help="Name of virtual port group to be created "
         "within this distributed virtual switch",
+    )
+    dvs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="Max MTU to be set on the DVS. This argument is optional",
+        required=False,
     )
     latency_parser = subparsers.add_parser(
         "latency",
