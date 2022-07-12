@@ -742,16 +742,14 @@ def get_args():
 
     modify_sriov_parser = subparsers.add_parser(
         "modify_sriov",
-        help="Modify SR-IOV properties on host(s)",
+        help="Modify SR-IOV properties on host(s).\n"
+        "This operation assumes that SR-IOV drivers have been installed on Esxi host",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     modify_sriov_group1 = modify_sriov_parser.add_mutually_exclusive_group(
         required=True
     )
     modify_sriov_group2 = modify_sriov_parser.add_mutually_exclusive_group(
-        required=True
-    )
-    modify_sriov_group3 = modify_sriov_parser.add_mutually_exclusive_group(
         required=True
     )
     modify_sriov_group1.add_argument(
@@ -769,24 +767,25 @@ def get_args():
         help="Name of the file containing a list of hosts, "
         "one per line, to perform the modify SR-IOV operation",
     )
-    modify_sriov_group2.add_argument(
+    modify_sriov_parser.add_argument(
         "--location",
         action="store",
         default=None,
         type=str,
         help="Location of the pnic in format xxxx:xx:xx.x",
+        required=True,
     )
-    modify_sriov_group3.add_argument(
+    modify_sriov_group2.add_argument(
         "--on", action="store_true", help="Turn on SR-IOV mode for pnic on host(s)"
     )
-    modify_sriov_group3.add_argument(
+    modify_sriov_group2.add_argument(
         "--off", action="store_true", help="Turn off SR-IOV mode for pnic on host(s)"
     )
     modify_sriov_parser.add_argument(
         "--num_func",
         action="store",
         type=int,
-        help="Number of virtual functions. This is only set if you are turning SR-IOV mode on",
+        help="Number of virtual functions. This argument is ignored if used with --off flag",
     )
 
     pvrdma_parser = subparsers.add_parser(
