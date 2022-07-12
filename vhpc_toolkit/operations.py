@@ -585,10 +585,16 @@ class Operations(object):
 
     def power_policy_cli(self):
         hosts = []
-        if self.cfg["host"]:
+        if "host" in self.cfg:
             hosts.append(self.cfg["host"])
         else:
-            hosts.extend(self._extract_file(self.cfg))
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
         for host in hosts:
             host_obj = self.objs.get_host(host)
             ConfigHost(host_obj).change_power_policy(self.cfg["policy"])

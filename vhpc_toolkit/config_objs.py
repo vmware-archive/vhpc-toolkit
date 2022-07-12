@@ -1038,20 +1038,35 @@ class ConfigHost(object):
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemovePortGroup(pgName=pg_name)
 
-    def change_power_policy(self, power_policy_key):
+    def change_power_policy(self, power_policy_key: int):
+        """
+        Change the power policy on the host.
+
+        1. High Performance
+        2. Balanced
+        3. Low Performance
+        4. Custom
+
+        Args:
+            power_policy_key: The key that corresponds to the power policy it must be set to
+
+        Returns:
+            None
+
+        """
         power_system = self.host_obj.configManager.powerSystem
         capabilities = power_system.capability.availablePolicy
         power_policy_names = [capability.shortName for capability in capabilities]
 
         self.logger.info(
-            f"Available power policies : {', '.join([f'{power_policy_name} - {index+1}' for index, power_policy_name in enumerate(power_policy_names)])}"
+            f"Available power policies : {', '.join([f'{power_policy_name} - {index + 1}' for index, power_policy_name in enumerate(power_policy_names)])}"
         )
 
         if power_policy_names:
             try:
                 power_system.ConfigurePowerPolicy(key=power_policy_key)
                 self.logger.info(
-                    f"Successfully set power policy {power_policy_names[power_policy_key-1]} on host {self.host_obj.name}"
+                    f"Successfully set power policy {power_policy_names[power_policy_key - 1]} on host {self.host_obj.name}"
                 )
             except vim.fault.HostConfigFault:
                 self.logger.error(
