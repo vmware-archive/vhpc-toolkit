@@ -275,7 +275,7 @@ def get_args():
         action="store",
         type=int,
         help="The power policy to change it to. Specify the corresponding index for the power policy\n"
-        "1 - High Performance (static), 2 - Balanced (dynamic), 3- Low Power (low), 4 - Custom (custom)",
+        "1 - High Performance, 2 - Balanced, 3- Low Power, 4 - Custom",
         required=True,
         choices=[1, 2, 3, 4],
     )

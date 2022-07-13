@@ -1054,20 +1054,21 @@ class ConfigHost(object):
             None
 
         """
+        power_policy_mapping = {
+            1: "High Performance",
+            2: "Balanced",
+            3: "Low Performance",
+            4: "Custom",
+        }
         power_system = self.host_obj.configManager.powerSystem
         capabilities = power_system.capability.availablePolicy
         power_policy_names = [capability.shortName for capability in capabilities]
-
-        self.logger.info(
-            f"Available power policies : "
-            f"{', '.join([f'{index + 1} - {power_policy_name}' for index, power_policy_name in enumerate(power_policy_names)])} "
-        )
 
         if power_policy_names:
             try:
                 power_system.ConfigurePowerPolicy(key=power_policy_key)
                 self.logger.info(
-                    f"Successfully set power policy to {power_policy_names[power_policy_key - 1]} on host {self.host_obj.name}"
+                    f"Successfully set power policy to {power_policy_mapping[power_policy_key]} on host {self.host_obj.name}"
                 )
             except vim.fault.HostConfigFault:
                 self.logger.error(
