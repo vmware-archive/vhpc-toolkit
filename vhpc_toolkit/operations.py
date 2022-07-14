@@ -2195,6 +2195,10 @@ class Operations(object):
             self.logger.info(
                 f"Migrating VM {vm_cfg['vm']} to host {self.cfg['destination']}"
             )
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    f"VM {vm_cfg['vm']} is powered on. So migration task might take some time"
+                )
             tasks.append(ConfigVM(vm_obj).migrate_vm(host_obj))
 
         GetWait().wait_for_tasks(tasks, task_name="Migrate VM(s)")
