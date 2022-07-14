@@ -2095,3 +2095,15 @@ class Operations(object):
         print("-----------------------------------------")
         print(json.dumps(vm_details, indent=4))
         print("-----------------------------------------")
+
+    def migrate_vm_cli(self):
+        tasks = []
+        for vm_cfg in self._extract_file(self.cfg):
+            vm_obj = self.objs.get_vm(vm_cfg["vm"])
+            host_obj = self.objs.get_host(self.cfg["destination"])
+            self.logger.info(
+                f"Migrating VM {vm_cfg['vm']} to host {self.cfg['destination']}"
+            )
+            tasks.append(ConfigVM(vm_obj).migrate_vm(host_obj))
+
+        GetWait().wait_for_tasks(tasks, task_name="Migrate VM(s)")
