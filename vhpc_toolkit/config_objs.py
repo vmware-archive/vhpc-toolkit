@@ -1044,7 +1044,7 @@ class ConfigHost(object):
 
         1. High Performance
         2. Balanced
-        3. Low Performance
+        3. Low Power
         4. Custom
 
         Args:
@@ -1057,7 +1057,7 @@ class ConfigHost(object):
         power_policy_mapping = {
             1: "High Performance",
             2: "Balanced",
-            3: "Low Performance",
+            3: "Low Power",
             4: "Custom",
         }
         power_system = self.host_obj.configManager.powerSystem
