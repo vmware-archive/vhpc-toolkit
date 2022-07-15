@@ -780,9 +780,10 @@ def get_args():
     sriov_host_parser.add_argument(
         "--num_func",
         action="store",
-        default=4,
+        default=None,
         type=int,
-        help="Number of virtual functions. This argument is ignored if used with --off flag",
+        help="Number of virtual functions. This argument is ignored if used with --off flag. "
+        "num_func must be equal or smaller than the VF enabled in firmware",
     )
 
     pvrdma_parser = subparsers.add_parser(
