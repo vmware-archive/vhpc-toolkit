@@ -1004,9 +1004,9 @@ class ConfigHost(object):
                 f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {device_id} on host {self.host_obj.name}"
             )
         except vim.fault.HostConfigFault as e:
-            self.logger.error(f"{e.message}")
+            self.logger.error(f"Caught HostConfig fault: " + e.msg)
         except vmodl.RuntimeFault as e:
-            self.logger.error(f"{e.message}")
+            self.logger.error("Caught vmodl fault: " + e.msg)
 
     def destroy_svs(self, svs_name):
         """Destroy a standard virtual switch
