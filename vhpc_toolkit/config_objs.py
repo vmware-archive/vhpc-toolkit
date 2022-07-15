@@ -984,7 +984,7 @@ class ConfigHost(object):
         Function to enable/disable SRIOV and/or change the number of virtual functions on devices of a host.
         Number of virtual functions argument is skipped if user is trying to disable SRIOV
         Args:
-            device_id: Location of the NIC which supports SRIOV in format xxxx:xx:xx.x
+            device_id: Address of the device which supports SRIOV in format xxxx:xx:xx.x
             num_virtual_functions: Number of virtual functions to set for the NIC
             enable_sriov: Whether to enable or disable SRIOV for the NIC
 
