@@ -65,5 +65,5 @@ def command():
         ops.vm_scheduling_affinity_cli()
     elif ops.cfg[CMD_KEY] == "numa_affinity":
         ops.numa_affinity_cli()
-    elif ops.cfg[CMD_KEY] == "modify_sriov":
+    elif ops.cfg[CMD_KEY] == "sriov_host":
         ops.modify_host_sriov_cli()

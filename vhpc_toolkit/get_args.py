@@ -740,26 +740,22 @@ def get_args():
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
 
-    modify_sriov_parser = subparsers.add_parser(
-        "modify_sriov",
-        help="Modify SR-IOV properties on host(s).\n"
-        "This operation assumes that SR-IOV drivers have been installed on Esxi host",
+    sriov_host = subparsers.add_parser(
+        "sriov_host",
+        help="Modify SR-IOV configuration on host(s).\n"
+        "This operation assumes that SR-IOV drivers have been installed on ESXi host",
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    modify_sriov_group1 = modify_sriov_parser.add_mutually_exclusive_group(
-        required=True
-    )
-    modify_sriov_group2 = modify_sriov_parser.add_mutually_exclusive_group(
-        required=True
-    )
-    modify_sriov_group1.add_argument(
+    sriov_host1 = sriov_host.add_mutually_exclusive_group(required=True)
+    sriov_host2 = sriov_host.add_mutually_exclusive_group(required=True)
+    sriov_host1.add_argument(
         "--host",
         action="store",
         default=None,
         type=str,
         help="Name of the host on which to perform the modify SR-IOV operation",
     )
-    modify_sriov_group1.add_argument(
+    sriov_host1.add_argument(
         "--file",
         action="store",
         default=None,
@@ -767,23 +763,24 @@ def get_args():
         help="Name of the file containing a list of hosts, "
         "one per line, to perform the modify SR-IOV operation",
     )
-    modify_sriov_parser.add_argument(
-        "--location",
+    sriov_host.add_argument(
+        "--device",
         action="store",
         default=None,
         type=str,
-        help="Location of the pnic in format xxxx:xx:xx.x",
+        help="Address of the SR-IOV device in format xxxx:xx:xx.x",
         required=True,
     )
-    modify_sriov_group2.add_argument(
-        "--on", action="store_true", help="Turn on SR-IOV mode for pnic on host(s)"
+    sriov_host2.add_argument(
+        "--on", action="store_true", help="Turn on SR-IOV mode for device on host(s)"
     )
-    modify_sriov_group2.add_argument(
-        "--off", action="store_true", help="Turn off SR-IOV mode for pnic on host(s)"
+    sriov_host2.add_argument(
+        "--off", action="store_true", help="Turn off SR-IOV mode for device on host(s)"
     )
-    modify_sriov_parser.add_argument(
+    sriov_host.add_argument(
         "--num_func",
         action="store",
+        default=4,
         type=int,
         help="Number of virtual functions. This argument is ignored if used with --off flag",
     )
