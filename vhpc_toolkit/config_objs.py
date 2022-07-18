@@ -335,20 +335,24 @@ class ConfigVM(object):
 
         """
 
+        dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualVmxnet3()
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = network_obj
-        nic_spec.device.backing.deviceName = network_obj.name
-        nic_spec.device.backing.useAutoDetect = False
+        nic_spec.device.backing = (
+            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
+        )
+        nic_spec.device.backing.port = vim.dvs.PortConnection()
+        nic_spec.device.backing.port.portgroupKey = network_obj.key
+        nic_spec.device.backing.port.switchUuid = dvs.uuid
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True
         nic_spec.device.connectable.allowGuestControl = True
+        nic_spec.device.connectable.status = "untried"
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
