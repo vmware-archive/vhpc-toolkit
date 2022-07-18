@@ -249,7 +249,7 @@ def get_args():
 
     migrate_vm_parser = subparsers.add_parser(
         "migrate_vm",
-        help="Migrate VM(s) to different host",
+        help="Migrate VM(s) to a different host",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     migrate_vm_group1 = migrate_vm_parser.add_mutually_exclusive_group(required=True)
