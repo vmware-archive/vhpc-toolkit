@@ -2201,7 +2201,7 @@ class Operations(object):
 
         for host in hosts:
             ConfigHost(self.objs.get_host(host)).modify_sriov(
-                self.cfg["location"],
+                self.cfg["device"],
                 num_virtual_functions=self.cfg.get("num_func"),
                 enable_sriov=bool(self.cfg["on"]),
             )

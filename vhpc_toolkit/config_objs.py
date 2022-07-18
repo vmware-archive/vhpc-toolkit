@@ -1005,7 +1005,7 @@ class ConfigHost(object):
                 config=[config]
             )
             self.logger.info(
-                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {device_id} on host {self.host_obj.name}"
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with PCIe device : {device_id} on host {self.host_obj.name}"
             )
         except vim.fault.HostConfigFault as e:
             self.logger.error(f"Caught HostConfig fault: " + e.msg)
