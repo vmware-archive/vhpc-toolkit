@@ -768,7 +768,7 @@ def get_args():
         action="store",
         default=None,
         type=str,
-        help="Address of the SR-IOV device in format xxxx:xx:xx.x",
+        help="PCIe address of the Virtual Function (VF) of the SR-IOV device in format xxxx:xx:xx.x",
         required=True,
     )
     sriov_host_group2.add_argument(
