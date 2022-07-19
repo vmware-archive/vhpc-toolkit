@@ -874,6 +874,21 @@ class ConfigVM(object):
         config_spec.deviceChange = [dev_config_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
+    def migrate_vm(self, host_obj: vim.HostSystem) -> vim.Task:
+        """
+        Migrate a VM to a different host
+
+        Args:
+            host_obj: Host object of the destination host
+
+        Returns:
+            Task
+
+        """
+        relocate_spec = vim.vm.RelocateSpec()
+        relocate_spec.host = host_obj
+        return self.vm_obj.RelocateVM_Task(spec=relocate_spec)
+
     def execute_script(self, process_manager, script, username, password):
         """Execute a post script for a VM
             First copy local script content to remote VM
@@ -1079,6 +1094,51 @@ class ConfigHost(object):
 
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemovePortGroup(pgName=pg_name)
+
+    def change_power_policy(self, power_policy_key: int):
+        """
+        Change the power policy on the host.
+
+        1. High Performance
+        2. Balanced
+        3. Low Power
+        4. Custom
+
+        Args:
+            power_policy_key: The key that corresponds to the power policy it must be set to
+
+        Returns:
+            None
+
+        """
+        power_policy_mapping = {
+            1: "High Performance",
+            2: "Balanced",
+            3: "Low Power",
+            4: "Custom",
+        }
+        power_system = self.host_obj.configManager.powerSystem
+        capabilities = power_system.capability.availablePolicy
+        power_policy_names = [capability.shortName for capability in capabilities]
+
+        if power_policy_names:
+            try:
+                power_system.ConfigurePowerPolicy(key=power_policy_key)
+                self.logger.info(
+                    f"Successfully set power policy to {power_policy_mapping[power_policy_key]} on host {self.host_obj.name}"
+                )
+            except vim.fault.HostConfigFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}."
+                )
+            except vmodl.RuntimeFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}. Please try again later"
+                )
+        else:
+            self.logger.warning(
+                f"Could not find the power policy {power_policy_key} for host {self.host_obj.name}"
+            )
 
 
 class ConfigDatacenter(object):

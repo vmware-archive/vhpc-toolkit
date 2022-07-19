@@ -247,6 +247,69 @@ def get_args():
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
 
+    migrate_vm_parser = subparsers.add_parser(
+        "migrate_vm",
+        help="Migrate VM(s) to a different host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    migrate_vm_group1 = migrate_vm_parser.add_mutually_exclusive_group(required=True)
+    migrate_vm_group1.add_argument(
+        "--vm",
+        default=None,
+        action="store",
+        type=str,
+        help="The VM to migrate to a different host",
+    )
+    migrate_vm_group1.add_argument(
+        "--file",
+        default=None,
+        action="store",
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the migrate operation",
+    )
+    migrate_vm_parser.add_argument(
+        "--destination",
+        default=None,
+        action="store",
+        type=str,
+        required=True,
+        help="The name of the destination host VM(s) should be migrated to",
+    )
+
+    power_policy_parser = subparsers.add_parser(
+        "power_policy",
+        help="Change the power policy for the host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    power_policy_group1 = power_policy_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    power_policy_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host whose power policy must be changed",
+    )
+    power_policy_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of host(s),"
+        " one per line, to perform the change power policy operation",
+    )
+    power_policy_parser.add_argument(
+        "--policy",
+        action="store",
+        type=int,
+        help="The power policy to change it to. Specify the corresponding index for the power policy\n"
+        "1 - High Performance, 2 - Balanced, 3- Low Power, 4 - Custom",
+        required=True,
+        choices=[1, 2, 3, 4],
+    )
+
     secure_boot_parser = subparsers.add_parser(
         "secure_boot",
         help="Turn secure boot on/off VM(s)",
