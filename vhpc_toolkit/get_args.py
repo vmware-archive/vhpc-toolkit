@@ -247,6 +247,36 @@ def get_args():
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
 
+    migrate_vm_parser = subparsers.add_parser(
+        "migrate_vm",
+        help="Migrate VM(s) to a different host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    migrate_vm_group1 = migrate_vm_parser.add_mutually_exclusive_group(required=True)
+    migrate_vm_group1.add_argument(
+        "--vm",
+        default=None,
+        action="store",
+        type=str,
+        help="The VM to migrate to a different host",
+    )
+    migrate_vm_group1.add_argument(
+        "--file",
+        default=None,
+        action="store",
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the migrate operation",
+    )
+    migrate_vm_parser.add_argument(
+        "--destination",
+        default=None,
+        action="store",
+        type=str,
+        required=True,
+        help="The name of the destination host VM(s) should be migrated to",
+    )
+
     power_policy_parser = subparsers.add_parser(
         "power_policy",
         help="Change the power policy for the host",

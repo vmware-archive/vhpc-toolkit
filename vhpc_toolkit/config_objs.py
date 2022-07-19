@@ -870,6 +870,21 @@ class ConfigVM(object):
         config_spec.deviceChange = [dev_config_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
+    def migrate_vm(self, host_obj: vim.HostSystem) -> vim.Task:
+        """
+        Migrate a VM to a different host
+
+        Args:
+            host_obj: Host object of the destination host
+
+        Returns:
+            Task
+
+        """
+        relocate_spec = vim.vm.RelocateSpec()
+        relocate_spec.host = host_obj
+        return self.vm_obj.RelocateVM_Task(spec=relocate_spec)
+
     def execute_script(self, process_manager, script, username, password):
         """Execute a post script for a VM
             First copy local script content to remote VM

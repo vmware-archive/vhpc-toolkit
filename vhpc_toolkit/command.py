@@ -69,3 +69,5 @@ def command():
         ops.power_policy_cli()
     elif ops.cfg[CMD_KEY] == "sriov_host":
         ops.modify_host_sriov_cli()
+    elif ops.cfg[CMD_KEY] == "migrate_vm":
+        ops.migrate_vm_cli()

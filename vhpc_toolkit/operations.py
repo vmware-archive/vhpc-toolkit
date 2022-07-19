@@ -2203,6 +2203,22 @@ class Operations(object):
 
         GetWait().wait_for_tasks(tasks, task_name="Set NUMA node affinity")
 
+    def migrate_vm_cli(self):
+        tasks = []
+        for vm_cfg in self._extract_file(self.cfg):
+            vm_obj = self.objs.get_vm(vm_cfg["vm"])
+            host_obj = self.objs.get_host(self.cfg["destination"])
+            self.logger.info(
+                f"Migrating VM {vm_cfg['vm']} to host {self.cfg['destination']}"
+            )
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    f"VM {vm_cfg['vm']} is powered on. So migration task might take some time"
+                )
+            tasks.append(ConfigVM(vm_obj).migrate_vm(host_obj))
+
+        GetWait().wait_for_tasks(tasks, task_name="Migrate VM(s)")
+
     def modify_host_sriov_cli(self):
         hosts = []
         if "host" in self.cfg:
