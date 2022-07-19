@@ -277,6 +277,39 @@ def get_args():
         help="The name of the destination host VM(s) should be migrated to",
     )
 
+    power_policy_parser = subparsers.add_parser(
+        "power_policy",
+        help="Change the power policy for the host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    power_policy_group1 = power_policy_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    power_policy_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host whose power policy must be changed",
+    )
+    power_policy_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of host(s),"
+        " one per line, to perform the change power policy operation",
+    )
+    power_policy_parser.add_argument(
+        "--policy",
+        action="store",
+        type=int,
+        help="The power policy to change it to. Specify the corresponding index for the power policy\n"
+        "1 - High Performance, 2 - Balanced, 3- Low Power, 4 - Custom",
+        required=True,
+        choices=[1, 2, 3, 4],
+    )
+
     secure_boot_parser = subparsers.add_parser(
         "secure_boot",
         help="Turn secure boot on/off VM(s)",
@@ -769,6 +802,53 @@ def get_args():
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
+
+    sriov_host_parser = subparsers.add_parser(
+        "sriov_host",
+        help="Modify SR-IOV configuration on host(s).\n"
+        "This operation assumes that SR-IOV drivers have been installed on ESXi host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    sriov_host_group1 = sriov_host_parser.add_mutually_exclusive_group(required=True)
+    sriov_host_group2 = sriov_host_parser.add_mutually_exclusive_group(required=True)
+    sriov_host_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to perform the modify SR-IOV operation",
+    )
+    sriov_host_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to perform the modify SR-IOV operation",
+    )
+    sriov_host_parser.add_argument(
+        "--device",
+        action="store",
+        default=None,
+        type=str,
+        help="PCIe address of the Virtual Function (VF) of the SR-IOV device in format xxxx:xx:xx.x",
+        required=True,
+    )
+    sriov_host_group2.add_argument(
+        "--on", action="store_true", help="Turn on SR-IOV mode for device on host(s)"
+    )
+    sriov_host_group2.add_argument(
+        "--off", action="store_true", help="Turn off SR-IOV mode for device on host(s)"
+    )
+    sriov_host_parser.add_argument(
+        "--num_func",
+        action="store",
+        default=None,
+        type=int,
+        help="Number of virtual functions. This argument is ignored if used with --off flag. "
+        "num_func must be equal or smaller than the VF enabled in firmware",
+    )
+
     pvrdma_parser = subparsers.add_parser(
         "pvrdma",
         help="Add/Remove PVRDMA (Paravirtual RDMA) device(s)",

@@ -583,6 +583,22 @@ class Operations(object):
             tasks = self._get_poweroff_tasks(vms)
             GetWait().wait_for_tasks(tasks, task_name="Power off")
 
+    def power_policy_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).change_power_policy(self.cfg["policy"])
+
     def _power_cluster(self, vm_cfgs, key):
         """Power on or off VMs (defined in cluster conf file)
 
@@ -2202,3 +2218,22 @@ class Operations(object):
             tasks.append(ConfigVM(vm_obj).migrate_vm(host_obj))
 
         GetWait().wait_for_tasks(tasks, task_name="Migrate VM(s)")
+
+    def modify_host_sriov_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            ConfigHost(self.objs.get_host(host)).modify_sriov(
+                self.cfg["device"],
+                num_virtual_functions=self.cfg.get("num_func"),
+                enable_sriov=bool(self.cfg["on"]),
+            )
