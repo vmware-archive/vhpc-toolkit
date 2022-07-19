@@ -335,20 +335,24 @@ class ConfigVM(object):
 
         """
 
+        dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualVmxnet3()
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = network_obj
-        nic_spec.device.backing.deviceName = network_obj.name
-        nic_spec.device.backing.useAutoDetect = False
+        nic_spec.device.backing = (
+            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
+        )
+        nic_spec.device.backing.port = vim.dvs.PortConnection()
+        nic_spec.device.backing.port.portgroupKey = network_obj.key
+        nic_spec.device.backing.port.switchUuid = dvs.uuid
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True
         nic_spec.device.connectable.allowGuestControl = True
+        nic_spec.device.connectable.status = "untried"
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
@@ -973,6 +977,40 @@ class ConfigHost(object):
         svs.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[vmnic])
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
+
+    def modify_sriov(
+        self,
+        device_id: str,
+        num_virtual_functions: int = None,
+        enable_sriov: bool = True,
+    ):
+        """
+        Function to enable/disable SRIOV and/or change the number of virtual functions on devices of a host.
+        Number of virtual functions argument is skipped if user is trying to disable SRIOV
+        Args:
+            device_id: PCIe address of the Virtual Function (VF) of the SRIOV device in format xxxx:xx:xx.x
+            num_virtual_functions: Number of virtual functions to set for the SRIOV device
+            enable_sriov: Whether to enable or disable SRIOV for the NIC
+
+        Returns:
+            None
+        """
+        config = vim.host.SriovConfig()
+        config.sriovEnabled = enable_sriov
+        if enable_sriov and num_virtual_functions:
+            config.numVirtualFunction = num_virtual_functions
+        config.id = device_id
+        try:
+            self.host_obj.configManager.pciPassthruSystem.UpdatePassthruConfig(
+                config=[config]
+            )
+            self.logger.info(
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for PCIe device : {device_id} on host {self.host_obj.name}"
+            )
+        except vim.fault.HostConfigFault as e:
+            self.logger.error(f"Caught HostConfig fault: " + e.msg)
+        except vmodl.RuntimeFault as e:
+            self.logger.error("Caught vmodl fault: " + e.msg)
 
     def destroy_svs(self, svs_name):
         """Destroy a standard virtual switch

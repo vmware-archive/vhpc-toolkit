@@ -2202,3 +2202,22 @@ class Operations(object):
                 )
 
         GetWait().wait_for_tasks(tasks, task_name="Set NUMA node affinity")
+
+    def modify_host_sriov_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            ConfigHost(self.objs.get_host(host)).modify_sriov(
+                self.cfg["device"],
+                num_virtual_functions=self.cfg.get("num_func"),
+                enable_sriov=bool(self.cfg["on"]),
+            )

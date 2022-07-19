@@ -67,3 +67,5 @@ def command():
         ops.numa_affinity_cli()
     elif ops.cfg[CMD_KEY] == "power_policy":
         ops.power_policy_cli()
+    elif ops.cfg[CMD_KEY] == "sriov_host":
+        ops.modify_host_sriov_cli()
