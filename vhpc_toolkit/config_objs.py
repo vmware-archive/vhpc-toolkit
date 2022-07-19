@@ -982,6 +982,40 @@ class ConfigHost(object):
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
 
+    def modify_sriov(
+        self,
+        device_id: str,
+        num_virtual_functions: int = None,
+        enable_sriov: bool = True,
+    ):
+        """
+        Function to enable/disable SRIOV and/or change the number of virtual functions on devices of a host.
+        Number of virtual functions argument is skipped if user is trying to disable SRIOV
+        Args:
+            device_id: PCIe address of the Virtual Function (VF) of the SRIOV device in format xxxx:xx:xx.x
+            num_virtual_functions: Number of virtual functions to set for the SRIOV device
+            enable_sriov: Whether to enable or disable SRIOV for the NIC
+
+        Returns:
+            None
+        """
+        config = vim.host.SriovConfig()
+        config.sriovEnabled = enable_sriov
+        if enable_sriov and num_virtual_functions:
+            config.numVirtualFunction = num_virtual_functions
+        config.id = device_id
+        try:
+            self.host_obj.configManager.pciPassthruSystem.UpdatePassthruConfig(
+                config=[config]
+            )
+            self.logger.info(
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for PCIe device : {device_id} on host {self.host_obj.name}"
+            )
+        except vim.fault.HostConfigFault as e:
+            self.logger.error(f"Caught HostConfig fault: " + e.msg)
+        except vmodl.RuntimeFault as e:
+            self.logger.error("Caught vmodl fault: " + e.msg)
+
     def destroy_svs(self, svs_name):
         """Destroy a standard virtual switch
 
