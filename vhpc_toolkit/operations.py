@@ -887,6 +887,7 @@ class Operations(object):
         else:
             Check().check_kv(vm_cfg, "ip", required=True)
             ip = vm_cfg["ip"]
+
         task = ConfigVM(vm_obj).config_networking(
             network_obj, ip, netmask, gateway, domain, dns, guest_hostname
         )

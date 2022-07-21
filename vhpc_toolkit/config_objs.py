@@ -546,7 +546,10 @@ class ConfigVM(object):
         """
 
         global_ip = vim.vm.customization.GlobalIPSettings()
-        global_ip.dnsServerList = [dns]
+        if ip:
+            if isinstance(dns, str):
+                dns = [dns]
+            global_ip.dnsServerList = dns
 
         adapter_map = vim.vm.customization.AdapterMapping()
         adapter_map.macAddress = network_obj.macAddress
@@ -554,10 +557,12 @@ class ConfigVM(object):
         if ip:
             adapter_map.adapter.ip = vim.vm.customization.FixedIp()
             adapter_map.adapter.ip.ipAddress = ip
+            if isinstance(gateway, str):
+                gateway = [gateway]
+            adapter_map.adapter.gateway = gateway
         else:
             adapter_map.adapter.ip = vim.vm.customization.DhcpIpGenerator()
         adapter_map.adapter.subnetMask = netmask
-        adapter_map.adapter.gateway = [gateway]
         adapter_map.adapter.dnsDomain = domain
 
         ident = vim.vm.customization.LinuxPrep()
@@ -566,13 +571,14 @@ class ConfigVM(object):
             ident.hostName.name = guest_hostname
         else:
             ident.hostName.name = self.vm_obj.name
+        ident.domain = domain
 
         custom_spec = vim.vm.customization.Specification()
         custom_spec.nicSettingMap = [adapter_map]
         custom_spec.identity = ident
         custom_spec.globalIPSettings = global_ip
 
-        return self.vm_obj.Customize(spec=custom_spec)
+        return self.vm_obj.CustomizeVM_Task(spec=custom_spec)
 
     def enable_fork_parent(self):
         """Enable fork parent for a VM
