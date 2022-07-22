@@ -1814,7 +1814,7 @@ class Operations(object):
             host_obj = self.objs.get_host(dvs_host)
             host_vmnics[host_obj] = pnics
         task = ConfigDatacenter(datacenter_obj).create_dvs(
-            host_vmnics, dvs_name, max_mtu=dvs_cfg.get("mtu")
+            host_vmnics, dvs_name, mtu=dvs_cfg.get("mtu")
         )
         GetWait().wait_for_tasks([task], task_name="Create distributed virtual switch")
         # create port group within this DVS

@@ -977,7 +977,7 @@ def get_args():
         "--mtu",
         action="store",
         type=int,
-        help="Max MTU to be set on the SVS. This argument is optional",
+        help="MTU to be set for the SVS. This argument is optional",
         required=False,
     )
     dvs_parser = subparsers.add_parser(
@@ -1038,7 +1038,7 @@ def get_args():
         "--mtu",
         action="store",
         type=int,
-        help="Max MTU to be set on the DVS. This argument is optional",
+        help="MTU to be set for the DVS. This argument is optional",
         required=False,
     )
     latency_parser = subparsers.add_parser(

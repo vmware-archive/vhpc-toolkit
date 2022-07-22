@@ -1160,7 +1160,7 @@ class ConfigDatacenter(object):
         self.datacenter_obj = datacenter_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4, max_mtu: int = None):
+    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4, mtu: int = None):
         """Create a distributed virtual switch within the datacenter
 
         Args:
@@ -1170,7 +1170,7 @@ class ConfigDatacenter(object):
                                 physical adapters.
             dvs_name (str): The name of the DVS to be created
             num_uplinks (int): Number of active uplinks
-            max_mtu: Max MTU for DVS
+            mtu: MTU for DVS
 
         Returns:
             Task
@@ -1233,8 +1233,8 @@ class ConfigDatacenter(object):
             vim.dvs.VmwareDistributedVirtualSwitch.LacpApiVersion.multipleLag
         )
         dvs_config_spec.numStandalonePorts = num_uplinks
-        if max_mtu:
-            dvs_config_spec.maxMtu = max_mtu
+        if mtu:
+            dvs_config_spec.maxMtu = mtu
         dvs_create_spec = vim.DistributedVirtualSwitch.CreateSpec(
             configSpec=dvs_config_spec
         )
