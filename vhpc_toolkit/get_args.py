@@ -928,6 +928,7 @@ def get_args():
         type=str,
         help="Profile of the vGPU, for example: grid_p100-4q",
     )
+
     svs_parser = subparsers.add_parser(
         "svs",
         help="Create/destroy a standard virtual switch",
@@ -971,6 +972,13 @@ def get_args():
         type=str,
         help="Name of virtual port group to be created within "
         "this standard virtual switch",
+    )
+    svs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="MTU to be set for the SVS. This argument is optional",
+        required=False,
     )
     dvs_parser = subparsers.add_parser(
         "dvs",
@@ -1025,6 +1033,13 @@ def get_args():
         required=False,
         help="Name of virtual port group to be created "
         "within this distributed virtual switch",
+    )
+    dvs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="MTU to be set for the DVS. This argument is optional",
+        required=False,
     )
     latency_parser = subparsers.add_parser(
         "latency",

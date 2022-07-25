@@ -1700,7 +1700,7 @@ class Operations(object):
             host_obj = self.objs.get_host(svs_host)
             host_update = ConfigHost(host_obj)
             try:
-                host_update.create_svs(svs_name=svs, vmnic=pnic)
+                host_update.create_svs(svs_name=svs, vmnic=pnic, mtu=svs_cfg.get("mtu"))
                 self.logger.info(
                     "Creating standard virtual switch {0} " "is successful.".format(svs)
                 )
@@ -1813,7 +1813,9 @@ class Operations(object):
         for dvs_host in dvs_hosts:
             host_obj = self.objs.get_host(dvs_host)
             host_vmnics[host_obj] = pnics
-        task = ConfigDatacenter(datacenter_obj).create_dvs(host_vmnics, dvs_name)
+        task = ConfigDatacenter(datacenter_obj).create_dvs(
+            host_vmnics, dvs_name, mtu=dvs_cfg.get("mtu")
+        )
         GetWait().wait_for_tasks([task], task_name="Create distributed virtual switch")
         # create port group within this DVS
         if Check().check_kv(dvs_cfg, "port_group"):
