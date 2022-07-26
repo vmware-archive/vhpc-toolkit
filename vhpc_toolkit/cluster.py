@@ -127,7 +127,7 @@ class Cluster(object):
                 # unfold range
                 self._unfold_range_svs_dvs(cfg)
                 cfgs.append(dict(cfg))
-                return cfgs
+            return cfgs
         except UnknownKeyError as e:
             e.log()
             raise SystemExit
