@@ -38,6 +38,7 @@ class Cluster(object):
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
+        self.cfg_parser.optionxform = str
         cluster_file = get_args.find_script_conf_file(self.file)
         try:
             self.cfg_parser.read(cluster_file)
@@ -551,6 +552,7 @@ class Cluster(object):
             "is_dhcp",
             "linked",
             "instant",
+            "secure_boot",
         ]
         list_keys = ["device", "dns"]
         append_keys = ["script"]

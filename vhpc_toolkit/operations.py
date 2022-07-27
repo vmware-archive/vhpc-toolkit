@@ -664,6 +664,27 @@ class Operations(object):
                 self.logger.info("VM {0} is already in power off state".format(vm))
         return tasks
 
+    def _secure_boot_cluster(self, vm_cfgs, key):
+        on_vms = []
+        off_vms = []
+        for vm_cfg in vm_cfgs:
+            if key in vm_cfg:
+                if vm_cfg[key]:
+                    on_vms.append(vm_cfg["vm"])
+                else:
+                    off_vms.append(vm_cfg["vm"])
+
+        if on_vms:
+            GetWait().wait_for_tasks(
+                self.__get_secure_boot_tasks(on_vms, enabled=True),
+                task_name="Turn on secure boot",
+            )
+        if off_vms:
+            GetWait().wait_for_tasks(
+                self.__get_secure_boot_tasks(off_vms, enabled=False),
+                task_name="Turn off secure boot",
+            )
+
     def secure_boot_cli(self):
         """
         Turn on or off secure boot for VMs
@@ -683,7 +704,7 @@ class Operations(object):
 
     def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
         """
-        Enable secure boot for vms
+        Enable/Disable secure boot for vms
         Args:
             vms: List of vm names
             enabled: Whether to enable secure boot or not
@@ -1953,6 +1974,7 @@ class Operations(object):
         self._vgpu_cluster(vm_cfgs, "vgpu")
         self._sriov_cluster(vm_cfgs, "sriov_port_group")
         self._pvrdma_cluster(vm_cfgs, "pvrdma_port_group")
+        self._secure_boot_cluster(vm_cfgs, "secure_boot")
         self._power_cluster(vm_cfgs, "power")
         # execute post scripts with enforced order
         cluster_read = Cluster(self.cfg["file"])
