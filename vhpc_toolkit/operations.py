@@ -29,6 +29,7 @@ from vhpc_toolkit.config_objs import ConfigHost
 from vhpc_toolkit.config_objs import ConfigVM
 from vhpc_toolkit.connect import Connect
 from vhpc_toolkit.get_objs import GetClone
+from vhpc_toolkit.get_objs import GetCluster
 from vhpc_toolkit.get_objs import GetDatacenter
 from vhpc_toolkit.get_objs import GetHost
 from vhpc_toolkit.get_objs import GetObjects
@@ -163,6 +164,9 @@ class Operations(object):
         if tasks:
             GetWait().wait_for_tasks(tasks, task_name="Clone VM")
 
+    def _get_clone_obj(self):
+        pass
+
     def _get_clone_task(self, vm_cfg):
         """clone VM and get task
 
@@ -194,18 +198,7 @@ class Operations(object):
                 else:
                     clone_dests[clone_dest] = None
             # get clone dest objs
-            clone_objs = GetClone(
-                content=self.content,
-                template_obj=template_obj,
-                datacenter_name=clone_dests["datacenter"],
-                folder_name=clone_dests["vm_folder"],
-                cluster_name=clone_dests["cluster"],
-                resource_pool_name=clone_dests["resource_pool"],
-                host_name=clone_dests["host"],
-                datastore_name=clone_dests["datastore"],
-                cpu=clone_dests["cpu"],
-                memory=clone_dests["memory"],
-            )
+            clone_objs = self._get_clone_object(clone_dests, template_obj)
             # linked clone
             if Check().check_kv(vm_cfg, "linked"):
                 task = ConfigVM(template_obj).linked_clone(
@@ -234,6 +227,119 @@ class Operations(object):
                 "Can not find clone template {0}.".format(vm_cfg["template"])
             )
             raise SystemExit
+
+    @staticmethod
+    def _create_resource_pool(resource_pool_name, destination_host: vim.HostSystem):
+        resource_spec = vim.ResourceConfigSpec()
+        resource_allocation_info = vim.ResourceAllocationInfo()
+        resource_allocation_info.expandableReservation = True
+        resource_allocation_info.reservation = 0
+        resource_allocation_info.limit = -1
+        resource_allocation_info.shares = vim.SharesInfo()
+        resource_allocation_info.shares.level = vim.SharesInfo.Level.normal
+        resource_spec.cpuAllocation = resource_allocation_info
+        resource_spec.memoryAllocation = resource_allocation_info
+
+        return destination_host.parent.resourcePool.CreateResourcePool(
+            name=resource_pool_name, spec=resource_spec
+        )
+
+    def _get_clone_object(self, clone_dests, template_obj):
+        # get the default datacenter
+        dest_datacenter_obj = self.objs.get_datacenter(clone_dests["datacenter"])
+
+        folder_name = clone_dests["vm_folder"]
+        if folder_name:
+            dest_folder_obj = self.objs.get_folder(folder_name)
+        else:
+            dest_folder_obj = dest_datacenter_obj.vmFolder
+            self.logger.info(
+                "No VM folder specified. "
+                "The first VM folder ({0}) "
+                "in the datacenter ({1}) is "
+                "used.".format(dest_folder_obj.name, dest_datacenter_obj.name)
+            )
+
+        datastore_name = clone_dests["datastore"]
+        if datastore_name:
+            dest_datastore_obj = self.objs.get_datastore(datastore_name)
+        else:
+            dest_datastore_obj = self.objs.get_datastore(template_obj.datastore[0].name)
+            self.logger.info(
+                "No datastore specified. "
+                "The same datastore ({0}) "
+                "of the template ({1}) is used.".format(
+                    dest_datastore_obj.name, template_obj.name
+                )
+            )
+
+        cluster_name = clone_dests["cluster"]
+        if cluster_name:
+            dest_cluster_obj = self.objs.get_cluster(cluster_name)
+        else:
+            dest_cluster_obj = dest_datacenter_obj.hostFolder.childEntity[0]
+
+        host_name = clone_dests["host"]
+        dest_host_obj = None
+        if host_name:
+            dest_host_obj = self.objs.get_host(host_name)
+        elif GetCluster(dest_cluster_obj).is_drs():
+            self.logger.info(
+                "No host specified. "
+                "DRS is enabled. "
+                "A host selected by DRS will be used."
+            )
+        else:
+            self.logger.warning(
+                "No host specified and DRS is not enabled. "
+                "The same host of the template "
+                "in the cluster will be used."
+            )
+
+        resource_pool_name = clone_dests["resource_pool"]
+        dest_resource_pool_obj = None
+        if resource_pool_name:
+            dest_resource_pool_obj = self.objs.get_resource_pool(
+                resource_pool_name,
+                _exit=False,
+                host_name=host_name,
+                cluster_name=cluster_name,
+            )
+            if dest_resource_pool_obj is None:
+                self.logger.info(
+                    f"Resource pool: {resource_pool_name} not found. So creating new resource pool"
+                )
+                dest_resource_pool_obj = self._create_resource_pool(
+                    resource_pool_name, dest_host_obj
+                )
+        else:
+            self.logger.info(
+                "No resource pool specified. Will use default resource pool."
+            )
+
+        cpu = clone_dests["cpu"]
+        if cpu:
+            cpu = int(cpu)
+        else:
+            cpu = GetVM(template_obj).cpu()
+
+        memory = clone_dests["memory"]
+        if memory:
+            self.memory = int(float(memory) * 1024)
+        else:
+            self.memory = GetVM(template_obj).memory()
+
+        return GetClone(
+            content=self.content,
+            datacenter_obj=dest_datacenter_obj,
+            folder_obj=dest_folder_obj,
+            cluster_obj=dest_cluster_obj,
+            resource_pool_obj=dest_resource_pool_obj,
+            host_obj=dest_host_obj,
+            datastore_obj=dest_datastore_obj,
+            cpu=cpu,
+            memory=memory,
+        )
 
     def destroy_cli(self):
         """destroy VMs
@@ -976,9 +1082,17 @@ class Operations(object):
         vm_update = ConfigVM(vm_obj)
         vm_status = VMGetWait(vm_obj)
         proc_mng = self.content.guestOperationsManager.processManager
+        guest_operations_manager = self.content.guestOperationsManager
         if vm_status.wait_for_vmtools():
             for script in scripts:
-                proc = vm_update.execute_script(proc_mng, script, username, password)
+                proc = vm_update.execute_script(
+                    proc_mng,
+                    guest_operations_manager,
+                    self.objs.get_host_by_vm(vm_obj),
+                    script,
+                    username,
+                    password,
+                )
                 procs.append(proc)
         return procs
 

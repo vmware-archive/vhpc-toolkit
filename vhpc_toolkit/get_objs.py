@@ -1143,27 +1143,25 @@ class GetClone(GetObjects):
     def __init__(
         self,
         content,
-        template_obj,
-        datacenter_name=None,
-        folder_name=None,
-        cluster_name=None,
-        resource_pool_name=None,
-        host_name=None,
-        datastore_name=None,
-        cpu=None,
-        memory=None,
+        datacenter_obj: vim.Datacenter,
+        folder_obj: vim.Folder,
+        cluster_obj: vim.ClusterComputeResource,
+        resource_pool_obj,
+        host_obj: vim.HostSystem,
+        datastore_obj: vim.Datastore,
+        cpu: int,
+        memory: int,
     ):
         """
 
         Args:
             content: vCenter retrieve content by ServiceInstance object
-            template_obj (vim.VirtualMachine)
-            datacenter_name (str): the dest datacenter name
-            folder_name (str): the dest folder name
-            cluster_name (str): the dest cluster name
-            resource_pool_name (str): the dest resource pool name
-            host_name (str): the dest host name
-            datastore_name (str): the dest datastore name
+            datacenter_obj (str): the dest datacenter name
+            folder_obj (str): the dest folder name
+            cluster_obj (str): the dest cluster name
+            resource_pool_obj (str): the dest resource pool name
+            host_obj (str): the dest host name
+            datastore_obj (str): the dest datastore name
             cpu (int): number of vCPUs; if none, it will be same as template VM
             memory (int): memory size in GB; if none, will will be same as
             template VM
@@ -1173,67 +1171,11 @@ class GetClone(GetObjects):
         super().__init__(content)
 
         # get the default datacenter
-        self.dest_datacenter_obj = self.get_datacenter(datacenter_name)
-
-        if folder_name:
-            self.dest_folder_obj = self.get_folder(folder_name)
-        else:
-            self.dest_folder_obj = self.dest_datacenter_obj.vmFolder
-            self.logger.info(
-                "No VM folder specified. "
-                "The first VM folder ({0}) "
-                "in the datacenter ({1}) is "
-                "used.".format(self.dest_folder_obj.name, self.dest_datacenter_obj.name)
-            )
-
-        if datastore_name:
-            self.dest_datastore_obj = self.get_datastore(datastore_name)
-        else:
-            self.dest_datastore_obj = self.get_datastore(template_obj.datastore[0].name)
-            self.logger.info(
-                "No datastore specified. "
-                "The same datastore ({0}) "
-                "of the template ({1}) is used.".format(
-                    self.dest_datastore_obj.name, template_obj.name
-                )
-            )
-
-        if resource_pool_name:
-            self.dest_resource_pool_obj = self.get_resource_pool(
-                resource_pool_name, host_name=host_name, cluster_name=cluster_name
-            )
-        else:
-            self.dest_resource_pool_obj = None
-            self.logger.info(
-                "No resource pool specified. Will use default resource pool."
-            )
-
-        if cluster_name:
-            self.dest_cluster_obj = self.get_cluster(cluster_name)
-        else:
-            self.dest_cluster_obj = self.dest_datacenter_obj.hostFolder.childEntity[0]
-
-        if host_name:
-            self.dest_host_obj = self.get_host(host_name)
-        elif GetCluster(self.dest_cluster_obj).is_drs():
-            self.logger.info(
-                "No host specified. "
-                "DRS is enabled. "
-                "A host selected by DRS will be used."
-            )
-            self.dest_host_obj = None
-        else:
-            self.dest_host_obj = None
-            self.logger.warning(
-                "No host specified and DRS is not enabled. "
-                "The same host of the template "
-                "in the cluster will be used."
-            )
-        if cpu:
-            self.cpu = int(cpu)
-        else:
-            self.cpu = GetVM(template_obj).cpu()
-        if memory:
-            self.memory = int(float(memory) * 1024)
-        else:
-            self.memory = GetVM(template_obj).memory()
+        self.dest_datacenter_obj = datacenter_obj
+        self.dest_folder_obj = folder_obj
+        self.dest_datastore_obj = datastore_obj
+        self.dest_resource_pool_obj = resource_pool_obj
+        self.dest_cluster_obj = cluster_obj
+        self.dest_host_obj = host_obj
+        self.cpu = cpu
+        self.memory = int(float(memory) * 1024)

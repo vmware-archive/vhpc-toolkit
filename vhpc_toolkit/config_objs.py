@@ -11,8 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import os
+import re
 from typing import List
 
+import requests
 from pyVmomi import vim
 from pyVmomi import vmodl
 
@@ -895,13 +897,48 @@ class ConfigVM(object):
         relocate_spec.host = host_obj
         return self.vm_obj.RelocateVM_Task(spec=relocate_spec)
 
-    def execute_script(self, process_manager, script, username, password):
+    def upload_file(
+        self, guest_operations_manager, host_obj, script_content, auth, dest_file_path
+    ):
+        try:
+            file_attribute = vim.vm.guest.FileManager.FileAttributes()
+            url = guest_operations_manager.fileManager.InitiateFileTransferToGuest(
+                vm=self.vm_obj,
+                auth=auth,
+                guestFilePath=f"/{auth.username}/{dest_file_path}",
+                fileAttributes=file_attribute,
+                fileSize=len(script_content),
+                overwrite=True,
+            )
+
+            url = re.sub(r"^https://\*:", "https://" + host_obj.name + ":", url)
+            resp = requests.put(url, data=script_content, verify=False)
+            if not resp.status_code == 200:
+                self.logger.error(
+                    f"Error while uploading post script to {self.vm_obj.name}"
+                )
+            else:
+                self.logger.info(f"Successfully uploaded script to {self.vm_obj.name}")
+        except IOError as ex:
+            self.logger.error(ex)
+
+    def execute_script(
+        self,
+        process_manager,
+        guest_operations_manager,
+        host_obj,
+        script,
+        username,
+        password,
+    ):
         """Execute a post script for a VM
             First copy local script content to remote VM
             Then execute the script in remote VM
             Only works for Linux system
 
         Args:
+            host_obj:
+            guest_operations_manager:
             process_manager (GuestProcessManager):  A singleton managed object
                         that provides methods for guest process operations.
                         Retrieved from service content.
@@ -925,17 +962,15 @@ class ConfigVM(object):
         auth.username = username
         auth.password = password
         try:
-            copy_content = (
-                "'"
-                + open(script).read().replace("'", '"\'"')
-                + "' >> "
-                + os.path.basename(script)
+            self.upload_file(
+                guest_operations_manager=guest_operations_manager,
+                host_obj=host_obj,
+                script_content=open(script).read(),
+                auth=auth,
+                dest_file_path=os.path.basename(script),
             )
+
             program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
-            program_spec.programPath = "/bin/echo"
-            program_spec.arguments = copy_content
-            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
-            assert pid > 0
             program_spec.programPath = "/bin/sh"
             log_file = "/var/log/vhpc_toolkit.log"
             execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
