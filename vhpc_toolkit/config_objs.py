@@ -1014,7 +1014,7 @@ class ConfigHost(object):
         self.host_obj = host_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_svs(self, svs_name, vmnic, num_ports=8):
+    def create_svs(self, svs_name, vmnic, num_ports=8, mtu: int = None):
         """Create a standard virtual switch
             It calls AddVirtualSwitch method from HostNetworkSystem. It
             doesn't return a Task to track
@@ -1023,6 +1023,7 @@ class ConfigHost(object):
             svs_name (str): The name of SVS to be created.
             vmnic (str): The name of physical adapter to create the SVS
             num_ports (int): number of ports for the SVS
+            mtu: MTU for the SVS
 
         Returns:
             None
@@ -1035,6 +1036,8 @@ class ConfigHost(object):
         svs = vim.host.VirtualSwitch.Specification()
         svs.numPorts = num_ports
         svs.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[vmnic])
+        if mtu:
+            svs.mtu = mtu
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
 
@@ -1202,7 +1205,7 @@ class ConfigDatacenter(object):
         self.datacenter_obj = datacenter_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4):
+    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4, mtu: int = None):
         """Create a distributed virtual switch within the datacenter
 
         Args:
@@ -1212,6 +1215,7 @@ class ConfigDatacenter(object):
                                 physical adapters.
             dvs_name (str): The name of the DVS to be created
             num_uplinks (int): Number of active uplinks
+            mtu: MTU for DVS
 
         Returns:
             Task
@@ -1274,6 +1278,8 @@ class ConfigDatacenter(object):
             vim.dvs.VmwareDistributedVirtualSwitch.LacpApiVersion.multipleLag
         )
         dvs_config_spec.numStandalonePorts = num_uplinks
+        if mtu:
+            dvs_config_spec.maxMtu = mtu
         dvs_create_spec = vim.DistributedVirtualSwitch.CreateSpec(
             configSpec=dvs_config_spec
         )
