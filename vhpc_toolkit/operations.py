@@ -314,8 +314,14 @@ class Operations(object):
                 )
         else:
             self.logger.info(
-                "No resource pool specified. Will use default resource pool."
+                "No resource pool specified. Will try to use default resource pool in destination cluster."
             )
+            if dest_host_obj is not None:
+                dest_resource_pool_obj = getattr(dest_host_obj.parent, "resourcePool")
+            else:
+                SystemExit(
+                    "Resource pool and destination host name cannot both be empty"
+                )
 
         cpu = clone_dests["cpu"]
         if cpu:
