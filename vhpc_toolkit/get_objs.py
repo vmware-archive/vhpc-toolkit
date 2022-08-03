@@ -51,6 +51,16 @@ class GetObjects(object):
         )
         return container.view
 
+    def get_objs(self, vimtype, name):
+        objs = []
+        for c in self.get_container_view(vimtype):
+            if name:
+                if c.name == name:
+                    objs.append(c)
+            else:
+                objs.append(c)
+        return objs
+
     def get_obj(self, vimtype, name):
         """Get the managed object by name
 
@@ -281,11 +291,12 @@ class GetObjects(object):
             else:
                 return None
 
-    def get_network(self, network_name, _exit=True):
+    def get_network(self, network_name, dvs_name=None, _exit=True):
         """Get the network managed object by name
 
         Args:
             network_name (str): the name of network to get
+            dvs_name (str): the name of the dvs which the network belongs to
             _exit (bool)
 
         Returns:
@@ -293,16 +304,27 @@ class GetObjects(object):
 
         """
 
-        network_obj = self.get_obj([vim.Network], network_name)
-        if network_obj:
+        network_obj = self.get_objs([vim.Network], network_name)
+        if len(network_obj) > 1:
+            network_obj = [
+                network_object
+                for network_object in network_obj
+                if network_object.config.distributedVirtualSwitch.name == dvs_name
+            ]
+        if len(network_obj) == 1:
             self.logger.info("Found network {0}".format(network_name))
-            return network_obj
+            return network_obj[0]
+
+        if len(network_obj) > 1:
+            self.logger.error(
+                f"Found multiple networks with same name {network_name}. Please consider applying a filter and try again"
+            )
         else:
             self.logger.error("Cannot find network {0}".format(network_name))
-            if _exit:
-                raise SystemExit
-            else:
-                return None
+        if _exit:
+            raise SystemExit
+        else:
+            return None
 
     def get_dvs(self, dvs_name, _exit=True):
         """Get the distributed virtual switch (DVS) managed object by name

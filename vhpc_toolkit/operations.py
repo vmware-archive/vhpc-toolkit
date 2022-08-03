@@ -896,7 +896,7 @@ class Operations(object):
         if isinstance(pgs, str):
             pgs = [pgs]
         for pg in pgs:
-            pg_obj = self.objs.get_network(pg)
+            pg_obj = self.objs.get_network(pg, dvs_name=vm_cfg.get("dvs_name"))
             if pg in GetVM(vm_obj).network_names():
                 self.logger.warning(
                     "Port group {0} already exists on VM "

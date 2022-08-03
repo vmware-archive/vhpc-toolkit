@@ -543,6 +543,7 @@ class Cluster(object):
             "pf",
             "power",
             "dvs_name",
+            "svs_name",
         ]
         float_keys = ["memory"]
         int_keys = ["cpu", "mmio_size", "cpu_shares", "memory_shares"]

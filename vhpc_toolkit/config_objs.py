@@ -12,6 +12,7 @@
 # coding=utf-8
 import os
 import re
+import time
 from typing import List
 
 import requests
@@ -336,7 +337,6 @@ class ConfigVM(object):
             pyvmomi/docs/vim/vm/device/VirtualDeviceSpec.rst
 
         """
-
         dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
@@ -961,37 +961,52 @@ class ConfigVM(object):
         auth = vim.vm.guest.NamePasswordAuthentication()
         auth.username = username
         auth.password = password
-        try:
-            self.upload_file(
-                guest_operations_manager=guest_operations_manager,
-                host_obj=host_obj,
-                script_content=open(script).read(),
-                auth=auth,
-                dest_file_path=os.path.basename(script),
-            )
+        retries = 0
+        while True:
+            try:
+                self.upload_file(
+                    guest_operations_manager=guest_operations_manager,
+                    host_obj=host_obj,
+                    script_content=open(script).read(),
+                    auth=auth,
+                    dest_file_path=os.path.basename(script),
+                )
 
-            program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
-            program_spec.programPath = "/bin/sh"
-            log_file = "/var/log/vhpc_toolkit.log"
-            execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
-            program_spec.arguments = execute_content
-            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
-            assert pid > 0
-            self.logger.info(
-                "Script {0} is being executed in VM {1} guest OS "
-                "and PID is {2}".format(os.path.basename(script), self.vm_obj.name, pid)
-            )
-        except IOError:
-            self.logger.error("Can not open script {0}".format(script))
-            raise SystemExit
-        except AssertionError:
-            self.logger.error("Script is not launched successfully.")
-            raise SystemExit
-        except vim.fault.InvalidGuestLogin as e:
-            self.logger.error(e.msg)
-            raise SystemExit
-        else:
-            return pid, auth, self.vm_obj
+                program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
+                program_spec.programPath = "/bin/sh"
+                log_file = "/var/log/vhpc_toolkit.log"
+                execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
+                program_spec.arguments = execute_content
+                pid = process_manager.StartProgramInGuest(
+                    self.vm_obj, auth, program_spec
+                )
+                assert pid > 0
+                self.logger.info(
+                    "Script {0} is being executed in VM {1} guest OS "
+                    "and PID is {2}".format(
+                        os.path.basename(script), self.vm_obj.name, pid
+                    )
+                )
+            except IOError:
+                self.logger.error("Can not open script {0}".format(script))
+                raise SystemExit
+            except AssertionError:
+                self.logger.error("Script is not launched successfully.")
+                raise SystemExit
+            except vim.fault.InvalidGuestLogin as e:
+                self.logger.error(e.msg)
+                raise SystemExit
+            except vim.fault.GuestOperationsUnavailable:
+                retries += 1
+                if retries < 4:
+                    self.logger.info(f"Guest agent could not be contacted. Retrying")
+                    time.sleep(5 * retries)
+                    continue
+                else:
+                    self.logger.error("Guest agent could not be contacted. Exiting")
+                    raise SystemExit
+            else:
+                return pid, auth, self.vm_obj
 
 
 class ConfigHost(object):
