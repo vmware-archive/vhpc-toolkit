@@ -331,9 +331,9 @@ class Operations(object):
 
         memory = clone_dests["memory"]
         if memory:
-            self.memory = int(float(memory) * 1024)
+            memory = int(float(memory) * 1024)
         else:
-            self.memory = GetVM(template_obj).memory()
+            memory = GetVM(template_obj).memory()
 
         return GetClone(
             content=self.content,

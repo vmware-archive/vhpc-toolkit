@@ -1200,4 +1200,4 @@ class GetClone(GetObjects):
         self.dest_cluster_obj = cluster_obj
         self.dest_host_obj = host_obj
         self.cpu = cpu
-        self.memory = int(float(memory) * 1024)
+        self.memory = memory
