@@ -546,7 +546,13 @@ class Cluster(object):
             "svs_name",
         ]
         float_keys = ["memory"]
-        int_keys = ["cpu", "mmio_size", "cpu_shares", "memory_shares"]
+        int_keys = [
+            "cpu",
+            "mmio_size",
+            "cpu_shares",
+            "memory_shares",
+            "cores_per_socket",
+        ]
         bool_keys = [
             "cpu_reservation",
             "memory_reservation",
