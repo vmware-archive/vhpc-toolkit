@@ -12,6 +12,7 @@
 # coding=utf-8
 import json
 import logging
+from typing import List
 
 from distutils.util import strtobool
 from pyVmomi import vim
@@ -582,6 +583,22 @@ class Operations(object):
             tasks = self._get_poweroff_tasks(vms)
             GetWait().wait_for_tasks(tasks, task_name="Power off")
 
+    def power_policy_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).change_power_policy(self.cfg["policy"])
+
     def _power_cluster(self, vm_cfgs, key):
         """Power on or off VMs (defined in cluster conf file)
 
@@ -645,6 +662,48 @@ class Operations(object):
                 tasks.append(task)
             else:
                 self.logger.info("VM {0} is already in power off state".format(vm))
+        return tasks
+
+    def secure_boot_cli(self):
+        """
+        Turn on or off secure boot for VMs
+
+        Returns:
+            None
+        """
+
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+        if self.cfg["on"]:
+            tasks = self.__get_secure_boot_tasks(vms, True)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot on")
+        if self.cfg["off"]:
+            tasks = self.__get_secure_boot_tasks(vms, False)
+            GetWait().wait_for_tasks(tasks, task_name="Secure boot off")
+
+    def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
+        """
+        Enable secure boot for vms
+        Args:
+            vms: List of vm names
+            enabled: Whether to enable secure boot or not
+
+        Returns:
+            List of task objects
+
+        """
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    "VM {0} is turned on. So cannot change secure boot. Please turn off and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(ConfigVM(vm_obj).change_secure_boot(enabled=enabled))
+
         return tasks
 
     def network_cli(self):
@@ -1648,7 +1707,7 @@ class Operations(object):
             host_obj = self.objs.get_host(svs_host)
             host_update = ConfigHost(host_obj)
             try:
-                host_update.create_svs(svs_name=svs, vmnic=pnic)
+                host_update.create_svs(svs_name=svs, vmnic=pnic, mtu=svs_cfg.get("mtu"))
                 self.logger.info(
                     "Creating standard virtual switch {0} " "is successful.".format(svs)
                 )
@@ -1761,7 +1820,9 @@ class Operations(object):
         for dvs_host in dvs_hosts:
             host_obj = self.objs.get_host(dvs_host)
             host_vmnics[host_obj] = pnics
-        task = ConfigDatacenter(datacenter_obj).create_dvs(host_vmnics, dvs_name)
+        task = ConfigDatacenter(datacenter_obj).create_dvs(
+            host_vmnics, dvs_name, mtu=dvs_cfg.get("mtu")
+        )
         GetWait().wait_for_tasks([task], task_name="Create distributed virtual switch")
         # create port group within this DVS
         if Check().check_kv(dvs_cfg, "port_group"):
@@ -2105,6 +2166,89 @@ class Operations(object):
         print("-----------------------------------------")
         print(json.dumps(vm_details, indent=4))
         print("-----------------------------------------")
+
+    def vm_scheduling_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.error(
+                    "Could not change affinity for VM {0}. Please power off VM and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(
+                    ConfigVM(vm_obj).change_vm_scheduling_affinity(self.cfg["affinity"])
+                )
+
+        GetWait().wait_for_tasks(tasks, task_name="Set VM scheduling affinity")
+
+    def numa_affinity_cli(self):
+        vm_cfgs = self._extract_file(self.cfg)
+        vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
+        # If clear flag is set, clear the affinity
+        if self.cfg["clear"]:
+            self.cfg["affinity"] = []
+
+        tasks = []
+        for vm in vms:
+            vm_obj = self.objs.get_vm(vm)
+            if GetVM(vm_obj).is_power_on():
+                self.logger.error(
+                    "Could not change NUMA affinity for VM {0}. Please power off VM and try again".format(
+                        vm
+                    )
+                )
+            else:
+                tasks.append(
+                    ConfigVM(vm_obj).change_numa_affinity(self.cfg["affinity"])
+                )
+
+        GetWait().wait_for_tasks(tasks, task_name="Set NUMA node affinity")
+
+    def migrate_vm_cli(self):
+        tasks = []
+        for vm_cfg in self._extract_file(self.cfg):
+            vm_obj = self.objs.get_vm(vm_cfg["vm"])
+            host_obj = self.objs.get_host(self.cfg["destination"])
+            self.logger.info(
+                f"Migrating VM {vm_cfg['vm']} to host {self.cfg['destination']}"
+            )
+            if GetVM(vm_obj).is_power_on():
+                self.logger.info(
+                    f"VM {vm_cfg['vm']} is powered on. So migration task might take some time"
+                )
+            tasks.append(ConfigVM(vm_obj).migrate_vm(host_obj))
+
+        GetWait().wait_for_tasks(tasks, task_name="Migrate VM(s)")
+
+    def modify_host_sriov_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            ConfigHost(self.objs.get_host(host)).modify_sriov(
+                self.cfg["device"],
+                num_virtual_functions=self.cfg.get("num_func"),
+                enable_sriov=bool(self.cfg["on"]),
+            )
 
     def passthru_host_cli(self):
         hosts = []

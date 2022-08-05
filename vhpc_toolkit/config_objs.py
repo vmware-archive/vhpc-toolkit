@@ -11,6 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import os
+from typing import List
 
 from pyVmomi import vim
 from pyVmomi import vmodl
@@ -222,6 +223,64 @@ class ConfigVM(object):
 
         return self.vm_obj.PowerOff()
 
+    def change_secure_boot(self, enabled=True) -> vim.Task:
+        """
+        This function can enable or disable secure boot
+
+        Args:
+            enabled: Whether secure boot should be enabled or not
+
+        Returns:
+            Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        boot_option = vim.vm.BootOptions()
+        boot_option.efiSecureBootEnabled = enabled
+        config_spec.bootOptions = boot_option
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
+    def change_vm_scheduling_affinity(self, affinity: List[int]) -> vim.Task:
+        """
+        This function changes the scheduling affinity for the VM
+
+        Args:
+            affinity: List of nodes that may be used by the VM. If no argument is given, the existing affinity option is cleared
+
+        Returns:
+            Task
+
+        """
+        config_spec = vim.vm.ConfigSpec()
+        affinity_info = vim.vm.AffinityInfo()
+        affinity_info.affinitySet = affinity
+        config_spec.cpuAffinity = affinity_info
+        return self.vm_obj.ReconfigVM_Task(config_spec)
+
+    def change_numa_affinity(
+        self, affinity: List[int], numa_node: str = None
+    ) -> vim.Task:
+        """
+        Change the NUMA node affinity
+
+        Args:
+            affinity: Constrain VM resource scheduling to these numa nodes
+            numa_node: Use this to specify a NUMA node for a specific virtual NUMA node on a VM
+
+        Returns:
+            Task
+
+        """
+        if numa_node is None:
+            if not affinity:
+                return self.remove_extra("numa.nodeAffinity")
+            else:
+                return self.add_extra("numa.nodeAffinity", ",".join(map(str, affinity)))
+        else:
+            return self.add_extra(
+                f"numa.{numa_node}.affinity", ",".join(map(str, affinity))
+            )
+
     def latency(self, level):
         """Configure Latency Sensitivity for a VM
 
@@ -276,20 +335,24 @@ class ConfigVM(object):
 
         """
 
+        dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualVmxnet3()
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
-        nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-        nic_spec.device.backing.network = network_obj
-        nic_spec.device.backing.deviceName = network_obj.name
-        nic_spec.device.backing.useAutoDetect = False
+        nic_spec.device.backing = (
+            vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
+        )
+        nic_spec.device.backing.port = vim.dvs.PortConnection()
+        nic_spec.device.backing.port.portgroupKey = network_obj.key
+        nic_spec.device.backing.port.switchUuid = dvs.uuid
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True
         nic_spec.device.connectable.allowGuestControl = True
+        nic_spec.device.connectable.status = "untried"
         config_spec = vim.vm.ConfigSpec()
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
@@ -823,6 +886,21 @@ class ConfigVM(object):
         config_spec.deviceChange = [dev_config_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
+    def migrate_vm(self, host_obj: vim.HostSystem) -> vim.Task:
+        """
+        Migrate a VM to a different host
+
+        Args:
+            host_obj: Host object of the destination host
+
+        Returns:
+            Task
+
+        """
+        relocate_spec = vim.vm.RelocateSpec()
+        relocate_spec.host = host_obj
+        return self.vm_obj.RelocateVM_Task(spec=relocate_spec)
+
     def execute_script(self, process_manager, script, username, password):
         """Execute a post script for a VM
             First copy local script content to remote VM
@@ -907,9 +985,7 @@ class ConfigHost(object):
         self.host_obj = host_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_svs(
-        self, svs_name: str, vmnic: str, num_ports: int = 8, mtu: int = 9000
-    ):
+    def create_svs(self, svs_name, vmnic, num_ports=8, mtu: int = None):
         """Create a standard virtual switch
             It calls AddVirtualSwitch method from HostNetworkSystem. It
             doesn't return a Task to track
@@ -930,48 +1006,45 @@ class ConfigHost(object):
 
         svs = vim.host.VirtualSwitch.Specification()
         svs.numPorts = num_ports
-        svs.mtu = mtu
         svs.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[vmnic])
+        if mtu:
+            svs.mtu = mtu
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.AddVirtualSwitch(vswitchName=svs_name, spec=svs)
 
     def modify_sriov(
         self,
-        pnic_location: str,
+        device_id: str,
         num_virtual_functions: int = None,
         enable_sriov: bool = True,
     ):
         """
-        Function to enable/disable SRIOV and/or change the number of virtual functions on vmnics of a host.
+        Function to enable/disable SRIOV and/or change the number of virtual functions on devices of a host.
         Number of virtual functions argument is skipped if user is trying to disable SRIOV
         Args:
-            pnic_location: Location of the NIC which supports SRIOV in format xxxx:xx:xx.x
-            num_virtual_functions: Number of virtual functions to set for the NIC
+            device_id: PCIe address of the Virtual Function (VF) of the SRIOV device in format xxxx:xx:xx.x
+            num_virtual_functions: Number of virtual functions to set for the SRIOV device
             enable_sriov: Whether to enable or disable SRIOV for the NIC
 
         Returns:
-
+            None
         """
         config = vim.host.SriovConfig()
         config.sriovEnabled = enable_sriov
         if enable_sriov and num_virtual_functions:
             config.numVirtualFunction = num_virtual_functions
-        config.id = pnic_location
+        config.id = device_id
         try:
             self.host_obj.configManager.pciPassthruSystem.UpdatePassthruConfig(
                 config=[config]
             )
             self.logger.info(
-                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for network with location: {pnic_location}"
+                f"{'enabled' if enable_sriov else 'disabled'} SRIOV for PCIe device : {device_id} on host {self.host_obj.name}"
             )
-        except vim.fault.HostConfigFault:
-            self.logger.error(
-                f"Trying to set illegal configuration for network with location: {pnic_location}"
-            )
-        except vmodl.RuntimeFault:
-            self.logger.error(
-                f"Error when changing configuration for network with location: {pnic_location}. Please try again later"
-            )
+        except vim.fault.HostConfigFault as e:
+            self.logger.error(f"Caught HostConfig fault: " + e.msg)
+        except vmodl.RuntimeFault as e:
+            self.logger.error("Caught vmodl fault: " + e.msg)
 
     def destroy_svs(self, svs_name):
         """Destroy a standard virtual switch
@@ -1037,6 +1110,51 @@ class ConfigHost(object):
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemovePortGroup(pgName=pg_name)
 
+    def change_power_policy(self, power_policy_key: int):
+        """
+        Change the power policy on the host.
+
+        1. High Performance
+        2. Balanced
+        3. Low Power
+        4. Custom
+
+        Args:
+            power_policy_key: The key that corresponds to the power policy it must be set to
+
+        Returns:
+            None
+
+        """
+        power_policy_mapping = {
+            1: "High Performance",
+            2: "Balanced",
+            3: "Low Power",
+            4: "Custom",
+        }
+        power_system = self.host_obj.configManager.powerSystem
+        capabilities = power_system.capability.availablePolicy
+        power_policy_names = [capability.shortName for capability in capabilities]
+
+        if power_policy_names:
+            try:
+                power_system.ConfigurePowerPolicy(key=power_policy_key)
+                self.logger.info(
+                    f"Successfully set power policy to {power_policy_mapping[power_policy_key]} on host {self.host_obj.name}"
+                )
+            except vim.fault.HostConfigFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}."
+                )
+            except vmodl.RuntimeFault:
+                self.logger.error(
+                    f"Error changing power policy for host {self.host_obj.name}. Please try again later"
+                )
+        else:
+            self.logger.warning(
+                f"Could not find the power policy {power_policy_key} for host {self.host_obj.name}"
+            )
+
     def toggle_pci_device_availability(self, pci_device_id: str, available=True):
         """
         Change availability of the passthrough device on a host
@@ -1087,7 +1205,7 @@ class ConfigDatacenter(object):
         self.datacenter_obj = datacenter_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
-    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4):
+    def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4, mtu: int = None):
         """Create a distributed virtual switch within the datacenter
 
         Args:
@@ -1097,6 +1215,7 @@ class ConfigDatacenter(object):
                                 physical adapters.
             dvs_name (str): The name of the DVS to be created
             num_uplinks (int): Number of active uplinks
+            mtu: MTU for DVS
 
         Returns:
             Task
@@ -1159,6 +1278,8 @@ class ConfigDatacenter(object):
             vim.dvs.VmwareDistributedVirtualSwitch.LacpApiVersion.multipleLag
         )
         dvs_config_spec.numStandalonePorts = num_uplinks
+        if mtu:
+            dvs_config_spec.maxMtu = mtu
         dvs_create_spec = vim.DistributedVirtualSwitch.CreateSpec(
             configSpec=dvs_config_spec
         )
