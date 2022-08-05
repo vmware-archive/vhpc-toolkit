@@ -537,6 +537,12 @@ def get_args():
         help="64-bit MMIO size in GB for PCI device with large BARs. "
         "Default: %(default)s.",
     )
+    passthru_parser.add_argument(
+        "--dynamic",
+        action="store_true",
+        required=False,
+        help="If this flag is added, PCI devices are added in dynamic direct i/o mode",
+    )
 
     passthru_host_parser = subparsers.add_parser(
         "passthru_host",

@@ -639,7 +639,9 @@ class ConfigVM(object):
 
         return 1 << (x - 1).bit_length()
 
-    def add_pci(self, pci, host_obj, vm_update, vm_status, mmio_size):
+    def add_pci(
+        self, pci, host_obj, vm_update, vm_status, mmio_size, dynamic_direct_io=False
+    ):
         """Add a PCI device for a VM.
             If a PCI device has large BARs, it requires 64bit MMIO
             support and large enough MMIO mapping space. This method will add
@@ -654,6 +656,7 @@ class ConfigVM(object):
             vm_update (ConfigVM): VM update obj
             vm_status (GetVM): VM status obj
             mmio_size (int): 64-bit MMIO space in GB
+            dynamic_direct_io (bool): Whether to attach the PCI device in dynamic direct i/o mode or just direct i/o mode
 
         Returns:
             list: a list of Task objects
@@ -682,21 +685,24 @@ class ConfigVM(object):
             self.logger.info(
                 "Good. VM {0} has UEFI " "installation.".format(self.vm_obj.name)
             )
-        sys_id = vm_status.pci_id_sys_id_passthru()
 
-        # backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
-        #     deviceId=device_id,
-        #     id=pci_obj.id,
-        #     systemId=sys_id[pci_obj.id],
-        #     vendorId=pci_obj.vendorId,
-        #     deviceName=pci_obj.deviceName,
-        # )
-        allowed_device = vim.VirtualPCIPassthroughAllowedDevice(
-            deviceId=pci_obj.deviceId, vendorId=pci_obj.vendorId
-        )
-        backing = vim.VirtualPCIPassthroughDynamicBackingInfo(
-            allowedDevice=[allowed_device]
-        )
+        if dynamic_direct_io:
+            allowed_device = vim.VirtualPCIPassthroughAllowedDevice(
+                deviceId=pci_obj.deviceId, vendorId=pci_obj.vendorId
+            )
+            backing = vim.VirtualPCIPassthroughDynamicBackingInfo(
+                allowedDevice=[allowed_device]
+            )
+        else:
+            sys_id = vm_status.pci_id_sys_id_passthru()
+            backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
+                deviceId=device_id,
+                id=pci_obj.id,
+                systemId=sys_id[pci_obj.id],
+                vendorId=pci_obj.vendorId,
+                deviceName=pci_obj.deviceName,
+            )
+
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
         dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add

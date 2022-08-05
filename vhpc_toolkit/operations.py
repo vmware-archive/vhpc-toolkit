@@ -1119,7 +1119,14 @@ class Operations(object):
                     "Device {0} is available for " "VM {1}".format(device, vm_obj.name)
                 )
                 tasks.extend(
-                    vm_update.add_pci(device, host_obj, vm_update, vm_status, mmio_size)
+                    vm_update.add_pci(
+                        device,
+                        host_obj,
+                        vm_update,
+                        vm_status,
+                        mmio_size,
+                        dynamic_direct_io=bool(vm_cfg.get("dynamic")),
+                    )
                 )
             else:
                 if device in vm_status.existing_pci_ids():
