@@ -787,7 +787,7 @@ def get_args():
         "one per line, to enable/disable passthrough devices",
     )
     passthru_host_group2.add_argument(
-        "--device_id",
+        "--device",
         action="store",
         default=None,
         type=str,
