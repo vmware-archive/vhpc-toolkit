@@ -13,6 +13,7 @@
 import configparser
 import itertools
 import re
+from collections import OrderedDict
 from operator import itemgetter
 
 from distutils.util import strtobool
@@ -20,6 +21,15 @@ from texttable import Texttable
 
 from vhpc_toolkit import get_args
 from vhpc_toolkit import log
+
+
+class MultiOrderedDict(OrderedDict):
+    def __setitem__(self, key, value):
+        if isinstance(value, list) and key in self:
+            self[key].extend(value)
+
+        else:
+            super().__setitem__(key, value)
 
 
 class Cluster(object):
@@ -538,9 +548,7 @@ class Cluster(object):
             "domain",
             "guest_hostname",
             "vgpu",
-            "sriov_port_group",
             "pvrdma_port_group",
-            "pf",
             "power",
             "dvs_name",
             "svs_name",
@@ -562,9 +570,9 @@ class Cluster(object):
             "secure_boot",
         ]
         list_keys = ["device", "dns"]
-        append_keys = ["script"]
-        barrier_keys = ["barrier"]
-        barrier_target = "script"
+        append_keys = ["script", "pf", "sriov_port_group", "sriov_dvs_name"]
+        sequence_keys = ["sequence"]
+        sequence_target = "script"
         if key in str_keys:
             cfg[key] = value
         elif key in list_keys:
@@ -572,18 +580,17 @@ class Cluster(object):
         elif key in append_keys:
             if not Check().check_kv(cfg, key):
                 cfg[key] = []
-            if value not in cfg[key]:
-                cfg[key].append(value)
+            cfg[key].append(value)
         elif key in int_keys:
             cfg[key] = int(value)
         elif key in float_keys:
             cfg[key] = float(value)
         elif key in bool_keys:
             cfg[key] = strtobool(value)
-        elif key in barrier_keys:
-            labeled_barrier_target = barrier_target + str(value)
-            cfg[labeled_barrier_target] = cfg[barrier_target]
-            cfg[barrier_target] = []
+        elif key in sequence_keys:
+            labeled_sequence_target = sequence_target + str(value)
+            cfg[labeled_sequence_target] = cfg[sequence_target]
+            cfg[sequence_target] = []
         else:
             self.logger.error("Unknown key {0}".format(key))
             raise SystemExit
