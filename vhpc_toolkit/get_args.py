@@ -784,7 +784,7 @@ def get_args():
         default=None,
         type=str,
         help="Name of the file containing a list of hosts, "
-        "one per line, to perform the enable/disable passthrough devices",
+        "one per line, to enable/disable passthrough devices",
     )
     passthru_host_group2.add_argument(
         "--device_id",

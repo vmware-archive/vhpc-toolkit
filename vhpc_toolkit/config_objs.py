@@ -719,7 +719,7 @@ class ConfigVM(object):
             vm_update (ConfigVM): VM update obj
             vm_status (GetVM): VM status obj
             mmio_size (int): 64-bit MMIO space in GB
-            dynamic_direct_io (bool): Whether to attach the PCI device in dynamic direct i/o mode or just direct i/o mode
+            dynamic_direct_io (bool): Whether to attach the PCI device in dynamic direct I/O mode or just direct I/O mode
 
         Returns:
             list: a list of Task objects
