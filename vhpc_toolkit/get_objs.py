@@ -916,10 +916,12 @@ class GetVM(object):
         """
 
         return [
-            device.backing.id
+            getattr(device.backing, "id")
+            if hasattr(device.backing, "id")
+            else getattr(device.backing, "assignedId")
             for device in self.vm_obj.config.hardware.device
             if isinstance(device, vim.VirtualPCIPassthrough)
-            and hasattr(device.backing, "id")
+            and (hasattr(device.backing, "id") or hasattr(device.backing, "assignedId"))
         ]
 
     def configurable_pci_ids(self):
