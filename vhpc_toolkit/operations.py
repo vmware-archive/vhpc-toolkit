@@ -1178,7 +1178,14 @@ class Operations(object):
                     "Device {0} is available for " "VM {1}".format(device, vm_obj.name)
                 )
                 tasks.extend(
-                    vm_update.add_pci(device, host_obj, vm_update, vm_status, mmio_size)
+                    vm_update.add_pci(
+                        device,
+                        host_obj,
+                        vm_update,
+                        vm_status,
+                        mmio_size,
+                        dynamic_direct_io=bool(vm_cfg.get("dynamic")),
+                    )
                 )
             else:
                 if device in vm_status.existing_pci_ids():
@@ -2125,14 +2132,17 @@ class Operations(object):
                         "Label": network_object.deviceInfo.label,
                     }
                 )
-            if isinstance(
-                network_object, vim.vm.device.VirtualPCIPassthrough
-            ) and hasattr(network_object.backing, "id"):
+            if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough) and (
+                hasattr(network_object.backing, "id")
+                or hasattr(network_object.backing, "assignedId")
+            ):
+                backing_id = (
+                    getattr(network_object.backing, "id")
+                    if hasattr(network_object.backing, "id")
+                    else getattr(network_object.backing, "assignedId")
+                )
                 for attached_direct_passthru_device in attached_direct_passthru_devices:
-                    if (
-                        attached_direct_passthru_device["Device ID"]
-                        == network_object.backing.id
-                    ):
+                    if attached_direct_passthru_device["Device ID"] == backing_id:
                         attached_direct_passthru_device.update(
                             {"Label": network_object.deviceInfo.label}
                         )
@@ -2238,4 +2248,22 @@ class Operations(object):
                 self.cfg["device"],
                 num_virtual_functions=self.cfg.get("num_func"),
                 enable_sriov=bool(self.cfg["on"]),
+            )
+
+    def passthru_host_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).toggle_pci_device_availability(
+                self.cfg["device_id"], bool(self.cfg["on"])
             )

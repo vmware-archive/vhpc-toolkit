@@ -702,7 +702,9 @@ class ConfigVM(object):
 
         return 1 << (x - 1).bit_length()
 
-    def add_pci(self, pci, host_obj, vm_update, vm_status, mmio_size):
+    def add_pci(
+        self, pci, host_obj, vm_update, vm_status, mmio_size, dynamic_direct_io=False
+    ):
         """Add a PCI device for a VM.
             If a PCI device has large BARs, it requires 64bit MMIO
             support and large enough MMIO mapping space. This method will add
@@ -717,6 +719,7 @@ class ConfigVM(object):
             vm_update (ConfigVM): VM update obj
             vm_status (GetVM): VM status obj
             mmio_size (int): 64-bit MMIO space in GB
+            dynamic_direct_io (bool): Whether to attach the PCI device in dynamic direct I/O mode or just direct I/O mode
 
         Returns:
             list: a list of Task objects
@@ -745,14 +748,24 @@ class ConfigVM(object):
             self.logger.info(
                 "Good. VM {0} has UEFI " "installation.".format(self.vm_obj.name)
             )
-        sys_id = vm_status.pci_id_sys_id_passthru()
-        backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
-            deviceId=device_id,
-            id=pci_obj.id,
-            systemId=sys_id[pci_obj.id],
-            vendorId=pci_obj.vendorId,
-            deviceName=pci_obj.deviceName,
-        )
+
+        if dynamic_direct_io:
+            allowed_device = vim.VirtualPCIPassthroughAllowedDevice(
+                deviceId=pci_obj.deviceId, vendorId=pci_obj.vendorId
+            )
+            backing = vim.VirtualPCIPassthroughDynamicBackingInfo(
+                allowedDevice=[allowed_device]
+            )
+        else:
+            sys_id = vm_status.pci_id_sys_id_passthru()
+            backing = vim.VirtualPCIPassthroughDeviceBackingInfo(
+                deviceId=device_id,
+                id=pci_obj.id,
+                systemId=sys_id[pci_obj.id],
+                vendorId=pci_obj.vendorId,
+                deviceName=pci_obj.deviceName,
+            )
+
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
         dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
@@ -825,11 +838,12 @@ class ConfigVM(object):
         config_spec.extraConfig = [opt]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
-    def add_vgpu(self, vgpu_profile):
+    def add_vgpu(self, vgpu_profile, migration_supported: bool = False):
         """Add a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be added into a VM
+            migration_supported: Whether to support migration or not
 
         Returns:
             Task
@@ -839,7 +853,9 @@ class ConfigVM(object):
         self.logger.info(
             "Adding vGPU {0} for " "VM {1}".format(vgpu_profile, self.vm_obj.name)
         )
-        backing = vim.VirtualPCIPassthroughVmiopBackingInfo(vgpu=vgpu_profile)
+        backing = vim.VirtualPCIPassthroughVmiopBackingInfo(
+            vgpu=vgpu_profile, migrateSupported=migration_supported
+        )
         backing_obj = vim.VirtualPCIPassthrough(backing=backing)
         dev_config_spec = vim.VirtualDeviceConfigSpec(device=backing_obj)
         dev_config_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
@@ -1137,6 +1153,35 @@ class ConfigHost(object):
         else:
             self.logger.warning(
                 f"Could not find the power policy {power_policy_key} for host {self.host_obj.name}"
+            )
+
+    def toggle_pci_device_availability(self, pci_device_id: str, available=True):
+        """
+        Change availability of the passthrough device on a host
+        Args:
+            pci_device_id: The device ID of the passthrough device
+            available: Whether the device should be enabled for the host or not
+
+        Returns:
+            None
+        """
+        passthru_object = self.host_obj.configManager.pciPassthruSystem
+        try:
+            passthru_config = vim.host.PciPassthruConfig()
+            passthru_config.id = pci_device_id.lower()
+            passthru_config.passthruEnabled = available
+            passthru_object.UpdatePassthruConfig([passthru_config])
+            self.logger.info(
+                f"Successfully {'enabled' if available else 'disabled'} "
+                f"pci device {pci_device_id} on host {self.host_obj.name}"
+            )
+        except vim.fault.HostConfigFault:
+            self.logger.error(
+                "Error trying to toggle passthrough device availability. Please make sure configuration is correct"
+            )
+        except vmodl.RuntimeFault:
+            self.logger.error(
+                "Runtime error when trying to change passthru device availability.Please try again later"
             )
 
 
