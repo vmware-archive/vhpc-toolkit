@@ -36,5 +36,6 @@ setup(
         "texttable==0.8.8",
         "textwrap3==0.9.1",
         "hvac>=0.10.5",
+        "coloredlogs>=15.0.1" "colorama==0.4.5",
     ],
 )

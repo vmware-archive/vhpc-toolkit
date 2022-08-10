@@ -10,6 +10,7 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+import itertools
 import json
 import logging
 from typing import List
@@ -228,8 +229,9 @@ class Operations(object):
             )
             raise SystemExit
 
-    @staticmethod
-    def _create_resource_pool(resource_pool_name, destination_host: vim.HostSystem):
+    def _create_resource_pool(
+        self, resource_pool_name, destination_host: vim.HostSystem
+    ):
         resource_spec = vim.ResourceConfigSpec()
         resource_allocation_info = vim.ResourceAllocationInfo()
         resource_allocation_info.expandableReservation = True
@@ -239,6 +241,10 @@ class Operations(object):
         resource_allocation_info.shares.level = vim.SharesInfo.Level.normal
         resource_spec.cpuAllocation = resource_allocation_info
         resource_spec.memoryAllocation = resource_allocation_info
+
+        self.logger.warning(
+            "Use default policy of resource pool creation. No limitation on CPU and memory allocation."
+        )
 
         return destination_host.parent.resourcePool.CreateResourcePool(
             name=resource_pool_name, spec=resource_spec
@@ -1486,16 +1492,19 @@ class Operations(object):
         Check().check_kv(vm_cfg, "pf", required=True)
         Check().check_kv(vm_cfg, "sriov_port_group", required=True)
 
+        # Converting to list to make sure it supports adding multiple SR-IOV at once
         if isinstance(vm_cfg["pf"], str):
             vm_cfg["pf"] = [vm_cfg["pf"]]
 
         if isinstance(vm_cfg["sriov_port_group"], str):
             vm_cfg["sriov_port_group"] = [vm_cfg["sriov_port_group"]]
 
+        # Need to ensure length of pf and sriov port group is same
         if len(vm_cfg["pf"]) != len(vm_cfg["sriov_port_group"]):
             self.logger.error("Number of pf and sriov port groups must be the same")
             raise SystemExit
 
+        # If you add dvs for one of the SR-IOV, need to add it to all of them
         if len(vm_cfg["pf"]) > 1 and len(vm_cfg["sriov_port_group"]) != len(
             vm_cfg.get("sriov_dvs_name", [])
         ):
@@ -1506,7 +1515,7 @@ class Operations(object):
 
         vm_cfg["sriov_dvs_name"] = vm_cfg.get("sriov_dvs_name", [None])
 
-        for pf, pg, dvs_name in zip(
+        for pf, pg, dvs_name in itertools.zip_longest(
             vm_cfg["pf"], vm_cfg["sriov_port_group"], vm_cfg["sriov_dvs_name"]
         ):
             pf_obj = GetHost(host_obj).pci_obj(pf)

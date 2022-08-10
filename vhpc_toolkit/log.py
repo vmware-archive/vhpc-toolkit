@@ -13,6 +13,7 @@
 import datetime
 import logging
 
+import coloredlogs
 
 loggers = {}
 
@@ -49,4 +50,5 @@ def my_logger(name=" ", log_level=logging.INFO, log_file=LOG_FILE):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         loggers.update({name: logger})
+        coloredlogs.install(level=log_level, logger=logger, fmt=FORMAT)
         return logger

@@ -23,15 +23,6 @@ from vhpc_toolkit import get_args
 from vhpc_toolkit import log
 
 
-class MultiOrderedDict(OrderedDict):
-    def __setitem__(self, key, value):
-        if isinstance(value, list) and key in self:
-            self[key].extend(value)
-
-        else:
-            super().__setitem__(key, value)
-
-
 class Cluster(object):
     """
     Read cluster configuration file
@@ -48,6 +39,7 @@ class Cluster(object):
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
+        # Adding next line to prevent parser from converting everything to lowercase
         self.cfg_parser.optionxform = str
         cluster_file = get_args.find_script_conf_file(self.file)
         try:
