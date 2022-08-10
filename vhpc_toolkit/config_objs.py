@@ -382,7 +382,9 @@ class ConfigVM(object):
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
-    def add_sriov_adapter(self, network_obj, pf_obj, dvs_obj):
+    def add_sriov_adapter(
+        self, network_obj, pf_obj, dvs_obj, allow_guest_os_mtu_change=False
+    ):
         """Add a network adapter with SR-IOV adapter type for a VM
             Adding SR-IOV adapter requires a back-up physical adapter.
 
@@ -394,6 +396,7 @@ class ConfigVM(object):
             pf_obj (vim.host.PciDevice): a PCI object type describes info
                                         about of a single PCI device for
                                         backing up SR-IOV configuration
+            allow_guest_os_mtu_change (bool): Whether to allow guest OS MTU change
 
         Returns:
             Task
@@ -432,7 +435,7 @@ class ConfigVM(object):
         nic_spec.device.sriovBacking = (
             vim.vm.device.VirtualSriovEthernetCard.SriovBackingInfo()
         )
-        nic_spec.device.allowGuestOSMtuChange = False
+        nic_spec.device.allowGuestOSMtuChange = allow_guest_os_mtu_change
         # convert decimal to hex for the device ID of physical adapter
         device_id = hex(pf_obj.deviceId % 2**16).lstrip("0x")
         sys_id = GetVM(self.vm_obj).pci_id_sys_id_sriov()

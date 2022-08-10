@@ -851,6 +851,12 @@ def get_args():
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
 
+    sriov_parser.add_argument(
+        "--allow_guest_mtu_change",
+        action="store_true",
+        help="Allow guest MTU change",
+    )
+
     sriov_host_parser = subparsers.add_parser(
         "sriov_host",
         help="Modify SR-IOV configuration on host(s).\n"

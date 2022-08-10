@@ -568,6 +568,7 @@ class Cluster(object):
             "linked",
             "instant",
             "secure_boot",
+            "allow_guest_mtu_change",
         ]
         list_keys = ["device", "dns"]
         append_keys = ["script", "pf", "sriov_port_group", "sriov_dvs_name"]

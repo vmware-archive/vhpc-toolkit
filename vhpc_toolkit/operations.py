@@ -1521,7 +1521,16 @@ class Operations(object):
                         pf, vm_obj.name
                     )
                 )
-                tasks.append(vm_update.add_sriov_adapter(pg_obj, pf_obj, dvs_obj))
+                tasks.append(
+                    vm_update.add_sriov_adapter(
+                        pg_obj,
+                        pf_obj,
+                        dvs_obj,
+                        allow_guest_os_mtu_change=bool(
+                            vm_cfg.get("allow_guest_mtu_change", 0)
+                        ),
+                    )
+                )
             else:
                 self.logger.error(
                     "This physical function is not SR-IOV capable. " "Skipping"
