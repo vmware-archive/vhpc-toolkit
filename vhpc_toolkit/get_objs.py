@@ -481,7 +481,7 @@ class GetHost(object):
             vim.host.PciDevice: a PCI object if exists, otherwise None
 
         """
-
+        pci = pci.lower()
         for pciDevice in self.host_obj.hardware.pciDevice:
             if pci == pciDevice.id:
                 pci_obj = pciDevice
