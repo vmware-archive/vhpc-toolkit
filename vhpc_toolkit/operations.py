@@ -69,6 +69,39 @@ class Operations(object):
         else:
             self.logger = log.my_logger(name=self.__class__.__name__)
 
+    @staticmethod
+    def _extract_file(vm_cfg, file_keys=None):
+        """unfold the file parsed from individual operations
+
+        Args:
+            vm_cfg (dict): the dict contains vm ops info
+            file_keys (list): a list of keys to extract file which parsed
+                              from individual operations
+
+        Returns:
+            list: a list of vm_cfgs
+
+        """
+
+        if file_keys is None:
+            file_keys = ["vm"]
+        vm_cfgs = []
+        if Check().check_kv(vm_cfg, "vm"):
+            vm_cfgs.append(vm_cfg)
+        elif Check().check_kv(vm_cfg, "file"):
+            try:
+                f = open(vm_cfg["file"])
+            except IOError:
+                print("Failed to open file {0}".format(vm_cfg["file"]))
+                raise SystemExit
+            for line in f:
+                if line.strip() and not line.startswith("#"):
+                    for key in file_keys[: len(line.strip().split())]:
+                        vm_cfg[key] = line.split()[file_keys.index(key)]
+                    vm_cfgs.append(dict(vm_cfg))
+            f.close()
+        return vm_cfgs
+
     def view_cli(self):
         """view vCenter objects
 
@@ -109,39 +142,6 @@ class Operations(object):
         # wait for all tasks to finish
         if tasks:
             GetWait().wait_for_tasks(tasks, task_name="Clone VM")
-
-    @staticmethod
-    def _extract_file(vm_cfg, file_keys=None):
-        """unfold the file parsed from individual operations
-
-        Args:
-            vm_cfg (dict): the dict contains vm ops info
-            file_keys (list): a list of keys to extract file which parsed
-                              from individual operations
-
-        Returns:
-            list: a list of vm_cfgs
-
-        """
-
-        if file_keys is None:
-            file_keys = ["vm"]
-        vm_cfgs = []
-        if Check().check_kv(vm_cfg, "vm"):
-            vm_cfgs.append(vm_cfg)
-        elif Check().check_kv(vm_cfg, "file"):
-            try:
-                f = open(vm_cfg["file"])
-            except IOError:
-                print("Failed to open file {0}".format(vm_cfg["file"]))
-                raise SystemExit
-            for line in f:
-                if line.strip() and not line.startswith("#"):
-                    for key in file_keys[: len(line.strip().split())]:
-                        vm_cfg[key] = line.split()[file_keys.index(key)]
-                    vm_cfgs.append(dict(vm_cfg))
-            f.close()
-        return vm_cfgs
 
     def _clone_cluster(self, vm_cfgs, *keys):
         """clone VMs (defined in cluster conf file)
