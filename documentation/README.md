@@ -26,7 +26,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-!["vhpclogo"](documentation/img/hpc-logo400.png)
+!["vhpclogo"](/img/hpc-logo400.png)
 
 ## Overview 
 
