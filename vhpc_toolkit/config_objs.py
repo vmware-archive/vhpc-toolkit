@@ -269,7 +269,6 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
         if numa_node is None:
             if not affinity:
@@ -409,6 +408,7 @@ class ConfigVM(object):
         nic_spec.device.wakeOnLanEnabled = True
         nic_spec.device.addressType = "assigned"
         nic_spec.device.deviceInfo = vim.Description()
+
         if dvs_obj:
             nic_spec.device.backing = (
                 vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
@@ -423,6 +423,7 @@ class ConfigVM(object):
             nic_spec.device.backing.network = network_obj
             nic_spec.device.backing.deviceName = network_obj.name
             nic_spec.device.backing.useAutoDetect = False
+
         nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         nic_spec.device.connectable.startConnected = True
         nic_spec.device.connectable.connected = True

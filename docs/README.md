@@ -80,7 +80,9 @@ allows us to have different versions of dependencies.
 To install ```virtualenv``` if you don't have one, for example, 
 
 - For Mac: 
-```pip install --upgrade virtualenv```
+```bash
+- pip install --upgrade virtualenv
+```
 - For Ubuntu: 
 ```sudo apt-get install python3-pip```; ```sudo pip3 install virtualenv```
 
@@ -463,7 +465,7 @@ as an open-source patch. For more detailed information, refer to [CONTRIBUTING.m
 
 ## License
 
-This toolkit is available under the [Apache 2 license](LICENSE.txt).
+This toolkit is available under the [Apache 2 license](license.md).
 
 
 
