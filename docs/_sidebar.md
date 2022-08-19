@@ -1,6 +1,6 @@
 * Getting Started
 * * [Home](/ "VHPC Toolkit")
-* * [Available Keys](available-keys.md "Keys supported by cluster")
+* * [Install Toolkit](install.md "Install the toolkit")
 * * [Sample Operations](sample-operations.md "Sample operations")
 * CLI
 * * [List of Commands](commands.md "All available commands")
@@ -11,7 +11,7 @@
 * * [Cluster Command]()
 * Developer Guide
 * * [Architecture]()
-* * [Guide to Add Command]()
-* * [How to Contribute]()
+* * [Guide to Add New Command]()
+* * [How to Contribute](contribute.md "Contribute")
 * License
 * * [License Information](license.md "License Information")
