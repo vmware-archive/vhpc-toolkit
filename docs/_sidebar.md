@@ -6,12 +6,13 @@
 * * [List of Commands](commands.md "All available commands")
 * * [Examples](example.md "Use Case")
 * Documentation
-* * [Host Commands](host-commands.md "Host Command")
-* * [VM Commands]()
-* * [Cluster Command]()
+* * [Host Commands](host-commands.md "Host Commands")
+* * [VM Commands](vm-commands.md "VM Commands")
+* * [Common Commands](common-commands.md "Common Commands")
 * Developer Guide
 * * [Architecture]()
 * * [Guide to Add New Command]()
 * * [How to Contribute](contribute.md "Contribute")
-* License
+* Legal
 * * [License Information](license.md "License Information")
+* * [Code of Conduct](code-of-conduct.md "Code of Conduct")

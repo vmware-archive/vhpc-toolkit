@@ -4,8 +4,8 @@ This is a list of all the commands available to use
 
 | **Command**          	                                     | **What does it do?**                                                                                                	|
 |------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------	|
-| view                 	                                     | View the vCenter object names                                                                                       	|
-| cluster              	                                     | Create/Destroy vHPC cluster based on cluster configuration file                                                     	|
+| [view](common-commands.md#view)                 	          | View the vCenter object names                                                                                       	|
+| [cluster](common-commands.md#cluster)              	       | Create/Destroy vHPC cluster based on cluster configuration file                                                     	|
 | [clone](vm-commands.md#clone)                	             | Clone VM(s) via Full Clone or Linked Clone                                                                          	|
 | [destroy](vm-commands.md#destroy)              	           | Destroy VM(s)                                                                                                       	|
 | [power](vm-commands.md#power)                	             | Power on/off VM(s)                                                                                                  	|
