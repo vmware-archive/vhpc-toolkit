@@ -39,6 +39,7 @@ class Cluster(object):
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
+        # Adding next line to prevent parser from converting everything to lowercase
         self.cfg_parser.optionxform = str
         cluster_file = get_args.find_script_conf_file(self.file)
         try:

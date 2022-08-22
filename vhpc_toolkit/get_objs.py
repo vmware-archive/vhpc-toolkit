@@ -10,6 +10,8 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+from typing import List
+
 from pyVmomi import vim
 from pyVmomi import vmodl
 
@@ -45,20 +47,30 @@ class GetObjects(object):
                                     this view
 
         """
-
+        # Get all the objects in the root folder which is of vimtype type
         container = self.content.viewManager.CreateContainerView(
             self.content.rootFolder, vimtype, True
         )
         return container.view
 
-    def get_objs(self, vimtype, name):
+    def get_objs(self, vimtype: List[str], name: str) -> List[vmodl.ManagedObject]:
+        """
+        Get all managed objects of the given name
+        Args:
+            vimtype: The list of managed types to get container view
+            name: name of the desired object to get
+
+        Returns:
+            Managed object
+
+        """
         objs = []
-        for c in self.get_container_view(vimtype):
+        for obj in self.get_container_view(vimtype):
             if name:
-                if c.name == name:
-                    objs.append(c)
+                if obj.name == name:
+                    objs.append(obj)
             else:
-                objs.append(c)
+                objs.append(obj)
         return objs
 
     def get_obj(self, vimtype, name):
@@ -72,7 +84,6 @@ class GetObjects(object):
             vmodl.ManagedObject: the managed object
 
         """
-
         obj = None
         for c in self.get_container_view(vimtype):
             if name:
@@ -306,11 +317,12 @@ class GetObjects(object):
 
         network_obj = self.get_objs([vim.Network], network_name)
         if len(network_obj) > 1:
-            network_obj = [
-                network_object
-                for network_object in network_obj
-                if network_object.config.distributedVirtualSwitch.name == dvs_name
-            ]
+            if dvs_name:
+                network_obj = [
+                    network_object
+                    for network_object in network_obj
+                    if network_object.config.distributedVirtualSwitch.name == dvs_name
+                ]
         if len(network_obj) == 1:
             self.logger.info("Found network {0}".format(network_name))
             return network_obj[0]
