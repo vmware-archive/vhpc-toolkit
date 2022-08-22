@@ -1,10 +1,11 @@
-### Prerequisites
+# How to Install
+## Prerequisites
 
 OS for using this toolkit: Linux, Mac or Windows <br/>
 vSphere >=6.5 <br/>
 Python >=3.6 <br/> 
 
-### Install 
+## Install 
 
 Package dependencies will be isolated in a Python virtual environment by 
 ```virtualenv```. This 
@@ -14,7 +15,7 @@ To install ```virtualenv``` if you don't have one, for example,
 
 - For Mac and Windows: 
 ```bash
-- pip install --upgrade virtualenv
+pip install --upgrade virtualenv
 ```
 - For Ubuntu: 
 ```bash
@@ -41,7 +42,7 @@ pip install -e <folder_with_setup.py>
 pip install -e .
 ```
 
-### Secure Setup via Vault 
+## Secure Setup via Vault 
 
 This toolkit leverages vSphere APIs to manage vSphere objects (such as VMs, 
 distributed virtual switches). So it needs connection to vCenter. In order 
@@ -88,7 +89,7 @@ password: vcenter-password
 For more advanced features of Vault, such as managing token leases, dynamic 
 secrets and Web UI, please refer to  [Vault](https://learn.hashicorp.com/vault). 
 
-### Verification 
+## Verification 
 
 After proper installation and setup, you should be able to execute `
 ./vhpc_toolkit --help` under `vhpc_toolkit/bin` folder to view all available 

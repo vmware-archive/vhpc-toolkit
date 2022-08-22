@@ -1,5 +1,5 @@
 * Getting Started
-* * [Home](/ "VHPC Toolkit")
+* * [Overview](/ "Getting started")
 * * [Install Toolkit](install.md "Install the toolkit")
 * * [Sample Operations](sample-operations.md "Sample operations")
 * CLI
