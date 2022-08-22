@@ -4,9 +4,9 @@
 * * [Sample Operations](sample-operations.md "Sample operations")
 * CLI
 * * [List of Commands](commands.md "All available commands")
-* * [Examples]()
+* * [Examples](example.md "Use Case")
 * Documentation
-* * [Host Commands]()
+* * [Host Commands](host-commands.md "Host Command")
 * * [VM Commands]()
 * * [Cluster Command]()
 * Developer Guide
