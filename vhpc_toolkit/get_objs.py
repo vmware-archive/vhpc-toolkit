@@ -53,7 +53,7 @@ class GetObjects(object):
         )
         return container.view
 
-    def get_objs(self, vimtype: List[str], name: str) -> List[vmodl.ManagedObject]:
+    def get_objs(self, vimtype: List[str], name: str):
         """
         Get all managed objects of the given name
         Args:
