@@ -1416,7 +1416,9 @@ class Operations(object):
         if self.cfg["remove"]:
             tasks = []
             for vm_cfg in vm_cfgs:
-                tasks.append(self._get_remove_sriov_tasks(vm_cfg))
+                task = self._get_remove_sriov_tasks(vm_cfg)
+                if task:
+                    tasks.append(task)
             if tasks:
                 GetWait().wait_for_tasks(tasks, task_name="Remove SR-IOV device(s)")
 
@@ -1513,7 +1515,14 @@ class Operations(object):
             )
             raise SystemExit
 
-        vm_cfg["sriov_dvs_name"] = vm_cfg.get("sriov_dvs_name", [None])
+        if "sriov_dvs_name" in vm_cfg:
+            # If there is only one sriov_dvs_name, convert it to list
+            if isinstance(vm_cfg["sriov_dvs_name"], str):
+                vm_cfg["sriov_dvs_name"] = [vm_cfg["sriov_dvs_name"]]
+        else:
+            vm_cfg["sriov_dvs_name"] = [None]
+
+        vm_cfg["sriov_dvs_name"] = vm_cfg.get("sriov_dvs_name", None)
 
         for pf, pg, dvs_name in itertools.zip_longest(
             vm_cfg["pf"], vm_cfg["sriov_port_group"], vm_cfg["sriov_dvs_name"]
@@ -1571,9 +1580,10 @@ class Operations(object):
             pf_obj = GetVM(vm_obj).sriov_obj(pf)
             try:
                 task = ConfigVM(vm_obj).remove_sriov_adapter(pf_obj)
+                return task
             except KeyError:
                 self.logger.error(f"Could not find pf {pf}")
-            return task
+                return None
         elif Check().check_kv(vm_cfg, "sriov_port_group"):
             pg = vm_cfg["sriov_port_group"]
             pg_obj = GetVM(vm_obj).network_obj(
