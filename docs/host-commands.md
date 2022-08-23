@@ -44,7 +44,3 @@ Modify SR-IOV configuration on host(s).
 | num_func                	 | Number of virtual functions. This argument is ignored if used with --off flag. num_func must be equal or smaller than the VF enabled in firmware |      | integer | No          |
 
 !> The **num_func** argument is ignored if used with --off flag. **num_func** must be equal to or smaller than the virtual functions enabled in firmware
-
-## svs
-
-## dvs

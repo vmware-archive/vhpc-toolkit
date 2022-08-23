@@ -25,8 +25,8 @@ This is a list of all the commands available to use
 | [get_vm_config](vm-commands.md#get_vm_config)        	     | View the performance metrics of the VM                                                                              	|
 | [power_policy](host-commands.md#power_policy)        	     | Change the power policy for the host                                                                                	|
 | [sriov_host](host-commands.md#sriov_host)           	      | Modify SR-IOV configuration on host(s). This operation assumes that SR-IOV drivers have been installed on ESXi host 	|
-| [svs](host-commands.md#svs)                  	             | Create/destroy a standard virtual switch                                                                            	|
-| [dvs](host-commands.md#dvs)                  	             | Create/destroy a distributed virtual switch                                                                         	|
+| [svs](common-commands.md#svs)                  	           | Create/destroy a standard virtual switch                                                                            	|
+| [dvs](common-commands.md#dvs)                  	           | Create/destroy a distributed virtual switch                                                                         	|
 
 ## Instructions to use documentation
 
