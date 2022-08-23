@@ -11,8 +11,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
 import os
+import re
+import time
 from typing import List
 
+import requests
 from pyVmomi import vim
 from pyVmomi import vmodl
 
@@ -334,7 +337,6 @@ class ConfigVM(object):
             pyvmomi/docs/vim/vm/device/VirtualDeviceSpec.rst
 
         """
-
         dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
@@ -380,7 +382,9 @@ class ConfigVM(object):
         config_spec.deviceChange = [nic_spec]
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
-    def add_sriov_adapter(self, network_obj, pf_obj, dvs_obj):
+    def add_sriov_adapter(
+        self, network_obj, pf_obj, dvs_obj, allow_guest_os_mtu_change=False
+    ):
         """Add a network adapter with SR-IOV adapter type for a VM
             Adding SR-IOV adapter requires a back-up physical adapter.
 
@@ -392,6 +396,7 @@ class ConfigVM(object):
             pf_obj (vim.host.PciDevice): a PCI object type describes info
                                         about of a single PCI device for
                                         backing up SR-IOV configuration
+            allow_guest_os_mtu_change (bool): Whether to allow guest OS MTU change
 
         Returns:
             Task
@@ -430,7 +435,7 @@ class ConfigVM(object):
         nic_spec.device.sriovBacking = (
             vim.vm.device.VirtualSriovEthernetCard.SriovBackingInfo()
         )
-        nic_spec.device.allowGuestOSMtuChange = False
+        nic_spec.device.allowGuestOSMtuChange = allow_guest_os_mtu_change
         # convert decimal to hex for the device ID of physical adapter
         device_id = hex(pf_obj.deviceId % 2**16).lstrip("0x")
         sys_id = GetVM(self.vm_obj).pci_id_sys_id_sriov()
@@ -546,29 +551,39 @@ class ConfigVM(object):
         """
 
         global_ip = vim.vm.customization.GlobalIPSettings()
+        if ip:
+            if isinstance(dns, str):
+                dns = [dns]
+            global_ip.dnsServerList = dns
+
         adapter_map = vim.vm.customization.AdapterMapping()
-        adapter_map.adapter = vim.vm.customization.IPSettings()
         adapter_map.macAddress = network_obj.macAddress
+        adapter_map.adapter = vim.vm.customization.IPSettings()
         if ip:
             adapter_map.adapter.ip = vim.vm.customization.FixedIp()
             adapter_map.adapter.ip.ipAddress = ip
+            if isinstance(gateway, str):
+                gateway = [gateway]
+            adapter_map.adapter.gateway = gateway
         else:
             adapter_map.adapter.ip = vim.vm.customization.DhcpIpGenerator()
         adapter_map.adapter.subnetMask = netmask
-        adapter_map.adapter.gateway = gateway
-        global_ip.dnsServerList = dns
         adapter_map.adapter.dnsDomain = domain
+
         ident = vim.vm.customization.LinuxPrep()
         ident.hostName = vim.vm.customization.FixedName()
         if guest_hostname:
             ident.hostName.name = guest_hostname
         else:
             ident.hostName.name = self.vm_obj.name
+        ident.domain = domain
+
         custom_spec = vim.vm.customization.Specification()
         custom_spec.nicSettingMap = [adapter_map]
         custom_spec.identity = ident
         custom_spec.globalIPSettings = global_ip
-        return self.vm_obj.Customize(spec=custom_spec)
+
+        return self.vm_obj.CustomizeVM_Task(spec=custom_spec)
 
     def enable_fork_parent(self):
         """Enable fork parent for a VM
@@ -901,13 +916,48 @@ class ConfigVM(object):
         relocate_spec.host = host_obj
         return self.vm_obj.RelocateVM_Task(spec=relocate_spec)
 
-    def execute_script(self, process_manager, script, username, password):
+    def upload_file(
+        self, guest_operations_manager, host_obj, script_content, auth, dest_file_path
+    ):
+        try:
+            file_attribute = vim.vm.guest.FileManager.FileAttributes()
+            url = guest_operations_manager.fileManager.InitiateFileTransferToGuest(
+                vm=self.vm_obj,
+                auth=auth,
+                guestFilePath=f"/{auth.username}/{dest_file_path}",
+                fileAttributes=file_attribute,
+                fileSize=len(script_content),
+                overwrite=True,
+            )
+
+            url = re.sub(r"^https://\*:", "https://" + host_obj.name + ":", url)
+            resp = requests.put(url, data=script_content, verify=False)
+            if not resp.status_code == 200:
+                self.logger.error(
+                    f"Error while uploading post script to {self.vm_obj.name}"
+                )
+            else:
+                self.logger.info(f"Successfully uploaded script to {self.vm_obj.name}")
+        except IOError as ex:
+            self.logger.error(ex)
+
+    def execute_script(
+        self,
+        process_manager,
+        guest_operations_manager,
+        host_obj,
+        script,
+        username,
+        password,
+    ):
         """Execute a post script for a VM
             First copy local script content to remote VM
             Then execute the script in remote VM
             Only works for Linux system
 
         Args:
+            host_obj:
+            guest_operations_manager:
             process_manager (GuestProcessManager):  A singleton managed object
                         that provides methods for guest process operations.
                         Retrieved from service content.
@@ -930,39 +980,52 @@ class ConfigVM(object):
         auth = vim.vm.guest.NamePasswordAuthentication()
         auth.username = username
         auth.password = password
-        try:
-            copy_content = (
-                "'"
-                + open(script).read().replace("'", '"\'"')
-                + "' >> "
-                + os.path.basename(script)
-            )
-            program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
-            program_spec.programPath = "/bin/echo"
-            program_spec.arguments = copy_content
-            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
-            assert pid > 0
-            program_spec.programPath = "/bin/sh"
-            log_file = "/var/log/vhpc_toolkit.log"
-            execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
-            program_spec.arguments = execute_content
-            pid = process_manager.StartProgramInGuest(self.vm_obj, auth, program_spec)
-            assert pid > 0
-            self.logger.info(
-                "Script {0} is being executed in VM {1} guest OS "
-                "and PID is {2}".format(os.path.basename(script), self.vm_obj.name, pid)
-            )
-        except IOError:
-            self.logger.error("Can not open script {0}".format(script))
-            raise SystemExit
-        except AssertionError:
-            self.logger.error("Script is not launched successfully.")
-            raise SystemExit
-        except vim.fault.InvalidGuestLogin as e:
-            self.logger.error(e.msg)
-            raise SystemExit
-        else:
-            return pid, auth, self.vm_obj
+        retries = 0
+        while True:
+            try:
+                self.upload_file(
+                    guest_operations_manager=guest_operations_manager,
+                    host_obj=host_obj,
+                    script_content=open(script).read(),
+                    auth=auth,
+                    dest_file_path=os.path.basename(script),
+                )
+
+                program_spec = vim.vm.guest.ProcessManager.ProgramSpec()
+                program_spec.programPath = "/bin/sh"
+                log_file = "/var/log/vhpc_toolkit.log"
+                execute_content = os.path.basename(script) + " 2>&1 | tee " + log_file
+                program_spec.arguments = execute_content
+                pid = process_manager.StartProgramInGuest(
+                    self.vm_obj, auth, program_spec
+                )
+                assert pid > 0
+                self.logger.info(
+                    "Script {0} is being executed in VM {1} guest OS "
+                    "and PID is {2}".format(
+                        os.path.basename(script), self.vm_obj.name, pid
+                    )
+                )
+            except IOError:
+                self.logger.error("Can not open script {0}".format(script))
+                raise SystemExit
+            except AssertionError:
+                self.logger.error("Script is not launched successfully.")
+                raise SystemExit
+            except vim.fault.InvalidGuestLogin as e:
+                self.logger.error(e.msg)
+                raise SystemExit
+            except vim.fault.GuestOperationsUnavailable:
+                retries += 1
+                if retries < 4:
+                    self.logger.info(f"Guest agent could not be contacted. Retrying")
+                    time.sleep(5 * retries)
+                    continue
+                else:
+                    self.logger.error("Guest agent could not be contacted. Exiting")
+                    raise SystemExit
+            else:
+                return pid, auth, self.vm_obj
 
 
 class ConfigHost(object):

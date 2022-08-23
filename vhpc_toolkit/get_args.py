@@ -787,7 +787,7 @@ def get_args():
         "one per line, to enable/disable passthrough devices",
     )
     passthru_host_group2.add_argument(
-        "--device_id",
+        "--device",
         action="store",
         default=None,
         type=str,
@@ -838,7 +838,7 @@ def get_args():
         help="Name of port group which could enable SR-IOV adapter type",
     )
     sriov_parser.add_argument(
-        "--dvs_name",
+        "--sriov_dvs_name",
         action="store",
         type=str,
         help="Name of distributed virtual switch which could enable SR-IOV",
@@ -849,6 +849,12 @@ def get_args():
         action="store",
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
+    )
+
+    sriov_parser.add_argument(
+        "--allow_guest_mtu_change",
+        action="store_true",
+        help="Allow guest MTU change",
     )
 
     sriov_host_parser = subparsers.add_parser(
