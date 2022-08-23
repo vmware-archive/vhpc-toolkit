@@ -1569,7 +1569,10 @@ class Operations(object):
         if Check().check_kv(vm_cfg, "pf"):
             pf = vm_cfg["pf"]
             pf_obj = GetVM(vm_obj).sriov_obj(pf)
-            task = ConfigVM(vm_obj).remove_sriov_adapter(pf_obj)
+            try:
+                task = ConfigVM(vm_obj).remove_sriov_adapter(pf_obj)
+            except KeyError:
+                self.logger.error(f"Could not find pf {pf}")
             return task
         elif Check().check_kv(vm_cfg, "sriov_port_group"):
             pg = vm_cfg["sriov_port_group"]
