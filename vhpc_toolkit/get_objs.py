@@ -38,7 +38,8 @@ class GetObjects(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def get_container_view(self, vimtype):
-        """Get the container view by managed object types
+        """
+        Get the container view by managed object types
 
         Args:
             vimtype ([str]): a list of types to get container view
@@ -57,6 +58,7 @@ class GetObjects(object):
     def get_objs(self, vimtype: List, name: str):
         """
         Get all managed objects of the given name
+
         Args:
             vimtype: The list of managed types to get container view
             name: name of the desired object to get
@@ -308,43 +310,42 @@ class GetObjects(object):
     ) -> Optional[vim.Network]:
         """
         Get the network managed object by name.
-        Network object and port group object is used interchangeable
+        Network object and port group object are used interchangeable
 
         Args:
-            network_name (str): the name of network/name of the port group to get
+            network_name (str): the name of the network (port group) to get
             dvs_name (str): the name of the dvs which the network belongs to
             _exit (bool)
 
         Returns:
             Network object
-
         """
         # Get all the objects of network type and given network name
-        network_obj = self.get_objs([vim.Network], network_name)
+        network_objs = self.get_objs([vim.Network], network_name)
 
         # If there are more than one network objects with the same name, we need a way to filter the number to one
-        if len(network_obj) > 1:
-            # If dvs name is specified, filter based on the name
+        if len(network_objs) > 1:
+            # If dvs_name is specified, filter based on the name
             if dvs_name:
-                network_obj = [
-                    network_object
-                    for network_object in network_obj
-                    if hasattr(network_object.config, "distributedVirtualSwitch")
-                    and network_object.config.distributedVirtualSwitch.name == dvs_name
+                network_objs = [
+                    network_obj
+                    for network_obj in network_objs
+                    if hasattr(network_obj.config, "distributedVirtualSwitch")
+                    and network_obj.config.distributedVirtualSwitch.name == dvs_name
                 ]
 
         # If only one object is left, return that object
-        if len(network_obj) == 1:
+        if len(network_objs) == 1:
             self.logger.info("Found network {0}".format(network_name))
-            return network_obj[0]
+            return network_objs[0]
 
         # If there are still multiple objects left, then log error
-        if len(network_obj) > 1:
+        if len(network_objs) > 1:
             self.logger.error(
-                f"Found multiple networks with same name {network_name}. Please consider applying a filter and try again"
+                f"Found multiple networks (port groups) with the same name {network_name}. Please consider applying a filter and try again."
             )
         else:
-            self.logger.error("Cannot find network {0}".format(network_name))
+            self.logger.error("Cannot find network (port group) {0}".format(network_name))
 
         if _exit:
             raise SystemExit
