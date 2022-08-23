@@ -750,6 +750,54 @@ def get_args():
         help="64-bit MMIO size in GB for PCI device with large BARs. "
         "Default: %(default)s.",
     )
+    passthru_parser.add_argument(
+        "--dynamic",
+        action="store_true",
+        required=False,
+        help="If this flag is added, PCI devices are added in dynamic direct i/o mode",
+    )
+
+    passthru_host_parser = subparsers.add_parser(
+        "passthru_host",
+        help="Enable/Disable PCI device(s) on host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    passthru_host_group1 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group2 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group3 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to enable/disable passthrough devices",
+    )
+    passthru_host_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to enable/disable passthrough devices",
+    )
+    passthru_host_group2.add_argument(
+        "--device",
+        action="store",
+        default=None,
+        type=str,
+        help="The ID of the PCI device to enable/disable on host",
+    )
+    passthru_host_group3.add_argument("--on", action="store_true", help="Enable device")
+    passthru_host_group3.add_argument(
+        "--off", action="store_true", help="Enable device"
+    )
+
     sriov_parser = subparsers.add_parser(
         "sriov",
         help="Add/remove single root I/O virtualization (SR-IOV) device(s)",
@@ -790,7 +838,7 @@ def get_args():
         help="Name of port group which could enable SR-IOV adapter type",
     )
     sriov_parser.add_argument(
-        "--dvs_name",
+        "--sriov_dvs_name",
         action="store",
         type=str,
         help="Name of distributed virtual switch which could enable SR-IOV",
@@ -801,6 +849,12 @@ def get_args():
         action="store",
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
+    )
+
+    sriov_parser.add_argument(
+        "--allow_guest_mtu_change",
+        action="store_true",
+        help="Allow guest MTU change",
     )
 
     sriov_host_parser = subparsers.add_parser(

@@ -10,6 +10,7 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+import itertools
 import json
 import logging
 from typing import List
@@ -29,6 +30,7 @@ from vhpc_toolkit.config_objs import ConfigHost
 from vhpc_toolkit.config_objs import ConfigVM
 from vhpc_toolkit.connect import Connect
 from vhpc_toolkit.get_objs import GetClone
+from vhpc_toolkit.get_objs import GetCluster
 from vhpc_toolkit.get_objs import GetDatacenter
 from vhpc_toolkit.get_objs import GetHost
 from vhpc_toolkit.get_objs import GetObjects
@@ -163,6 +165,9 @@ class Operations(object):
         if tasks:
             GetWait().wait_for_tasks(tasks, task_name="Clone VM")
 
+    def _get_clone_obj(self):
+        pass
+
     def _get_clone_task(self, vm_cfg):
         """clone VM and get task
 
@@ -194,18 +199,7 @@ class Operations(object):
                 else:
                     clone_dests[clone_dest] = None
             # get clone dest objs
-            clone_objs = GetClone(
-                content=self.content,
-                template_obj=template_obj,
-                datacenter_name=clone_dests["datacenter"],
-                folder_name=clone_dests["vm_folder"],
-                cluster_name=clone_dests["cluster"],
-                resource_pool_name=clone_dests["resource_pool"],
-                host_name=clone_dests["host"],
-                datastore_name=clone_dests["datastore"],
-                cpu=clone_dests["cpu"],
-                memory=clone_dests["memory"],
-            )
+            clone_objs = self._get_clone_object(clone_dests, template_obj)
             # linked clone
             if Check().check_kv(vm_cfg, "linked"):
                 task = ConfigVM(template_obj).linked_clone(
@@ -234,6 +228,130 @@ class Operations(object):
                 "Can not find clone template {0}.".format(vm_cfg["template"])
             )
             raise SystemExit
+
+    def _create_resource_pool(
+        self, resource_pool_name, destination_host: vim.HostSystem
+    ):
+        resource_spec = vim.ResourceConfigSpec()
+        resource_allocation_info = vim.ResourceAllocationInfo()
+        resource_allocation_info.expandableReservation = True
+        resource_allocation_info.reservation = 0
+        resource_allocation_info.limit = -1
+        resource_allocation_info.shares = vim.SharesInfo()
+        resource_allocation_info.shares.level = vim.SharesInfo.Level.normal
+        resource_spec.cpuAllocation = resource_allocation_info
+        resource_spec.memoryAllocation = resource_allocation_info
+
+        self.logger.warning(
+            "Use default policy of resource pool creation. No limitation on CPU and memory allocation."
+        )
+
+        return destination_host.parent.resourcePool.CreateResourcePool(
+            name=resource_pool_name, spec=resource_spec
+        )
+
+    def _get_clone_object(self, clone_dests, template_obj):
+        # get the default datacenter
+        dest_datacenter_obj = self.objs.get_datacenter(clone_dests["datacenter"])
+
+        folder_name = clone_dests["vm_folder"]
+        if folder_name:
+            dest_folder_obj = self.objs.get_folder(folder_name)
+        else:
+            dest_folder_obj = dest_datacenter_obj.vmFolder
+            self.logger.info(
+                "No VM folder specified. "
+                "The first VM folder ({0}) "
+                "in the datacenter ({1}) is "
+                "used.".format(dest_folder_obj.name, dest_datacenter_obj.name)
+            )
+
+        datastore_name = clone_dests["datastore"]
+        if datastore_name:
+            dest_datastore_obj = self.objs.get_datastore(datastore_name)
+        else:
+            dest_datastore_obj = self.objs.get_datastore(template_obj.datastore[0].name)
+            self.logger.info(
+                "No datastore specified. "
+                "The same datastore ({0}) "
+                "of the template ({1}) is used.".format(
+                    dest_datastore_obj.name, template_obj.name
+                )
+            )
+
+        cluster_name = clone_dests["cluster"]
+        if cluster_name:
+            dest_cluster_obj = self.objs.get_cluster(cluster_name)
+        else:
+            dest_cluster_obj = dest_datacenter_obj.hostFolder.childEntity[0]
+
+        host_name = clone_dests["host"]
+        dest_host_obj = None
+        if host_name:
+            dest_host_obj = self.objs.get_host(host_name)
+        elif GetCluster(dest_cluster_obj).is_drs():
+            self.logger.info(
+                "No host specified. "
+                "DRS is enabled. "
+                "A host selected by DRS will be used."
+            )
+        else:
+            self.logger.warning(
+                "No host specified and DRS is not enabled. "
+                "The same host of the template "
+                "in the cluster will be used."
+            )
+
+        resource_pool_name = clone_dests["resource_pool"]
+        dest_resource_pool_obj = None
+        if resource_pool_name:
+            dest_resource_pool_obj = self.objs.get_resource_pool(
+                resource_pool_name,
+                _exit=False,
+                host_name=host_name,
+                cluster_name=cluster_name,
+            )
+            if dest_resource_pool_obj is None:
+                self.logger.info(
+                    f"Resource pool: {resource_pool_name} not found. So creating new resource pool"
+                )
+                dest_resource_pool_obj = self._create_resource_pool(
+                    resource_pool_name, dest_host_obj
+                )
+        else:
+            self.logger.info(
+                "No resource pool specified. Will try to use default resource pool in destination cluster."
+            )
+            if dest_host_obj is not None:
+                dest_resource_pool_obj = getattr(dest_host_obj.parent, "resourcePool")
+            else:
+                SystemExit(
+                    "Resource pool and destination host name cannot both be empty"
+                )
+
+        cpu = clone_dests["cpu"]
+        if cpu:
+            cpu = int(cpu)
+        else:
+            cpu = GetVM(template_obj).cpu()
+
+        memory = clone_dests["memory"]
+        if memory:
+            memory = int(float(memory) * 1024)
+        else:
+            memory = GetVM(template_obj).memory()
+
+        return GetClone(
+            content=self.content,
+            datacenter_obj=dest_datacenter_obj,
+            folder_obj=dest_folder_obj,
+            cluster_obj=dest_cluster_obj,
+            resource_pool_obj=dest_resource_pool_obj,
+            host_obj=dest_host_obj,
+            datastore_obj=dest_datastore_obj,
+            cpu=cpu,
+            memory=memory,
+        )
 
     def destroy_cli(self):
         """destroy VMs
@@ -664,6 +782,27 @@ class Operations(object):
                 self.logger.info("VM {0} is already in power off state".format(vm))
         return tasks
 
+    def _secure_boot_cluster(self, vm_cfgs, key):
+        on_vms = []
+        off_vms = []
+        for vm_cfg in vm_cfgs:
+            if key in vm_cfg:
+                if vm_cfg[key]:
+                    on_vms.append(vm_cfg["vm"])
+                else:
+                    off_vms.append(vm_cfg["vm"])
+
+        if on_vms:
+            GetWait().wait_for_tasks(
+                self.__get_secure_boot_tasks(on_vms, enabled=True),
+                task_name="Turn on secure boot",
+            )
+        if off_vms:
+            GetWait().wait_for_tasks(
+                self.__get_secure_boot_tasks(off_vms, enabled=False),
+                task_name="Turn off secure boot",
+            )
+
     def secure_boot_cli(self):
         """
         Turn on or off secure boot for VMs
@@ -683,7 +822,7 @@ class Operations(object):
 
     def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
         """
-        Enable secure boot for vms
+        Enable/Disable secure boot for vms
         Args:
             vms: List of vm names
             enabled: Whether to enable secure boot or not
@@ -763,7 +902,7 @@ class Operations(object):
         if isinstance(pgs, str):
             pgs = [pgs]
         for pg in pgs:
-            pg_obj = self.objs.get_network(pg)
+            pg_obj = self.objs.get_network(pg, dvs_name=vm_cfg.get("dvs_name"))
             if pg in GetVM(vm_obj).network_names():
                 self.logger.warning(
                     "Port group {0} already exists on VM "
@@ -887,6 +1026,7 @@ class Operations(object):
         else:
             Check().check_kv(vm_cfg, "ip", required=True)
             ip = vm_cfg["ip"]
+
         task = ConfigVM(vm_obj).config_networking(
             network_obj, ip, netmask, gateway, domain, dns, guest_hostname
         )
@@ -954,9 +1094,17 @@ class Operations(object):
         vm_update = ConfigVM(vm_obj)
         vm_status = VMGetWait(vm_obj)
         proc_mng = self.content.guestOperationsManager.processManager
+        guest_operations_manager = self.content.guestOperationsManager
         if vm_status.wait_for_vmtools():
             for script in scripts:
-                proc = vm_update.execute_script(proc_mng, script, username, password)
+                proc = vm_update.execute_script(
+                    proc_mng,
+                    guest_operations_manager,
+                    self.objs.get_host_by_vm(vm_obj),
+                    script,
+                    username,
+                    password,
+                )
                 procs.append(proc)
         return procs
 
@@ -1178,7 +1326,14 @@ class Operations(object):
                     "Device {0} is available for " "VM {1}".format(device, vm_obj.name)
                 )
                 tasks.extend(
-                    vm_update.add_pci(device, host_obj, vm_update, vm_status, mmio_size)
+                    vm_update.add_pci(
+                        device,
+                        host_obj,
+                        vm_update,
+                        vm_status,
+                        mmio_size,
+                        dynamic_direct_io=bool(vm_cfg.get("dynamic")),
+                    )
                 )
             else:
                 if device in vm_status.existing_pci_ids():
@@ -1261,7 +1416,9 @@ class Operations(object):
         if self.cfg["remove"]:
             tasks = []
             for vm_cfg in vm_cfgs:
-                tasks.append(self._get_remove_sriov_tasks(vm_cfg))
+                task = self._get_remove_sriov_tasks(vm_cfg)
+                if task:
+                    tasks.append(task)
             if tasks:
                 GetWait().wait_for_tasks(tasks, task_name="Remove SR-IOV device(s)")
 
@@ -1331,28 +1488,71 @@ class Operations(object):
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         host_obj = self.objs.get_host_by_vm(vm_obj)
         vm_update = ConfigVM(vm_obj)
-        Check().check_kv(vm_cfg, "pf", required=True)
-        Check().check_kv(vm_cfg, "sriov_port_group", required=True)
-        if Check().check_kv(vm_cfg, "dvs_name"):
-            dvs_name = vm_cfg["dvs_name"]
-            dvs_obj = self.objs.get_dvs(dvs_name)
-            self.logger.info("Found dvs {0}".format(dvs_name))
-        pf = vm_cfg["pf"]
-        pf_obj = GetHost(host_obj).pci_obj(pf)
-        pg = vm_cfg["sriov_port_group"]
-        pg_obj = self.objs.get_network(pg)
         # verify whether this PF has SR-IOV capability
         device_ids = GetVM(vm_obj).avail_sriov_ids()
-        if pf in device_ids:
-            self.logger.info(
-                "Find physical function {0} for VM {1} "
-                "and this physical function is SR-IOV capable".format(pf, vm_obj.name)
-            )
-            tasks.append(vm_update.add_sriov_adapter(pg_obj, pf_obj, dvs_obj))
-        else:
+
+        Check().check_kv(vm_cfg, "pf", required=True)
+        Check().check_kv(vm_cfg, "sriov_port_group", required=True)
+
+        # Converting to list to make sure it supports adding multiple SR-IOV at once
+        if isinstance(vm_cfg["pf"], str):
+            vm_cfg["pf"] = [vm_cfg["pf"]]
+
+        if isinstance(vm_cfg["sriov_port_group"], str):
+            vm_cfg["sriov_port_group"] = [vm_cfg["sriov_port_group"]]
+
+        # Need to ensure length of pf and sriov port group is same
+        if len(vm_cfg["pf"]) != len(vm_cfg["sriov_port_group"]):
+            self.logger.error("Number of pf and sriov port groups must be the same")
+            raise SystemExit
+
+        # If you add dvs for one of the SR-IOV, need to add it to all of them
+        if len(vm_cfg["pf"]) > 1 and len(vm_cfg["sriov_port_group"]) != len(
+            vm_cfg.get("sriov_dvs_name", [])
+        ):
             self.logger.error(
-                "This physical function is not SR-IOV capable. " "Skipping"
+                "When adding multiple SRIOV, cannot leave dvs name empty for any resource"
             )
+            raise SystemExit
+
+        if "sriov_dvs_name" in vm_cfg:
+            # If there is only one sriov_dvs_name, convert it to list
+            if isinstance(vm_cfg["sriov_dvs_name"], str):
+                vm_cfg["sriov_dvs_name"] = [vm_cfg["sriov_dvs_name"]]
+        else:
+            vm_cfg["sriov_dvs_name"] = [None]
+
+        vm_cfg["sriov_dvs_name"] = vm_cfg.get("sriov_dvs_name", None)
+
+        for pf, pg, dvs_name in itertools.zip_longest(
+            vm_cfg["pf"], vm_cfg["sriov_port_group"], vm_cfg["sriov_dvs_name"]
+        ):
+            pf_obj = GetHost(host_obj).pci_obj(pf)
+            pg_obj = self.objs.get_network(pg, dvs_name=dvs_name)
+            if dvs_name is not None:
+                dvs_obj = self.objs.get_dvs(dvs_name)
+                self.logger.info("Found dvs {0}".format(dvs_name))
+            if pf in device_ids:
+                self.logger.info(
+                    "Find physical function {0} for VM {1} "
+                    "and this physical function is SR-IOV capable".format(
+                        pf, vm_obj.name
+                    )
+                )
+                tasks.append(
+                    vm_update.add_sriov_adapter(
+                        pg_obj,
+                        pf_obj,
+                        dvs_obj,
+                        allow_guest_os_mtu_change=bool(
+                            vm_cfg.get("allow_guest_mtu_change", 0)
+                        ),
+                    )
+                )
+            else:
+                self.logger.error(
+                    "This physical function is not SR-IOV capable. " "Skipping"
+                )
         if tasks:
             if not GetVM(vm_obj).is_memory_reser_full():
                 self.logger.warning(
@@ -1378,8 +1578,12 @@ class Operations(object):
         if Check().check_kv(vm_cfg, "pf"):
             pf = vm_cfg["pf"]
             pf_obj = GetVM(vm_obj).sriov_obj(pf)
-            task = ConfigVM(vm_obj).remove_sriov_adapter(pf_obj)
-            return task
+            try:
+                task = ConfigVM(vm_obj).remove_sriov_adapter(pf_obj)
+                return task
+            except KeyError:
+                self.logger.error(f"Could not find pf {pf}")
+                return None
         elif Check().check_kv(vm_cfg, "sriov_port_group"):
             pg = vm_cfg["sriov_port_group"]
             pg_obj = GetVM(vm_obj).network_obj(
@@ -1954,6 +2158,7 @@ class Operations(object):
         self._vgpu_cluster(vm_cfgs, "vgpu")
         self._sriov_cluster(vm_cfgs, "sriov_port_group")
         self._pvrdma_cluster(vm_cfgs, "pvrdma_port_group")
+        self._secure_boot_cluster(vm_cfgs, "secure_boot")
         self._power_cluster(vm_cfgs, "power")
         # execute post scripts with enforced order
         cluster_read = Cluster(self.cfg["file"])
@@ -2125,14 +2330,17 @@ class Operations(object):
                         "Label": network_object.deviceInfo.label,
                     }
                 )
-            if isinstance(
-                network_object, vim.vm.device.VirtualPCIPassthrough
-            ) and hasattr(network_object.backing, "id"):
+            if isinstance(network_object, vim.vm.device.VirtualPCIPassthrough) and (
+                hasattr(network_object.backing, "id")
+                or hasattr(network_object.backing, "assignedId")
+            ):
+                backing_id = (
+                    getattr(network_object.backing, "id")
+                    if hasattr(network_object.backing, "id")
+                    else getattr(network_object.backing, "assignedId")
+                )
                 for attached_direct_passthru_device in attached_direct_passthru_devices:
-                    if (
-                        attached_direct_passthru_device["Device ID"]
-                        == network_object.backing.id
-                    ):
+                    if attached_direct_passthru_device["Device ID"] == backing_id:
                         attached_direct_passthru_device.update(
                             {"Label": network_object.deviceInfo.label}
                         )
@@ -2238,4 +2446,22 @@ class Operations(object):
                 self.cfg["device"],
                 num_virtual_functions=self.cfg.get("num_func"),
                 enable_sriov=bool(self.cfg["on"]),
+            )
+
+    def passthru_host_cli(self):
+        hosts = []
+        if "host" in self.cfg:
+            hosts.append(self.cfg["host"])
+        else:
+            hosts.extend(
+                [
+                    host_cfg["host"]
+                    for host_cfg in self._extract_file(self.cfg, file_keys=["host"])
+                ]
+            )
+
+        for host in hosts:
+            host_obj = self.objs.get_host(host)
+            ConfigHost(host_obj).toggle_pci_device_availability(
+                self.cfg["device"], bool(self.cfg["on"])
             )

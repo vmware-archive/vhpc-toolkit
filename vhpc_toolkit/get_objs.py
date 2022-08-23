@@ -10,6 +10,9 @@
 # license, as noted in the LICENSE file.
 # SPDX-License-Identifier: Apache-2.0
 # coding=utf-8
+from typing import List
+from typing import Optional
+
 from pyVmomi import vim
 from pyVmomi import vmodl
 
@@ -35,7 +38,8 @@ class GetObjects(object):
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def get_container_view(self, vimtype):
-        """Get the container view by managed object types
+        """
+        Get the container view by managed object types
 
         Args:
             vimtype ([str]): a list of types to get container view
@@ -45,11 +49,32 @@ class GetObjects(object):
                                     this view
 
         """
-
+        # Get all the objects in the root folder which is of vimtype type
         container = self.content.viewManager.CreateContainerView(
             self.content.rootFolder, vimtype, True
         )
         return container.view
+
+    def get_objs(self, vimtype: List, name: str):
+        """
+        Get all managed objects of the given name
+
+        Args:
+            vimtype: The list of managed types to get container view
+            name: name of the desired object to get
+
+        Returns:
+            [vmodl.ManagedObjectReferences]: List of managed objects
+
+        """
+        objs = []
+        for obj in self.get_container_view(vimtype):
+            if name:
+                if obj.name == name:
+                    objs.append(obj)
+            else:
+                objs.append(obj)
+        return objs
 
     def get_obj(self, vimtype, name):
         """Get the managed object by name
@@ -62,7 +87,6 @@ class GetObjects(object):
             vmodl.ManagedObject: the managed object
 
         """
-
         obj = None
         for c in self.get_container_view(vimtype):
             if name:
@@ -281,28 +305,52 @@ class GetObjects(object):
             else:
                 return None
 
-    def get_network(self, network_name, _exit=True):
-        """Get the network managed object by name
+    def get_network(
+        self, network_name, dvs_name=None, _exit=True
+    ) -> Optional[vim.Network]:
+        """
+        Get the network managed object by name.
+        Network object and port group object are used interchangeable
 
         Args:
-            network_name (str): the name of network to get
+            network_name (str): the name of the network (port group) to get
+            dvs_name (str): the name of the dvs which the network belongs to
             _exit (bool)
 
         Returns:
-            vim.Network if exists
-
+            Network object
         """
+        # Get all the objects of network type and given network name
+        network_objs = self.get_objs([vim.Network], network_name)
 
-        network_obj = self.get_obj([vim.Network], network_name)
-        if network_obj:
+        # If there are more than one network objects with the same name, we need a way to filter the number to one
+        if len(network_objs) > 1:
+            # If dvs_name is specified, filter based on the name
+            if dvs_name:
+                network_objs = [
+                    network_obj
+                    for network_obj in network_objs
+                    if hasattr(network_obj.config, "distributedVirtualSwitch")
+                    and network_obj.config.distributedVirtualSwitch.name == dvs_name
+                ]
+
+        # If only one object is left, return that object
+        if len(network_objs) == 1:
             self.logger.info("Found network {0}".format(network_name))
-            return network_obj
+            return network_objs[0]
+
+        # If there are still multiple objects left, then log error
+        if len(network_objs) > 1:
+            self.logger.error(
+                f"Found multiple networks (port groups) with the same name {network_name}. Please consider applying a filter and try again."
+            )
         else:
-            self.logger.error("Cannot find network {0}".format(network_name))
-            if _exit:
-                raise SystemExit
-            else:
-                return None
+            self.logger.error("Cannot find network (port group) {0}".format(network_name))
+
+        if _exit:
+            raise SystemExit
+        else:
+            return None
 
     def get_dvs(self, dvs_name, _exit=True):
         """Get the distributed virtual switch (DVS) managed object by name
@@ -459,7 +507,7 @@ class GetHost(object):
             vim.host.PciDevice: a PCI object if exists, otherwise None
 
         """
-
+        pci = pci.lower()
         for pciDevice in self.host_obj.hardware.pciDevice:
             if pci == pciDevice.id:
                 pci_obj = pciDevice
@@ -894,10 +942,12 @@ class GetVM(object):
         """
 
         return [
-            device.backing.id
+            getattr(device.backing, "id")
+            if hasattr(device.backing, "id")
+            else getattr(device.backing, "assignedId")
             for device in self.vm_obj.config.hardware.device
             if isinstance(device, vim.VirtualPCIPassthrough)
-            and hasattr(device.backing, "id")
+            and (hasattr(device.backing, "id") or hasattr(device.backing, "assignedId"))
         ]
 
     def configurable_pci_ids(self):
@@ -1143,27 +1193,25 @@ class GetClone(GetObjects):
     def __init__(
         self,
         content,
-        template_obj,
-        datacenter_name=None,
-        folder_name=None,
-        cluster_name=None,
-        resource_pool_name=None,
-        host_name=None,
-        datastore_name=None,
-        cpu=None,
-        memory=None,
+        datacenter_obj: vim.Datacenter,
+        folder_obj: vim.Folder,
+        cluster_obj: vim.ClusterComputeResource,
+        resource_pool_obj,
+        host_obj: vim.HostSystem,
+        datastore_obj: vim.Datastore,
+        cpu: int,
+        memory: int,
     ):
         """
 
         Args:
             content: vCenter retrieve content by ServiceInstance object
-            template_obj (vim.VirtualMachine)
-            datacenter_name (str): the dest datacenter name
-            folder_name (str): the dest folder name
-            cluster_name (str): the dest cluster name
-            resource_pool_name (str): the dest resource pool name
-            host_name (str): the dest host name
-            datastore_name (str): the dest datastore name
+            datacenter_obj (str): the dest datacenter name
+            folder_obj (str): the dest folder name
+            cluster_obj (str): the dest cluster name
+            resource_pool_obj (str): the dest resource pool name
+            host_obj (str): the dest host name
+            datastore_obj (str): the dest datastore name
             cpu (int): number of vCPUs; if none, it will be same as template VM
             memory (int): memory size in GB; if none, will will be same as
             template VM
@@ -1173,67 +1221,11 @@ class GetClone(GetObjects):
         super().__init__(content)
 
         # get the default datacenter
-        self.dest_datacenter_obj = self.get_datacenter(datacenter_name)
-
-        if folder_name:
-            self.dest_folder_obj = self.get_folder(folder_name)
-        else:
-            self.dest_folder_obj = self.dest_datacenter_obj.vmFolder
-            self.logger.info(
-                "No VM folder specified. "
-                "The first VM folder ({0}) "
-                "in the datacenter ({1}) is "
-                "used.".format(self.dest_folder_obj.name, self.dest_datacenter_obj.name)
-            )
-
-        if datastore_name:
-            self.dest_datastore_obj = self.get_datastore(datastore_name)
-        else:
-            self.dest_datastore_obj = self.get_datastore(template_obj.datastore[0].name)
-            self.logger.info(
-                "No datastore specified. "
-                "The same datastore ({0}) "
-                "of the template ({1}) is used.".format(
-                    self.dest_datastore_obj.name, template_obj.name
-                )
-            )
-
-        if resource_pool_name:
-            self.dest_resource_pool_obj = self.get_resource_pool(
-                resource_pool_name, host_name=host_name, cluster_name=cluster_name
-            )
-        else:
-            self.dest_resource_pool_obj = None
-            self.logger.info(
-                "No resource pool specified. Will use default resource pool."
-            )
-
-        if cluster_name:
-            self.dest_cluster_obj = self.get_cluster(cluster_name)
-        else:
-            self.dest_cluster_obj = self.dest_datacenter_obj.hostFolder.childEntity[0]
-
-        if host_name:
-            self.dest_host_obj = self.get_host(host_name)
-        elif GetCluster(self.dest_cluster_obj).is_drs():
-            self.logger.info(
-                "No host specified. "
-                "DRS is enabled. "
-                "A host selected by DRS will be used."
-            )
-            self.dest_host_obj = None
-        else:
-            self.dest_host_obj = None
-            self.logger.warning(
-                "No host specified and DRS is not enabled. "
-                "The same host of the template "
-                "in the cluster will be used."
-            )
-        if cpu:
-            self.cpu = int(cpu)
-        else:
-            self.cpu = GetVM(template_obj).cpu()
-        if memory:
-            self.memory = int(float(memory) * 1024)
-        else:
-            self.memory = GetVM(template_obj).memory()
+        self.dest_datacenter_obj = datacenter_obj
+        self.dest_folder_obj = folder_obj
+        self.dest_datastore_obj = datastore_obj
+        self.dest_resource_pool_obj = resource_pool_obj
+        self.dest_cluster_obj = cluster_obj
+        self.dest_host_obj = host_obj
+        self.cpu = cpu
+        self.memory = memory

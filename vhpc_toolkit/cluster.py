@@ -13,6 +13,7 @@
 import configparser
 import itertools
 import re
+from collections import OrderedDict
 from operator import itemgetter
 
 from distutils.util import strtobool
@@ -38,6 +39,8 @@ class Cluster(object):
         self.file = file
         self.logger = log.my_logger(name=self.__class__.__name__)
         self.cfg_parser = configparser.ConfigParser()
+        # Adding next line to prevent parser from converting everything to lowercase
+        self.cfg_parser.optionxform = str
         cluster_file = get_args.find_script_conf_file(self.file)
         try:
             self.cfg_parser.read(cluster_file)
@@ -127,7 +130,7 @@ class Cluster(object):
                 # unfold range
                 self._unfold_range_svs_dvs(cfg)
                 cfgs.append(dict(cfg))
-                return cfgs
+            return cfgs
         except UnknownKeyError as e:
             e.log()
             raise SystemExit
@@ -537,25 +540,32 @@ class Cluster(object):
             "domain",
             "guest_hostname",
             "vgpu",
-            "sriov_port_group",
             "pvrdma_port_group",
-            "pf",
             "power",
             "dvs_name",
+            "svs_name",
         ]
         float_keys = ["memory"]
-        int_keys = ["cpu", "mmio_size", "cpu_shares", "memory_shares"]
+        int_keys = [
+            "cpu",
+            "mmio_size",
+            "cpu_shares",
+            "memory_shares",
+            "cores_per_socket",
+        ]
         bool_keys = [
             "cpu_reservation",
             "memory_reservation",
             "is_dhcp",
             "linked",
             "instant",
+            "secure_boot",
+            "allow_guest_mtu_change",
         ]
         list_keys = ["device", "dns"]
-        append_keys = ["script"]
-        barrier_keys = ["barrier"]
-        barrier_target = "script"
+        append_keys = ["script", "pf", "sriov_port_group", "sriov_dvs_name"]
+        sequence_keys = ["sequence"]
+        sequence_target = "script"
         if key in str_keys:
             cfg[key] = value
         elif key in list_keys:
@@ -563,18 +573,17 @@ class Cluster(object):
         elif key in append_keys:
             if not Check().check_kv(cfg, key):
                 cfg[key] = []
-            if value not in cfg[key]:
-                cfg[key].append(value)
+            cfg[key].append(value)
         elif key in int_keys:
             cfg[key] = int(value)
         elif key in float_keys:
             cfg[key] = float(value)
         elif key in bool_keys:
             cfg[key] = strtobool(value)
-        elif key in barrier_keys:
-            labeled_barrier_target = barrier_target + str(value)
-            cfg[labeled_barrier_target] = cfg[barrier_target]
-            cfg[barrier_target] = []
+        elif key in sequence_keys:
+            labeled_sequence_target = sequence_target + str(value)
+            cfg[labeled_sequence_target] = cfg[sequence_target]
+            cfg[sequence_target] = []
         else:
             self.logger.error("Unknown key {0}".format(key))
             raise SystemExit
