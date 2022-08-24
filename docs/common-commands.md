@@ -30,7 +30,7 @@ To destroy the switch, can use only the required arguments
 ## dvs
 Create/Destroy Distributed Virtual Switch
 ```bash
-./vhpc_toolkit dvs --create 
+./vhpc_toolkit dvs --create --host host_name --name dvs_name --pnic pnic1 pnic2 --host host1 host2 host3 --port_group port_group
 ```
 
 | **Argument** 	| **What does it do?**                                                                                                    	| Group 	| Type         	| Required    	|
