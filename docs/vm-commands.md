@@ -81,6 +81,22 @@ To migrate VM(s) to a different host
 ## network_cfg
 ## passthru
 ## pvrdma
+Add/Remove PVRDMA (Paravirtual RDMA) device(s)
+
+```bash
+./vhpc_toolkit pvrdma [-h] (--vm VM | --file FILE) (--add | --remove) --pvrdma_port_group PVRDMA_PORT_GROUP --dvs_name DVS_NAME
+```
+
+| **Argument**      	| **What does it do?**                                                                     	| Group 	| Type   	| Required    	|
+|-------------------	|------------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
+| vm                	| Name of the VM on which to perform the PVRDMA operation                                  	| 1     	| string 	| True(Group) 	|
+| file              	| Name of the file containing a list of VMs, one per line, to perform the PVRDMA operation 	| 1     	| string 	| True(Group) 	|
+| add               	| Add PVRDMA device to VM(s)                                                               	| 2     	| None   	| True(Group) 	|
+| remove            	| Remove PVRDMA device from VM(s)                                                          	| 2     	| None   	| True(Group) 	|
+| pvrdma_port_group 	| Name of virtual network adapter which could enable PVRDMA                                	|       	| string 	| True        	|
+| dvs_name          	| Name of distributed virtual switch which could enable PVRDMA                             	|       	| string 	| True        	|
+
+
 ## vgpu
 Add/Remove vGPU device in SharedPassthru mode
 

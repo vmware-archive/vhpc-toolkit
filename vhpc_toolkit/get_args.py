@@ -942,6 +942,7 @@ def get_args():
         "--dvs_name",
         action="store",
         type=str,
+        required=True,
         help="Name of distributed virtual switch which could enable PVRDMA",
     )
     vgpu_parser = subparsers.add_parser(
