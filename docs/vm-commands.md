@@ -82,20 +82,37 @@ To migrate VM(s) to a different host
 ## passthru
 ## pvrdma
 ## vgpu
+Add/Remove vGPU device in SharedPassthru mode
+
+```bash
+vhpc_toolkit vgpu [-h] (--vm VM | --file FILE) [--query] [--remove | --add] [--profile PROFILE]
+```
+
+| **Argument** 	| **What does it do?**                                                                   	| Group 	| Type   	| Required    	|
+|--------------	|----------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
+| vm           	| Name of the VM on which to perform the vGPU operation                                  	| 1     	| string 	| True(Group) 	|
+| file         	| Name of the file containing a list of VMs, one per line, to perform the vGPU operation 	| 1     	| string 	| True(Group) 	|
+| query        	| Print available vGPU profiles information for the VM(s)                                	|       	| None   	| False       	|
+| remove       	| Remove vGPU profile                                                                    	| 2     	| string 	| False       	|
+| add          	| Add vGPU profile                                                                       	| 2     	| string 	| False       	|
+| profile      	| Profile of the vGPU, for example: `grid_p100-4q`                                       	|       	| string 	| False       	|
+
+?> When using **add**, **profile** must be specified
+
 ## post
 Run a shell script(s) on remote VM(s)
 ```bash
 ./vhpc_toolkit post [-h] (--vm VM | --file FILE) --script SCRIPT [SCRIPT ...] [--guest_username GUEST_USERNAME] [--guest_password GUEST_PASSWORD] [--wait]
 ```
 
-| **Argument**   	| **What does it do?**                                                               	| Group 	| Type         	| Required    	|
-|----------------	|------------------------------------------------------------------------------------	|-------	|--------------	|-------------	|
-| vm             	| Name of the VM on which to execute post script(s)                                  	| 1     	| string       	| True(Group) 	|
-| file           	| Name of the file containing a list of VMs, one per line, to execute post script(s) 	| 1     	| string       	| True(Group) 	|
-| script         	| Local post script(s) to be executed in guest OS                                    	|       	| list[string] 	| True        	|
-| guest_username 	| Guest OS username (default: root)                                                  	|       	| string       	| True        	|
-| guest_password 	| Guest OS password. If omitted, it will be prompted.                                	|       	| string       	| True        	|
-| wait           	| Wait for the script execution finish                                               	|       	| string       	| False       	|
+| **Argument**   	| **What does it do?**                                                               	| Group 	| Type         	| Required    	  |
+|----------------	|------------------------------------------------------------------------------------	|-------	|--------------	|----------------|
+| vm             	| Name of the VM on which to execute post script(s)                                  	| 1     	| string       	| True(Group) 	  |
+| file           	| Name of the file containing a list of VMs, one per line, to execute post script(s) 	| 1     	| string       	| True(Group) 	  |
+| script         	| Local post script(s) to be executed in guest OS                                    	|       	| list[string] 	| True        	  |
+| guest_username 	| Guest OS username (default: root)                                                  	|       	| string       	| False        	 |
+| guest_password 	| Guest OS password. If omitted, it will be prompted.                                	|       	| string       	| False        	 |
+| wait           	| Wait for the script execution finish                                               	|       	| string       	| False       	  |
 
 !> If your password contains any restricted characters, escape those characters using `\`
 
@@ -103,7 +120,7 @@ Run a shell script(s) on remote VM(s)
 Print performance related settings for VM
 
 ```bash
-./vhpc_toolkit get_vm_config --vm vm_name
+./vhpc_toolkit get_vm_config [-h] (--vm VM | --file FILE)
 ```
 
 | **Argument** 	| **What does it do?**                                                              	| Group 	| Type   	| Required    	|
