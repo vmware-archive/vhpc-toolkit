@@ -7,6 +7,10 @@ To clone a VM
 ## destroy
 To destroy VM(s)
 
+```bash
+./vhpc_toolkit destroy --vm vm_name
+```
+
 | **Argument** 	| **What does it do?**                                               	| Group 	| Type   	| Required    	|
 |--------------	|--------------------------------------------------------------------	|-------	|--------	|-------------	|
 | vm           	| Name of the VM to destroy                                          	| 1     	| string 	| True(Group) 	|
@@ -15,6 +19,10 @@ To destroy VM(s)
 ## power
 To Power on/off VM(s)
 
+```bash
+./vhpc_toolkit power --vm vm_name --off
+```
+
 | **Argument** 	| **What does it do?**                                               	| Group 	| Type   	| Required    	|
 |--------------	|--------------------------------------------------------------------	|-------	|--------	|-------------	|
 | vm           	| Name of the VM to destroy                                          	| 1     	| string 	| True(Group) 	|
@@ -22,6 +30,10 @@ To Power on/off VM(s)
 
 ## secure_boot
 To enable/disable secure boot for VM(s)
+
+```bash
+./vhpc_toolkit secure_boot --vm vm_name --on
+```
 
 | **Argument** 	| **What does it do?**                                                            	| Group 	| Type   	| Required    	|
 |--------------	|---------------------------------------------------------------------------------	|-------	|--------	|-------------	|
@@ -32,6 +44,10 @@ To enable/disable secure boot for VM(s)
 
 ## migrate_vm
 To migrate VM(s) to a different host
+
+```bash
+./vhpc_toolkit migrate_vm --vm vm_name --destination host_name
+```
 
 | **Argument** 	| **What does it do?**                                                    	| Group 	| Type   	| Required    	|
 |--------------	|-------------------------------------------------------------------------	|-------	|--------	|-------------	|
