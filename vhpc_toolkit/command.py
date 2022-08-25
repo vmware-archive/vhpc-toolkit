@@ -27,16 +27,18 @@ def command():
         raise SystemExit(0)
     if ops.cfg[CMD_KEY] == "view":
         ops.view_cli()
-    elif ops.cfg[CMD_KEY] == "clone":
-        ops.clone_cli()
+    elif ops.cfg[CMD_KEY] == "cluster":
+        ops.cluster()
     elif ops.cfg[CMD_KEY] == "destroy":
         ops.destroy_cli()
     elif ops.cfg[CMD_KEY] == "power":
         ops.power_cli()
-    elif ops.cfg[CMD_KEY] == "network":
-        ops.network_cli()
-    elif ops.cfg[CMD_KEY] == "network_cfg":
-        ops.network_cfg_cli()
+    elif ops.cfg[CMD_KEY] == "secure_boot":
+        ops.secure_boot_cli()
+    elif ops.cfg[CMD_KEY] == "clone":
+        ops.clone_cli()
+    elif ops.cfg[CMD_KEY] == "migrate_vm":
+        ops.migrate_vm_cli()
     elif ops.cfg[CMD_KEY] == "post":
         ops.post_cli()
     elif ops.cfg[CMD_KEY] == "passthru":
@@ -47,6 +49,10 @@ def command():
         ops.vgpu_cli()
     elif ops.cfg[CMD_KEY] == "pvrdma":
         ops.pvrdma_cli()
+    elif ops.cfg[CMD_KEY] == "network":
+        ops.network_cli()
+    elif ops.cfg[CMD_KEY] == "network_cfg":
+        ops.network_cfg_cli()
     elif ops.cfg[CMD_KEY] == "svs":
         ops.svs_cli()
     elif ops.cfg[CMD_KEY] == "dvs":
@@ -55,21 +61,16 @@ def command():
         ops.cpumem_cli()
     elif ops.cfg[CMD_KEY] == "latency":
         ops.latency_cli()
-    elif ops.cfg[CMD_KEY] == "cluster":
-        ops.cluster()
-    elif ops.cfg[CMD_KEY] == "passthru_host":
-        ops.passthru_host_cli()
-    elif ops.cfg[CMD_KEY] == "get_vm_config":
-        ops.get_vm_config_cli()
-    elif ops.cfg[CMD_KEY] == "secure_boot":
-        ops.secure_boot_cli()
     elif ops.cfg[CMD_KEY] == "vm_sched_affinity":
         ops.vm_scheduling_affinity_cli()
     elif ops.cfg[CMD_KEY] == "numa_affinity":
         ops.numa_affinity_cli()
-    elif ops.cfg[CMD_KEY] == "power_policy":
-        ops.power_policy_cli()
+    elif ops.cfg[CMD_KEY] == "get_vm_config":
+        ops.get_vm_config_cli()
+    elif ops.cfg[CMD_KEY] == "passthru_host":
+        ops.passthru_host_cli()
     elif ops.cfg[CMD_KEY] == "sriov_host":
         ops.modify_host_sriov_cli()
-    elif ops.cfg[CMD_KEY] == "migrate_vm":
-        ops.migrate_vm_cli()
+    elif ops.cfg[CMD_KEY] == "power_policy":
+        ops.power_policy_cli()
+
