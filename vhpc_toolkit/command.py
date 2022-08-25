@@ -25,13 +25,14 @@ def command():
     if CMD_KEY not in ops.cfg:
         print(parser.print_help())
         raise SystemExit(0)
+    
     # Cluster level operations
     if ops.cfg[CMD_KEY] == "view":
         ops.view_cli()
     elif ops.cfg[CMD_KEY] == "cluster":
         ops.cluster()
 
-    # One VM utility operations
+    # Utility operations on one VM
     elif ops.cfg[CMD_KEY] == "power":
         ops.power_cli()
     elif ops.cfg[CMD_KEY] == "secure_boot":
@@ -44,23 +45,7 @@ def command():
         ops.clone_cli()
     elif ops.cfg[CMD_KEY] == "post":
         ops.post_cli()
-
-    # Adding devices to one VM
-    elif ops.cfg[CMD_KEY] == "passthru":
-        ops.passthru_cli()
-    elif ops.cfg[CMD_KEY] == "sriov":
-        ops.sriov_cli()
-    elif ops.cfg[CMD_KEY] == "vgpu":
-        ops.vgpu_cli()
-    elif ops.cfg[CMD_KEY] == "pvrdma":
-        ops.pvrdma_cli()
-
-    # Network related operations to one VM
-    elif ops.cfg[CMD_KEY] == "network":
-        ops.network_cli()
-    elif ops.cfg[CMD_KEY] == "network_cfg":
-        ops.network_cfg_cli()
-
+    
     # Operations to change compute resources on one VM
     elif ops.cfg[CMD_KEY] == "cpumem":
         ops.cpumem_cli()
@@ -73,7 +58,23 @@ def command():
     elif ops.cfg[CMD_KEY] == "get_vm_config":
         ops.get_vm_config_cli()
 
-    #  Operations configured on host(s)
+    # Operations to add various devices on one VM
+    elif ops.cfg[CMD_KEY] == "passthru":
+        ops.passthru_cli()
+    elif ops.cfg[CMD_KEY] == "sriov":
+        ops.sriov_cli()
+    elif ops.cfg[CMD_KEY] == "vgpu":
+        ops.vgpu_cli()
+    elif ops.cfg[CMD_KEY] == "pvrdma":
+        ops.pvrdma_cli()
+
+    # Network related operations on one VM
+    elif ops.cfg[CMD_KEY] == "network":
+        ops.network_cli()
+    elif ops.cfg[CMD_KEY] == "network_cfg":
+        ops.network_cfg_cli()
+
+    # Operations configured on host(s)
     elif ops.cfg[CMD_KEY] == "svs":
         ops.svs_cli()
     elif ops.cfg[CMD_KEY] == "dvs":
