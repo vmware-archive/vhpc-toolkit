@@ -87,6 +87,7 @@ class Operations(object):
         if file_keys is None:
             file_keys = ["vm"]
         vm_cfgs = []
+
         if Check().check_kv(vm_cfg, "vm"):
             vm_cfgs.append(vm_cfg)
         elif Check().check_kv(vm_cfg, "file"):
@@ -199,6 +200,7 @@ class Operations(object):
                 "used.".format(dest_folder_obj.name, dest_datacenter_obj.name)
             )
 
+        # get datastore
         datastore_name = clone_dests["datastore"]
         if datastore_name:
             dest_datastore_obj = self.objs.get_datastore(datastore_name)
@@ -212,12 +214,14 @@ class Operations(object):
                 )
             )
 
+        # get cluster
         cluster_name = clone_dests["cluster"]
         if cluster_name:
             dest_cluster_obj = self.objs.get_cluster(cluster_name)
         else:
             dest_cluster_obj = dest_datacenter_obj.hostFolder.childEntity[0]
 
+        # get hosts
         host_name = clone_dests["host"]
         dest_host_obj = None
         if host_name:
@@ -235,6 +239,7 @@ class Operations(object):
                 "in the cluster will be used."
             )
 
+        # get resource pool
         resource_pool_name = clone_dests["resource_pool"]
         dest_resource_pool_obj = None
         if resource_pool_name:
@@ -262,6 +267,7 @@ class Operations(object):
                     "Resource pool and destination host name cannot both be empty"
                 )
 
+        # Change number of cores and memory if inputs are assigned
         cpu = clone_dests["cpu"]
         if cpu:
             cpu = int(cpu)
@@ -358,6 +364,7 @@ class Operations(object):
         """
         vm_cfgs = self._extract_file(self.cfg)
         vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
         if vms:
             try:
                 confirm = input(
@@ -386,6 +393,8 @@ class Operations(object):
         """
         vm_objs = []
         power_tasks = []
+
+        # Check whether VMs are powered off
         for vm in vms:
             vm_obj = self.objs.get_vm(vm, _exit=False)
             if vm_obj is not None:
@@ -396,7 +405,10 @@ class Operations(object):
             GetWait().wait_for_tasks(
                 power_tasks, task_name="Power off VMs before destroying"
             )
+        
+        # Destroy VMs
         destroy_tasks = [ConfigVM(vm_obj).destroy() for vm_obj in vm_objs]
+
         return destroy_tasks
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ DESTROY END ~~~~~~~~~~~~~~~~~~~~~~~#
@@ -412,15 +424,18 @@ class Operations(object):
         cpumem_tasks = []
         cpumem_reser_tasks = []
         vm_cfgs = self._extract_file(self.cfg)
+
         # Configure CPU and memory size for the VM(s)
         for vm_cfg in vm_cfgs:
             cpumem_tasks.extend(self._get_cpumem_tasks(vm_cfg))
         if cpumem_tasks:
             GetWait().wait_for_tasks(cpumem_tasks, task_name="Configure CPU/memory")
+
         # Configure CPU shares
         cpu_shares_tasks = [self._get_cpu_shares_task(vm_cfg) for vm_cfg in vm_cfgs]
         if cpu_shares_tasks:
             GetWait().wait_for_tasks(cpu_shares_tasks, task_name="Configure CPU shares")
+
         # Configure memory shares
         memory_shares_tasks = [
             self._get_memory_shares_task(vm_cfg) for vm_cfg in vm_cfgs
@@ -429,6 +444,7 @@ class Operations(object):
             GetWait().wait_for_tasks(
                 memory_shares_tasks, task_name="Configure memory shares"
             )
+        
         # Configure CPU or memory reservation
         for vm_cfg in vm_cfgs:
             cpumem_reser_tasks.extend(self._get_cpumem_reser_tasks(vm_cfg))
@@ -450,6 +466,7 @@ class Operations(object):
                 None
         """
         tasks = []
+
         for vm_cfg in vm_cfgs:
             if all(k in vm_cfg for k in keys):
                 tasks.extend(self._get_cpumem_tasks(vm_cfg))
@@ -471,7 +488,6 @@ class Operations(object):
             None
 
         """
-
         tasks = [
             self._get_cpu_shares_task(vm_cfg)
             for vm_cfg in vm_cfgs
@@ -531,6 +547,7 @@ class Operations(object):
         """
         tasks = []
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
+
         if Check().check_kv(vm_cfg, "cpu"):
             if GetVM(vm_obj).cpu() != vm_cfg["cpu"]:
                 self.logger.info(
@@ -541,6 +558,7 @@ class Operations(object):
                 self.logger.info(
                     "No change of number of " "CPUs for VM {0}".format(vm_obj.name)
                 )
+
         if Check().check_kv(vm_cfg, "memory"):
             mem = int(float(vm_cfg["memory"]) * 1024)
             if GetVM(vm_obj).memory() != mem:
@@ -553,6 +571,7 @@ class Operations(object):
                 self.logger.info(
                     "No change of memory size for VM {0}".format(vm_obj.name)
                 )
+        
         if Check().check_kv(vm_cfg, "cores_per_socket"):
             cores_per_socket = vm_cfg["cores_per_socket"]
             if GetVM(vm_obj).cores_per_socket() != cores_per_socket:
@@ -565,6 +584,7 @@ class Operations(object):
                 self.logger.info(
                     "No change of cores per socket for VM {0}".format(vm_obj.name)
                 )
+        
         return tasks
 
     def _get_cpu_shares_task(self, vm_cfg):
@@ -578,6 +598,7 @@ class Operations(object):
             Task
         """
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
+
         if Check().check_kv(vm_cfg, "cpu_shares"):
             if GetVM(vm_obj).cpu_shares() != vm_cfg["cpu_shares"]:
                 self.logger.info(
@@ -601,6 +622,7 @@ class Operations(object):
             Task
         """
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
+
         if Check().check_kv(vm_cfg, "memory_shares"):
             if GetVM(vm_obj).memory_shares() != vm_cfg["memory_shares"]:
                 self.logger.info(
@@ -628,6 +650,7 @@ class Operations(object):
         host_obj = self.objs.get_host_by_vm(vm_obj)
         vm_status = GetVM(vm_obj)
         vm_update = ConfigVM(vm_obj)
+
         if Check().check_kv(vm_cfg, "cpu_reservation", none_check=False):
             if vm_cfg["cpu_reservation"]:
                 host_cpu_mhz = GetHost(host_obj).cpu_mhz_per_core()
@@ -654,6 +677,7 @@ class Operations(object):
                     self.logger.info(
                         "CPU is already not reserved for VM {0}".format(vm_obj.name)
                     )
+
         if Check().check_kv(vm_cfg, "memory_reservation", none_check=False):
             if vm_cfg["memory_reservation"]:
                 if vm_status.is_memory_reser_full() != vm_cfg["memory_reservation"]:
@@ -675,6 +699,7 @@ class Operations(object):
                     self.logger.info(
                         "Memory is already not reserved for " "{0}".format(vm_obj.name)
                     )
+
         return tasks
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~ POWER ~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -687,9 +712,11 @@ class Operations(object):
         """
         vm_cfgs = self._extract_file(self.cfg)
         vms = [vm_cfg["vm"] for vm_cfg in vm_cfgs]
+
         if self.cfg["on"]:
             tasks = self._get_poweron_tasks(vms)
             GetWait().wait_for_tasks(tasks, task_name="Power on")
+        
         if self.cfg["off"]:
             tasks = self._get_poweroff_tasks(vms)
             GetWait().wait_for_tasks(tasks, task_name="Power off")
@@ -703,6 +730,7 @@ class Operations(object):
         """
         on_vms = []
         off_vms = []
+
         for vm_cfg in vm_cfgs:
             if Check().check_kv(vm_cfg, key) and vm_cfg[key] == "off":
                 off_vms.append(vm_cfg["vm"])
@@ -727,6 +755,7 @@ class Operations(object):
             list: a list of Tasks
         """
         tasks = []
+
         for vm in vms:
             vm_obj = self.objs.get_vm(vm)
             if not GetVM(vm_obj).is_power_on():
@@ -734,6 +763,7 @@ class Operations(object):
                 tasks.append(task)
             else:
                 self.logger.info("VM {0} is already in power on state".format(vm))
+        
         return tasks
 
     def _get_poweroff_tasks(self, vms):
@@ -747,6 +777,7 @@ class Operations(object):
             list: a list of Tasks
         """
         tasks = []
+
         for vm in vms:
             vm_obj = self.objs.get_vm(vm)
             if GetVM(vm_obj).is_power_on():
@@ -754,6 +785,7 @@ class Operations(object):
                 tasks.append(task)
             else:
                 self.logger.info("VM {0} is already in power off state".format(vm))
+        
         return tasks
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ POWER END ~~~~~~~~~~~~~~~~~~~~~~#
@@ -761,6 +793,7 @@ class Operations(object):
     # ~~~~~~~~~~~~~~~~~~~~~~ POWER POLICY ~~~~~~~~~~~~~~~~~~~~#
     def power_policy_cli(self):
         hosts = []
+
         if "host" in self.cfg:
             hosts.append(self.cfg["host"])
         else:
@@ -818,6 +851,7 @@ class Operations(object):
     def __get_secure_boot_tasks(self, vms: List[str], enabled: bool) -> List[vim.Task]:
         """
         Enable/Disable secure boot for vms
+
         Args:
             vms: List of vm names
             enabled: Whether to enable secure boot or not
@@ -874,6 +908,7 @@ class Operations(object):
             None
         """
         tasks = []
+
         for vm_cfg in vm_cfgs:
             if all(k in vm_cfg for k in keys):
                 tasks.extend(self._get_network_add_tasks(vm_cfg))
@@ -893,6 +928,7 @@ class Operations(object):
         tasks = []
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         pgs = vm_cfg["port_group"]
+
         if isinstance(pgs, str):
             pgs = [pgs]
         for pg in pgs:
@@ -920,6 +956,7 @@ class Operations(object):
         tasks = []
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         pgs = vm_cfg["port_group"]
+
         if isinstance(pgs, str):
             pgs = [pgs]
         for pg in pgs:
@@ -949,6 +986,7 @@ class Operations(object):
         """
         vm_cfgs = self._extract_file(self.cfg)
         tasks = [self._get_network_cfg_task(vm_cfg) for vm_cfg in vm_cfgs]
+
         if tasks:
             GetWait().wait_for_tasks(tasks, task_name="Configure network properties")
 
@@ -965,6 +1003,7 @@ class Operations(object):
             None
         """
         tasks = []
+
         for vm_cfg in vm_cfgs:
             if any(k in vm_cfg for k in keys):
                 tasks.append(self._get_network_cfg_task(vm_cfg))
@@ -982,6 +1021,7 @@ class Operations(object):
             Task
         """
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
+
         if GetVM(vm_obj).is_power_on():
             self.logger.error(
                 "VM {0} is powered on. "
@@ -1024,6 +1064,7 @@ class Operations(object):
         task = ConfigVM(vm_obj).config_networking(
             network_obj, ip, netmask, gateway, domain, dns, guest_hostname
         )
+
         return task
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ NETWORK CFG END ~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1212,6 +1253,8 @@ class Operations(object):
             )
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ LATENCY END ~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+    # ======================= Adding devices to one VM ===========================#
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~ PASSTHRU ~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -1641,6 +1684,7 @@ class Operations(object):
                 None
         """
         tasks = []
+
         for vm_cfg in vm_cfgs:
             if all(k in vm_cfg for k in keys):
                 vm_cfg["profile"] = vm_cfg["vgpu"]
@@ -1661,6 +1705,7 @@ class Operations(object):
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         host_obj = self.objs.get_host_by_vm(vm_obj)
         vgpu_profiles = GetHost(host_obj).shared_passthru_vgpu_types()
+        
         if vgpu_profiles:
             print("Available vGPU profiles for VM {0}:".format(vm_obj.name))
             for vgpu_profile in vgpu_profiles:
@@ -1684,6 +1729,7 @@ class Operations(object):
         vm_update = ConfigVM(vm_obj)
         vm_status = GetVM(vm_obj)
         host_obj = self.objs.get_host_by_vm(vm_obj)
+
         Check().check_kv(vm_cfg, "profile", required=True)
         if vm_cfg["profile"] in GetHost(host_obj).shared_passthru_vgpu_types():
             self.logger.debug(
@@ -1729,6 +1775,7 @@ class Operations(object):
         vm_obj = self.objs.get_vm(vm_cfg["vm"])
         vm_status = GetVM(vm_obj)
         vm_update = ConfigVM(vm_obj)
+
         Check().check_kv(vm_cfg, "profile", required=True)
         if vm_cfg["profile"] == vm_status.existing_vgpu_profile():
             self.logger.info(
@@ -1755,6 +1802,7 @@ class Operations(object):
             None
         """
         vm_cfgs = self._extract_file(self.cfg)
+
         if self.cfg["add"]:
             tasks = []
             for vm_cfg in vm_cfgs:
@@ -1780,6 +1828,7 @@ class Operations(object):
             None
         """
         tasks = []
+
         for vm_cfg in vm_cfgs:
             if all(k in vm_cfg for k in keys):
                 tasks.extend(self._get_add_pvrdma_tasks(vm_cfg))
@@ -1852,6 +1901,10 @@ class Operations(object):
             return None
 
     #~~~~~~~~~~~~~~~~~~~~ PVRDMA END ~~~~~~~~~~~~~~~~~~~#
+
+# ================ "Operations to add various devices on one VM" End ==================#
+
+# ================ "Operations configured on host(s)" =================================#
 
     #~~~~~~~~~~~~~~~~~~~~ SVS ~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -2044,6 +2097,8 @@ class Operations(object):
         GetWait().wait_for_tasks([task], task_name="Destroy distributed virtual switch")
 
     #~~~~~~~~~~~~~~~~~~~~~~~ DVS END ~~~~~~~~~~~~~~~~~~~~~#
+
+# ================ "Operations configured on host(s)" End ==============================#
 
     #~~~~~~~~~~~~~~~~~~~~~~~ CLUSTER ~~~~~~~~~~~~~~~~~~~~~#
     def cluster(self):
@@ -2240,6 +2295,9 @@ class Operations(object):
         for vm_cfg in vm_cfgs:
             self._print_vm_config(vm_cfg["vm"])
 
+    #~~~~~~~~~~~~~~~~~~~~~ GETVMCONFIG END ~~~~~~~~~~~~~~~~~~~~~#
+
+    #~~~~~~~~~~~~~~~~~~~~~ PRINT_VM_CONFIG ~~~~~~~~~~~~~~~~~~~~~#
     def _print_vm_config(self, vm_name: str) -> None:
         """
         This function prints the performance related settings of the vm using the vm name provided
@@ -2343,7 +2401,8 @@ class Operations(object):
         print(json.dumps(vm_details, indent=4))
         print("-----------------------------------------")
 
-    #~~~~~~~~~~~~~~~~~~~~~ GETVMCONFIG END ~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~ PRINT_VM_CONFIG End ~~~~~~~~~~~~~~~~~~#
+    
 
     #~~~~~~~~~~~~~~~~~~~~~~ AFFINITY ~~~~~~~~~~~~~~~~~~~~~~#
     def vm_scheduling_affinity_cli(self):
