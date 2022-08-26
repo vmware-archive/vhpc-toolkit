@@ -91,8 +91,8 @@ vhpc_toolkit cpumem [-h] (--vm VM | --file FILE) [--memory MEMORY] [--cpu CPU] [
 | cpu_shares         	| Shares of CPUs for VM(s)                                                                                            	|       	| integer                                     	| False       	|
 | cores_per_socket   	| Cores per socket for VM(s)                                                                                          	|       	| integer                                     	| False       	|
 | memory_shares      	| Shares of memory for VM(s)                                                                                          	|       	| integer                                     	| False       	|
-| memory_reservation 	| Whether to reserve memory.<br>Reserve memory: y, yes, t, true, or 1. <br>Not reserve memory: n, no, f, false, or 0. 	|       	| `{y,yes,t,true,1},<br>{n, no, f, false, 0}` 	| False       	|
-| cpu_reservation    	| Whether to reserve CPU. <br>Reserve CPU: y, yes, t, true, or 1. <br>Not reserve CPU: n, no, f, false, or 0.         	|       	| `{y,yes,t,true,1},<br>{n, no, f, false, 0}` 	| False       	|
+| memory_reservation 	| Whether to reserve memory.<br>Reserve memory: y, yes, t, true, or 1. <br>Not reserve memory: n, no, f, false, or 0. 	|       	| `{y,yes,t,true,1}`<br>`{n, no, f, false, 0}` 	| False       	|
+| cpu_reservation    	| Whether to reserve CPU. <br>Reserve CPU: y, yes, t, true, or 1. <br>Not reserve CPU: n, no, f, false, or 0.         	|       	| `{y,yes,t,true,1}`<br>`{n, no, f, false, 0}` 	| False       	|
 
 ## latency
 Configure/Check latency sensitivity
@@ -115,14 +115,15 @@ Change VM scheduling affinity
 ```
 
 | **Argument** 	 | **What does it do?**                                                                                                                                                           	| Group 	| Type   	| Required    	|
-|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
 | vm           	 | Name of the VM on which to configure latency sensitivity                                                                                                                       	| 1     	| string 	| True(Group) 	|
 | file         	 | Name of the file containing a list of VMs, one per line, to reconfigure vm scheduling affinity                                                                                 	| 1     	| string 	| True(Group) 	|
-| affinity     	 | Affinity range. Use ':' for separating ranges and steps, and ',' to separate values.<br>For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12 	| 2     	| string 	| True(Group) 	|
+| affinity     	 | Affinity range. Use `:` for separating ranges and steps, and `,` to separate values.<br>For example - `0, 2, 4:7, 8:12:2`  would indicate processors `0, 2, 4, 5, 6, 7, 8, 10, 12` 	| 2     	| string 	| True(Group) 	|
 | clear        	 | Clear the scheduling affinity settings for the VM(s)                                                                                                                           	| 2     	| None   	| True(Group) 	|
 
 !> VM needs to be powered off to change scheduling affinity settings
-!> Valid affinity range specifications should always be of type `lower_limit:upper_limit:step_length`. Both limits are included in the range
+<br>
+Valid affinity range specifications should always be of type `lower_limit:upper_limit:step_length`. Both limits are included in the range
 
 ## numa_affinity
 Change NUMA node affinity
@@ -132,10 +133,10 @@ Change NUMA node affinity
 ```
 
 | **Argument** 	| **What does it do?**                                                                                                                                                           	| Group 	| Type   	| Required    	|
-|--------------	|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
+|--------------	|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|-------	|--------	|-------------	|
 | vm           	| Name of the VM on which to change NUMA node affinity                                                                                                                           	| 1     	| string 	| True(Group) 	|
 | file         	| Name of the file containing a list of VMs, one per line, to reconfigure NUMA node affinity                                                                                     	| 1     	| string 	| True(Group) 	|
-| affinity     	| Affinity range. Use ':' for separating ranges and steps, and ',' to separate values.<br>For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12 	| 2     	| string 	| True(Group) 	|
+| affinity     	| Affinity range. Use `:` for separating ranges and steps, and `,` to separate values.<br>For example - `0, 2, 4:7, 8:12:2`  would indicate processors `0, 2, 4, 5, 6, 7, 8, 10, 12` 	| 2     	| string 	| True(Group) 	|
 | clear        	| Clear the NUMA affinity settings for the VM(s)                                                                                                                                 	| 2     	| None   	| True(Group) 	|
 
 !> VM needs to be powered off to change NUMA affinity settings
