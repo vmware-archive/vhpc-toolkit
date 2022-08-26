@@ -2,7 +2,7 @@
 * * [Overview](/#overview "Getting started")
 * * [Install Toolkit](install.md "Install the toolkit")
 * * [Sample Operations](sample-operations.md "Sample operations")
-* CLI
+* Command Line
 * * [List of Commands](commands.md "All available commands")
 * * [Examples](example.md "Use Case")
 * Documentation
