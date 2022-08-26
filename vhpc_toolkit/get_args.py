@@ -22,12 +22,12 @@ CMD_KEY = "command"
 
 
 def get_args():
-    """leverage argparse -- Python parser for command-line options for
+    """
+    leverage argparse -- Python parser for command-line options for
                              passing arguments
 
     Returns:
         ArgumentParser object: hold all necessary command line info to pass
-
     """
 
     from vhpc_toolkit.version import __version__
