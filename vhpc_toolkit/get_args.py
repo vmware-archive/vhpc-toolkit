@@ -22,12 +22,12 @@ CMD_KEY = "command"
 
 
 def get_args():
-    """leverage argparse -- Python parser for command-line options for
+    """
+    leverage argparse -- Python parser for command-line options for
                              passing arguments
 
     Returns:
         ArgumentParser object: hold all necessary command line info to pass
-
     """
 
     from vhpc_toolkit.version import __version__
@@ -48,6 +48,33 @@ def get_args():
         version="vhpc_toolkit version %s" % __version__,
     )
     subparsers = main_parser.add_subparsers(dest=CMD_KEY)
+
+    get_vm_config_parser = subparsers.add_parser(
+        "get_vm_config",
+        help="View the performance metrics of the VM",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    get_vm_config_group1 = get_vm_config_parser.add_mutually_exclusive_group(
+        required=True
+    )
+
+    get_vm_config_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM whose performance related settings should be fetched",
+    )
+    get_vm_config_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the operation",
+    )
+
     view_parser = subparsers.add_parser(
         "view",
         help="View the vCenter object names",
@@ -219,6 +246,219 @@ def get_args():
     )
     power_group2.add_argument("--on", action="store_true", help="Power on")
     power_group2.add_argument("--off", action="store_true", help="Power off")
+
+    migrate_vm_parser = subparsers.add_parser(
+        "migrate_vm",
+        help="Migrate VM(s) to a different host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    migrate_vm_group1 = migrate_vm_parser.add_mutually_exclusive_group(required=True)
+    migrate_vm_group1.add_argument(
+        "--vm",
+        default=None,
+        action="store",
+        type=str,
+        help="The VM to migrate to a different host",
+    )
+    migrate_vm_group1.add_argument(
+        "--file",
+        default=None,
+        action="store",
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the migrate operation",
+    )
+    migrate_vm_parser.add_argument(
+        "--destination",
+        default=None,
+        action="store",
+        type=str,
+        required=True,
+        help="The name of the destination host VM(s) should be migrated to",
+    )
+
+    power_policy_parser = subparsers.add_parser(
+        "power_policy",
+        help="Change the power policy for the host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    power_policy_group1 = power_policy_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    power_policy_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host whose power policy must be changed",
+    )
+    power_policy_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of host(s),"
+        " one per line, to perform the change power policy operation",
+    )
+    power_policy_parser.add_argument(
+        "--policy",
+        action="store",
+        type=int,
+        help="The power policy to change it to. Specify the corresponding index for the power policy\n"
+        "1 - High Performance, 2 - Balanced, 3- Low Power, 4 - Custom",
+        required=True,
+        choices=[1, 2, 3, 4],
+    )
+
+    secure_boot_parser = subparsers.add_parser(
+        "secure_boot",
+        help="Turn secure boot on/off VM(s)",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    secure_boot_group1 = secure_boot_parser.add_mutually_exclusive_group(required=True)
+    secure_boot_group2 = secure_boot_parser.add_mutually_exclusive_group(required=True)
+    secure_boot_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to perform the secure boot operation",
+    )
+    secure_boot_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs,"
+        " one per line, to perform the secure boot operation",
+    )
+    secure_boot_group2.add_argument("--on", action="store_true", help="Secure boot on")
+    secure_boot_group2.add_argument(
+        "--off", action="store_true", help="Secure boot off"
+    )
+
+    def affinity_array(string):
+        affinity_list = []
+        string = string.replace(" ", "")
+        if not string:
+            return []
+        split_ranges = string.split(",")
+        for affinity in split_ranges:
+            # If the given affinity element is not a range, then parse it to integer
+            if ":" not in affinity:
+                if not affinity.isdigit():
+                    raise argparse.ArgumentTypeError(
+                        "Each affinity element must be a valid integer"
+                    )
+                else:
+                    affinity_list.append(int(affinity))
+            else:
+                affinity_range = affinity.split(":")
+                if len(affinity_range) not in {2, 3}:
+                    raise argparse.ArgumentTypeError(
+                        "Argument range must have valid number of elements"
+                    )
+
+                step_length = 1 if len(affinity_range) == 2 else int(affinity_range[2])
+
+                if not all([affinity.isdigit() for affinity in affinity_range]):
+                    raise argparse.ArgumentTypeError(
+                        "Each affinity element must be a valid integer"
+                    )
+                elif int(affinity_range[1]) < int(affinity_range[0]):
+                    raise argparse.ArgumentTypeError("Affinity range must be valid")
+                # Convert the range to integer list
+                affinity_list.extend(
+                    list(
+                        range(
+                            int(affinity_range[0]),
+                            int(affinity_range[1]) + 1,
+                            step_length,
+                        )
+                    )
+                )
+        return affinity_list
+
+    vm_affinity_parser = subparsers.add_parser(
+        "vm_sched_affinity",
+        help="Change VM scheduling affinity",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    vm_affinity_group1 = vm_affinity_parser.add_mutually_exclusive_group(required=True)
+    vm_affinity_group2 = vm_affinity_parser.add_mutually_exclusive_group(required=True)
+
+    vm_affinity_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to reconfigure scheduling affinity",
+    )
+    vm_affinity_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs, one per line,"
+        " to reconfigure vm scheduling affinity",
+    )
+
+    vm_affinity_group2.add_argument(
+        "--affinity",
+        action="store",
+        default=[],
+        type=affinity_array,
+        help="Use ':' for separating ranges and steps, and ',' to separate values.\n"
+        "For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12",
+    )
+    vm_affinity_group2.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear the scheduling affinity settings for the VM(s)",
+    )
+
+    numa_affinity_parser = subparsers.add_parser(
+        "numa_affinity",
+        help="Change NUMA node affinity",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    numa_affinity_group1 = numa_affinity_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    numa_affinity_group2 = numa_affinity_parser.add_mutually_exclusive_group(
+        required=True
+    )
+
+    numa_affinity_group1.add_argument(
+        "--vm",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the VM on which to change NUMA node affinity",
+    )
+    numa_affinity_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of VMs, one per line,"
+        " to reconfigure NUMA node affinity",
+    )
+
+    numa_affinity_group2.add_argument(
+        "--affinity",
+        action="store",
+        default=[],
+        type=affinity_array,
+        help="Use ':' for separating ranges and steps, and ',' to separate values.\n"
+        "For example - 0, 2, 4:7, 8:12:2  would indicate processors 0, 2, 4, 5, 6, 7, 8, 10, 12",
+    )
+    numa_affinity_group2.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear the NUMA affinity settings for the VM(s)",
+    )
+
     cpumem_parser = subparsers.add_parser(
         "cpumem",
         help="Reconfigure CPU/memory for VM(s)",
@@ -510,6 +750,54 @@ def get_args():
         help="64-bit MMIO size in GB for PCI device with large BARs. "
         "Default: %(default)s.",
     )
+    passthru_parser.add_argument(
+        "--dynamic",
+        action="store_true",
+        required=False,
+        help="If this flag is added, PCI devices are added in dynamic direct i/o mode",
+    )
+
+    passthru_host_parser = subparsers.add_parser(
+        "passthru_host",
+        help="Enable/Disable PCI device(s) on host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    passthru_host_group1 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group2 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group3 = passthru_host_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    passthru_host_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to enable/disable passthrough devices",
+    )
+    passthru_host_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to enable/disable passthrough devices",
+    )
+    passthru_host_group2.add_argument(
+        "--device",
+        action="store",
+        default=None,
+        type=str,
+        help="The ID of the PCI device to enable/disable on host",
+    )
+    passthru_host_group3.add_argument("--on", action="store_true", help="Enable device")
+    passthru_host_group3.add_argument(
+        "--off", action="store_true", help="Enable device"
+    )
+
     sriov_parser = subparsers.add_parser(
         "sriov",
         help="Add/remove single root I/O virtualization (SR-IOV) device(s)",
@@ -550,7 +838,7 @@ def get_args():
         help="Name of port group which could enable SR-IOV adapter type",
     )
     sriov_parser.add_argument(
-        "--dvs_name",
+        "--sriov_dvs_name",
         action="store",
         type=str,
         help="Name of distributed virtual switch which could enable SR-IOV",
@@ -562,6 +850,59 @@ def get_args():
         type=str,
         help="Name of physical function which backs up SR-IOV Passthrough",
     )
+
+    sriov_parser.add_argument(
+        "--allow_guest_mtu_change",
+        action="store_true",
+        help="Allow guest MTU change",
+    )
+
+    sriov_host_parser = subparsers.add_parser(
+        "sriov_host",
+        help="Modify SR-IOV configuration on host(s).\n"
+        "This operation assumes that SR-IOV drivers have been installed on ESXi host",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    sriov_host_group1 = sriov_host_parser.add_mutually_exclusive_group(required=True)
+    sriov_host_group2 = sriov_host_parser.add_mutually_exclusive_group(required=True)
+    sriov_host_group1.add_argument(
+        "--host",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the host on which to perform the modify SR-IOV operation",
+    )
+    sriov_host_group1.add_argument(
+        "--file",
+        action="store",
+        default=None,
+        type=str,
+        help="Name of the file containing a list of hosts, "
+        "one per line, to perform the modify SR-IOV operation",
+    )
+    sriov_host_parser.add_argument(
+        "--device",
+        action="store",
+        default=None,
+        type=str,
+        help="PCIe address of the Virtual Function (VF) of the SR-IOV device in format xxxx:xx:xx.x",
+        required=True,
+    )
+    sriov_host_group2.add_argument(
+        "--on", action="store_true", help="Turn on SR-IOV mode for device on host(s)"
+    )
+    sriov_host_group2.add_argument(
+        "--off", action="store_true", help="Turn off SR-IOV mode for device on host(s)"
+    )
+    sriov_host_parser.add_argument(
+        "--num_func",
+        action="store",
+        default=None,
+        type=int,
+        help="Number of virtual functions. This argument is ignored if used with --off flag. "
+        "num_func must be equal or smaller than the VF enabled in firmware",
+    )
+
     pvrdma_parser = subparsers.add_parser(
         "pvrdma",
         help="Add/Remove PVRDMA (Paravirtual RDMA) device(s)",
@@ -641,6 +982,7 @@ def get_args():
         type=str,
         help="Profile of the vGPU, for example: grid_p100-4q",
     )
+
     svs_parser = subparsers.add_parser(
         "svs",
         help="Create/destroy a standard virtual switch",
@@ -684,6 +1026,13 @@ def get_args():
         type=str,
         help="Name of virtual port group to be created within "
         "this standard virtual switch",
+    )
+    svs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="MTU to be set for the SVS. This argument is optional",
+        required=False,
     )
     dvs_parser = subparsers.add_parser(
         "dvs",
@@ -738,6 +1087,13 @@ def get_args():
         required=False,
         help="Name of virtual port group to be created "
         "within this distributed virtual switch",
+    )
+    dvs_parser.add_argument(
+        "--mtu",
+        action="store",
+        type=int,
+        help="MTU to be set for the DVS. This argument is optional",
+        required=False,
     )
     latency_parser = subparsers.add_parser(
         "latency",
