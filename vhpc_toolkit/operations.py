@@ -2150,6 +2150,7 @@ class Operations(object):
         self._clone_cluster(vm_cfgs, "template")
         self._cpu_shares_cluster(vm_cfgs, "cpu_shares")
         self._memory_shares_cluster(vm_cfgs, "memory_shares")
+        self._cpumem_cluster(vm_cfgs, "cores_per_socket")
         self._cpumem_reser_cluster(vm_cfgs, "cpu_reservation", "memory_reservation")
         self._network_cluster(vm_cfgs, "port_group")
         self._network_cfg_cluster(vm_cfgs, "ip", "is_dhcp")
