@@ -3,7 +3,7 @@
 ## power_policy
 Select the power policy for the host(s) mentioned
 ```bash
-./vhpc_toolkit power_policy --host host_name --policy {1,2,3,4}
+./vhpc_toolkit power_policy [-h] (--host HOST | --file FILE) --policy {1,2,3,4}
 ```
 
 | **Argument**          	 | **What does it do?**                       | Group | Type              |
@@ -30,7 +30,7 @@ Modify SR-IOV configuration on host(s).
 !> This command assumes that SR-IOV drivers are already installed on ESXi host 
 
 ```bash
-./vhpc_toolkit sriov_host --host host_name --device device_address [--on || --off] --num_func number_of_functions
+./vhpc_toolkit sriov_host [-h] (--host HOST | --file FILE) --device DEVICE (--on | --off) [--num_func NUM_FUNC]
 ```
 
 

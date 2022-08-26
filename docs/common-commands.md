@@ -3,7 +3,7 @@
 ## view
 Use this command to view all vCenter object names
 ```bash
-./vhpc_toolkit view --networking
+./vhpc_toolkit view [-h] [--networking]
 ```
 
 | **Argument** 	| **What does it do?**                                                                     	| Group 	| Type 	| Required 	|
@@ -13,7 +13,7 @@ Use this command to view all vCenter object names
 ## svs
 Create/Destroy Standard Virtual Switch
 ```bash
-./vhpc_toolkit svs --create --host host_name --name switch_name --pnic nic_name --port_group port_group --mtu mtu
+./vhpc_toolkit svs [-h] (--create | --destroy) --host HOST [HOST ...] --name NAME [--pnic PNIC] [--port_group PORT_GROUP] [--mtu MTU]
 ```
 | **Argument** 	| **What does it do?**                                                                 	| Group 	| Type    	| Required    	|
 |--------------	|--------------------------------------------------------------------------------------	|-------	|---------	|-------------	|
@@ -30,7 +30,7 @@ To destroy the switch, can use only the required arguments
 ## dvs
 Create/Destroy Distributed Virtual Switch
 ```bash
-./vhpc_toolkit dvs --create --host host_name --name dvs_name --pnic pnic1 pnic2 --host host1 host2 host3 --port_group port_group
+./vhpc_toolkit dvs [-h] (--create | --destroy) --name NAME [--datacenter DATACENTER] [--host HOST [HOST ...]] [--pnic PNIC [PNIC ...]] [--port_group PORT_GROUP] [--mtu MTU]
 ```
 
 | **Argument** 	| **What does it do?**                                                                                                    	| Group 	| Type         	| Required    	|
