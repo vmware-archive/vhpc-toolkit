@@ -46,6 +46,136 @@ Create/Destroy Distributed Virtual Switch
 
 ## cluster
 
+The cluster configuration file is the key to defining an HPC virtual cluster. 
+It's composed of multiple sections, each of which consists of a set of properties that are represented as key-value pairs. The toolkit
+adopts the YAML format (without nested structure) to parse the cluster definition because of its human readability. The cluster definition file
+can be divided into three sections: property section, VM section and networking section. 
+
+### Property Section
+In the following example, a section called **BASE** has been defined (for
+any property section, section name can be arbitrary and section names
+should be bracketed). In this section, we can, for example, define clone
+properties as:
+```
+[BASE]
+template: vhpc_clone
+datacenter: HPC_Datacenter
+cluster: COMPUTE_GPU_Cluster
+host: vhpc-esx-01.hpc.vmware.com
+datastore: COMPUTE_vsanDatastore
+linked: no
+instant: no
+cpu: 4
+memory: 16
+```
+We define another section called **NETWORK**, which contains some
+networking properties:
+
+```
+[NETWORK]
+is_dhcp: true
+port_group: vHPC-PG-VMNetwork
+domain: hpc.vmware.com
+netmask: 255.255.255.0
+gateway: 172.1.101.1
+dns: ['172.1.110.1', '172.1.110.2']
+```
+
+We can also define another section to assign `NVIDIA P100 vGPU` with
+`grid_p100-2q` profile, where the profile represents the vGPU type
+and `2q` refers to the vGPU's memory size, 2GB.
+
+```
+[P100-VGPU]
+vgpu: grid_p100-2q
+```
+
+### VM Section
+The VM definition section should have the section name
+`_VMS_`. Each line contains a VM name and some property
+definitions. You can set the VM name arbitrarily, but the VM's
+definition must be a combination of previously-defined section names
+and explicit key-value pairs. Each section name will be replaced inline
+with the set of key-value pairs listed in that section’s definition.
+Multiple VM property definitions are delimited by whitespace, e.g.:
+
+```
+[_VMS_]
+new_vm1: BASE NETWORK P100-VGPU
+new_vm2: BASE NETWORK P100-VGPU
+new_vm3: BASE NETWORK
+```
+
+The above example defines three VMs: `new_vm1`, `new_vm2` and
+`new_vm3`. All VMs will inherit the properties defined in the
+`BASE`, `NETWORK` sections. VMs `new_vm1`, `new_vm2` will
+inherit properties defined in the `P100-VGPU` section as well.
+To inherit most of the properties in a section for a VM but override one
+or two particular properties, you can append the properties after the
+section inheritance. For example,
+
+```
+[_VMS_]
+new_vm1: BASE NETWORK P100-VGPU
+new_vm2: BASE NETWORK P100-VGPU
+new_vm3: BASE NETWORK host: vhpc-esx-02.hpc.vmware.com
+```
+
+In the VM section, certain key values can be defined in ranges, e.g.:
+```
+new_vm{4:7}: BASE NETWORK host: vhpc-esx-0{2:3}.hpc.vmware.com
+```
+The above example defines four VMs on two hosts. The rules for this
+range definition are:
+• The size of the range of the left-hand side (the number of VMs)
+must be greater than or equal to each of the ranges of the righthand
+side.
+• Currently, only the host, datastore, ip, and guest_hostname key
+values along with the VM name can include range specifiers.
+• Ranges on the property side that are smaller than the VM name
+range will be padded to the proper length using one of two
+strategies: round-robin or consecutive.
+In the round-robin case, the ranges will be expanded as shown in the table below.<br>
+
+| **VM**  	| **Host**                   	|
+|----------	|---------------------------|
+| new_vm4 	| vhpc-esx-02.hpc.vmware.com 	|
+| new_vm5 	| vhpc-esx-03.hpc.vmware.com 	|
+| new_vm6 	| vhpc-esx-02.hpc.vmware.com 	|
+| new_vm7 	| vhpc-esx-03.hpc.vmware.com 	|
+Note that the host range 2-3 has been expanded by repeating the
+range to match the number of VMs: 2, 3, 2, 3.<br><br>
+
+The expansion in the consecutive case is shown in table blow.
+
+| **VM**  	| **Host**                   	|
+|---------	|----------------------------	|
+| new_vm4 	| vhpc-esx-02.hpc.vmware.com 	|
+| new_vm5 	| vhpc-esx-02.hpc.vmware.com 	|
+| new_vm6 	| vhpc-esx-03.hpc.vmware.com 	|
+| new_vm7 	| vhpc-esx-03.hpc.vmware.com 	|
+
+The syntax for defining round-robin ranges is `{x:y}` and the syntax
+for defining consecutive ranges is `{{x:y}}`, where x is the beginning
+of the range and y is the end of the range. When you perform a cluster-level
+operation that includes ranges, the ranges will be expanded and
+the user will be prompted to confirm the action.
+
+### Networking Section
+Additionally, the user can also define operations to create/destroy SVS
+or DVS in the cluster configuration file. The section should have the
+section name `_SVS_` or `_DVS_`, e.g.:
+```
+[HOST-LIST]
+host: vhpc-esx-0{5:8}.hpc.vmware.com
+
+[_DVS_]
+pvrdma-dvs: pnic: vmnic5 port_group: pvrdma-pg HOSTLIST
+```
+which creates a DVS named `pvrdma-dvs` with pnic `vmnic5` from
+the hosts defined in the `HOST-LIST` property section and also
+creates a port group `pvrdma-pg` within this DVS.
+
 ### Available keys in cluster configuration file 
 
 These are the keys whose values can be handled by the `create` command in 
