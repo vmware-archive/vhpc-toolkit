@@ -143,6 +143,7 @@ In the round-robin case, the ranges will be expanded as shown in the table below
 | new_vm5 	| vhpc-esx-03.hpc.vmware.com 	|
 | new_vm6 	| vhpc-esx-02.hpc.vmware.com 	|
 | new_vm7 	| vhpc-esx-03.hpc.vmware.com 	|
+
 Note that the host range 2-3 has been expanded by repeating the
 range to match the number of VMs: 2, 3, 2, 3.<br><br>
 
