@@ -45,49 +45,46 @@ class ConfigVM(object):
             vm_obj (vim.VirtualMachine)
 
         """
-
         self.vm_obj = vm_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def memory(self, memory_mb):
-        """Configure memory size for a VM
+        """
+        Configure memory size for a VM
 
         Args:
             memory_mb (int): memory size in MB to be configured
 
         Returns:
             Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         config_spec.memoryMB = memory_mb
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpus(self, num_of_cpus):
-        """Configure number of CPUs for a VM
+        """
+        Configure number of CPUs for a VM
 
         Args:
             num_of_cpus (int): number of CPUs to be configured
 
         Returns:
             Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         config_spec.numCPUs = num_of_cpus
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_shares(self, shares):
-        """Configure CPU shares for a VM
+        """
+        Configure CPU shares for a VM
 
         Args:
             shares (int): CPU shares to be configured
 
         Returns:
             Task
-
         """
         assert shares >= 0
         config_spec = vim.vm.ConfigSpec()
@@ -97,14 +94,14 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cores_per_socket(self, cores_per_socket):
-        """Configure cores per socket for a VM
+        """
+        Configure cores per socket for a VM
 
         Args:
             cores_per_socket (int): Cores per Socket to be configured
 
         Returns:
             Task
-
         """
         assert cores_per_socket >= 0
         config_spec = vim.vm.ConfigSpec()
@@ -112,16 +109,15 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def memory_shares(self, shares):
-        """Configure memory shares for a VM
+        """
+        Configure memory shares for a VM
 
         Args:
             shares (int): memory shares to be configured
 
         Returns:
             Task
-
         """
-
         assert shares >= 0
         config_spec = vim.vm.ConfigSpec()
         shares_alloc = vim.ResourceAllocationInfo()
@@ -130,7 +126,8 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def memory_reservation(self, reser=0):
-        """Configure memory reservation for a VM
+        """
+        Configure memory reservation for a VM
 
         Args:
             reser (int): 0 (clear reservation) or
@@ -138,9 +135,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         mem_alloc = vim.ResourceAllocationInfo()
         if reser:
@@ -153,7 +148,8 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_reservation(self, host_cpu_mhz=None, reser=0):
-        """Configure CPU reservation for a VM
+        """
+        Configure CPU reservation for a VM
 
         Args:
             host_cpu_mhz (int): if to reser, host_cpu_mhz must have a value
@@ -162,9 +158,7 @@ class ConfigVM(object):
 
         Returns:
                 Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         cpu_alloc = vim.ResourceAllocationInfo()
         if reser:
@@ -177,14 +171,14 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def cpu_hotadd(self, enable_hotadd=True):
-        """Enable/disable CPU hotadd
+        """
+        Enable/disable CPU hotadd
 
         Args:
             enable_hotadd (bool)
 
         Returns:
                 Task
-
         """
 
         config_spec = vim.vm.ConfigSpec()
@@ -192,14 +186,14 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def mem_hotadd(self, enable_hotadd=True):
-        """Enable/disable memory hotadd
+        """
+        Enable/disable memory hotadd
 
         Args:
             enable_hotadd (bool)
 
         Returns:
             Task
-
         """
 
         config_spec = vim.vm.ConfigSpec()
@@ -207,21 +201,21 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def power_on(self):
-        """Power on VM
+        """
+        Power on VM
 
         Returns:
             Task
-
         """
 
         return self.vm_obj.PowerOn()
 
     def power_off(self):
-        """Power off VM
+        """
+        Power off VM
 
         Returns:
             Task
-
         """
 
         return self.vm_obj.PowerOff()
@@ -235,7 +229,6 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
         config_spec = vim.vm.ConfigSpec()
         boot_option = vim.vm.BootOptions()
@@ -252,7 +245,6 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
         config_spec = vim.vm.ConfigSpec()
         affinity_info = vim.vm.AffinityInfo()
@@ -284,7 +276,8 @@ class ConfigVM(object):
             )
 
     def latency(self, level):
-        """Configure Latency Sensitivity for a VM
+        """
+        Configure Latency Sensitivity for a VM
 
         Args:
             level (str): the Latency Sensitivity Level,
@@ -292,9 +285,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         latency_levels = ["high", "normal"]
         if level not in latency_levels:
             self.logger.error(
@@ -310,19 +301,19 @@ class ConfigVM(object):
             return self.vm_obj.ReconfigVM_Task(config_spec)
 
     def destroy(self):
-        """Destroy a VM
+        """
+        Destroy a VM
 
         Returns:
             Task
-
         """
-
         return self.vm_obj.Destroy()
 
     def add_network_adapter(self, network_obj):
-        """Add a network adapter for a VM
-            The device spec uses vim.vm.device.VirtualVmxnet3() by default,
-            which is recommended for best performance.
+        """
+        Add a network adapter for a VM
+        The device spec uses vim.vm.device.VirtualVmxnet3() by default,
+        which is recommended for best performance.
 
         Args:
             network_obj (vim.Network): network object accessible
@@ -334,7 +325,6 @@ class ConfigVM(object):
         References:
             pyvmomi/docs/vim/Network.rst
             pyvmomi/docs/vim/vm/device/VirtualDeviceSpec.rst
-
         """
         dvs = network_obj.config.distributedVirtualSwitch
         nic_spec = vim.vm.device.VirtualDeviceSpec()
@@ -359,7 +349,8 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_network_adapter(self, network_obj):
-        """Remove a network adapter for a VM
+        """
+        Remove a network adapter for a VM
 
         Args:
             network_obj (vim.Network): network object accessible by either
@@ -371,9 +362,7 @@ class ConfigVM(object):
         References:
             pyvmomi/docs/vim/Network.rst
             pyvmomi/docs/vim/vm/device/VirtualDeviceSpec.rst
-
         """
-
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.remove
         nic_spec.device = network_obj
@@ -384,8 +373,9 @@ class ConfigVM(object):
     def add_sriov_adapter(
         self, network_obj, pf_obj, dvs_obj, allow_guest_os_mtu_change=False
     ):
-        """Add a network adapter with SR-IOV adapter type for a VM
-            Adding SR-IOV adapter requires a back-up physical adapter.
+        """
+        Add a network adapter with SR-IOV adapter type for a VM
+        Adding SR-IOV adapter requires a back-up physical adapter.
 
         Args:
             dvs_obj (vim.dvs.VmwareDistributedVirtualSwitch):
@@ -404,9 +394,7 @@ class ConfigVM(object):
             pyvmomi/docs/vim/Network.rst
             pyvmomi/docs/vim/vm/device/VirtualDeviceSpec.rst
             pyvmomi/docs/vim/host/PciDevice.rst
-
         """
-
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualSriovEthernetCard()
@@ -453,8 +441,9 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_sriov_adapter(self, network_obj):
-        """Remove a SR-IOV network adapter for a VM.
-            Same as removing a regular network adapter
+        """
+        Remove a SR-IOV network adapter for a VM.
+        Same as removing a regular network adapter
 
         Args:
             network_obj (vim.Network): network object accessible
@@ -462,16 +451,15 @@ class ConfigVM(object):
 
         Returns:
                 Task
-
         """
-
         task = self.remove_network_adapter(network_obj)
         return task
 
     def add_pvrdma(self, dvs_obj, network_obj, label="pvRDMA Network Adapter"):
-        """Add a network adapter with pvrdma adapter type for a VM
-                Adding pvrdma adapter requires a port group from a DVS, which
-                has uplinks mapped from host RDMA NICS.
+        """
+        Add a network adapter with pvrdma adapter type for a VM
+        Adding pvrdma adapter requires a port group from a DVS, which
+        has uplinks mapped from host RDMA NICS.
 
         Args:
             dvs_obj (vim.dvs.VmwareDistributedVirtualSwitch):
@@ -491,9 +479,7 @@ class ConfigVM(object):
         References:
             For more pvrdma configuration details,
             please refer to VMware Docs for PVRDMA Support and Configuration
-
         """
-
         nic_spec = vim.vm.device.VirtualDeviceSpec()
         nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         nic_spec.device = vim.vm.device.VirtualVmxnet3Vrdma()
@@ -514,23 +500,23 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_pvrdma(self, network_obj):
-        """Remove a PVRDMA network adapter for a VM. Basically same as
-            removing a regular network adapter
+        """
+        Remove a PVRDMA network adapter for a VM. Basically same as
+        removing a regular network adapter
 
         Args:
             network_obj (vim.Network): network object accessible
                                            by either hosts or virtual machines
         Returns:
             Task
-
         """
-
         self.remove_network_adapter(network_obj)
 
     def config_networking(
         self, network_obj, ip, netmask, gateway, domain, dns, guest_hostname
     ):
-        """Configure network properties for a VM
+        """
+        Configure network properties for a VM
 
         Args:
             network_obj (vim.Network): network object accessible
@@ -548,9 +534,7 @@ class ConfigVM(object):
         References:
             pyvmomi/docs/vim/Network.rst
             pyvmomi/docs/vim/vm/customization/Specification.rst
-
         """
-
         global_ip = vim.vm.customization.GlobalIPSettings()
         if ip:
             if isinstance(dns, str):
@@ -587,23 +571,21 @@ class ConfigVM(object):
         return self.vm_obj.CustomizeVM_Task(spec=custom_spec)
 
     def enable_fork_parent(self):
-        """Enable fork parent for a VM
+        """
+        Enable fork parent for a VM
 
         Returns:
             None
-
         """
-
         self.vm_obj.EnableForkParent()
 
     def disable_fork_parent(self):
-        """Disable fork parent for a VM
+        """
+        Disable fork parent for a VM
 
         Returns:
                 Task
-
         """
-
         self.vm_obj.DisableForkParent()
 
     def full_clone(
@@ -616,7 +598,8 @@ class ConfigVM(object):
         cpu,
         mem,
     ):
-        """Clone a VM via full clone
+        """
+        Clone a VM via full clone
 
         Args:
             dest_vm_name (str): Name of destination VM
@@ -629,9 +612,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         self.logger.info("Full cloning VM %s to %s" % (self.vm_obj.name, dest_vm_name))
         relocation_spec = vim.vm.RelocateSpec()
         relocation_spec.pool = resource_pool_obj
@@ -654,7 +635,8 @@ class ConfigVM(object):
     def linked_clone(
         self, dest_vm, host_obj, folder_obj, resource_pool_obj, cpu, mem, power_on=True
     ):
-        """Clone a VM via linked clone
+        """
+        Clone a VM via linked clone
 
         Args:
             dest_vm (str): Name of destination VM
@@ -665,9 +647,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         self.logger.info(
             "Linked cloning VM {0} to {1}".format(self.vm_obj.name, dest_vm)
         )
@@ -706,28 +686,28 @@ class ConfigVM(object):
 
     @staticmethod
     def _find_nearest_power_of_two(x):
-        """find nearest of power of two for a given int number
+        """
+        find nearest of power of two for a given int number
 
         Args:
             x (int)
 
         Returns:
             int: nearest power of two
-
         """
-
         return 1 << (x - 1).bit_length()
 
     def add_pci(
         self, pci, host_obj, vm_update, vm_status, mmio_size, dynamic_direct_io=False
     ):
-        """Add a PCI device for a VM.
-            If a PCI device has large BARs, it requires 64bit MMIO
-            support and large enough MMIO mapping space. This method will add
-            these two configurations by default and check uEFI installation.
-            But haven't evaluated the impacts of
-            adding these configurations for a PCI device which doesn't have
-            large BARs. For more details, check the reference KB article.
+        """
+        Add a PCI device for a VM.
+        If a PCI device has large BARs, it requires 64bit MMIO
+        support and large enough MMIO mapping space. This method will add
+        these two configurations by default and check uEFI installation.
+        But haven't evaluated the impacts of
+        adding these configurations for a PCI device which doesn't have
+        large BARs. For more details, check the reference KB article.
 
         Args:
             pci (str): pci ID of the PCI device
@@ -742,9 +722,7 @@ class ConfigVM(object):
 
         References:
             https://kb.vmware.com/s/article/2142307
-
         """
-
         self.logger.info("Adding PCI device {0} for {1}".format(pci, self.vm_obj.name))
         extra_config_key1 = "pciPassthru.64bitMMIOSizeGB"
         extra_config_key2 = "pciPassthru.use64bitMMIO"
@@ -793,7 +771,8 @@ class ConfigVM(object):
         return tasks
 
     def remove_pci(self, pci, vm_status):
-        """Remove a PCI device from a VM
+        """
+        Remove a PCI device from a VM
 
         Args:
             pci (str): pci ID of the PCI device
@@ -801,9 +780,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         self.logger.info(
             "Removing PCI {0} from VM " "{1}".format(pci, self.vm_obj.name)
         )
@@ -816,7 +793,8 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def add_extra(self, entry, value):
-        """Add an extra advanced vmx entry for a VM
+        """
+        Add an extra advanced vmx entry for a VM
 
         Args:
             entry (str): extra config key
@@ -824,9 +802,7 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         self.logger.info("Adding/Updating extra config: {0} = {1}".format(entry, value))
         opt = vim.option.OptionValue()
@@ -836,16 +812,15 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_extra(self, entry):
-        """Add an extra advanced vmx entry from a VM
+        """
+        Add an extra advanced vmx entry from a VM
 
         Args:
             entry (str): extra config key
 
         Returns:
             Task
-
         """
-
         config_spec = vim.vm.ConfigSpec()
         self.logger.info("Removing extra config {0}".format(entry))
         opt = vim.option.OptionValue()
@@ -855,7 +830,8 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def add_vgpu(self, vgpu_profile, migration_supported: bool = False):
-        """Add a vGPU profile for a VM
+        """
+        Add a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be added into a VM
@@ -865,7 +841,6 @@ class ConfigVM(object):
             Task
 
         """
-
         self.logger.info(
             "Adding vGPU {0} for " "VM {1}".format(vgpu_profile, self.vm_obj.name)
         )
@@ -880,16 +855,15 @@ class ConfigVM(object):
         return self.vm_obj.ReconfigVM_Task(spec=config_spec)
 
     def remove_vgpu(self, vgpu_profile):
-        """Remove a vGPU profile for a VM
+        """
+        Remove a vGPU profile for a VM
 
         Args:
             vgpu_profile (str): the name of vGPU profile to be removed from a VM
 
         Returns:
             Task
-
         """
-
         self.logger.info(
             "Removing vGPU %s from VM %s" % (vgpu_profile, self.vm_obj.name)
         )
@@ -911,7 +885,6 @@ class ConfigVM(object):
 
         Returns:
             Task
-
         """
         relocate_spec = vim.vm.RelocateSpec()
         relocate_spec.host = host_obj
@@ -951,10 +924,11 @@ class ConfigVM(object):
         username,
         password,
     ):
-        """Execute a post script for a VM
-            First copy local script content to remote VM
-            Then execute the script in remote VM
-            Only works for Linux system
+        """
+        Execute a post script for a VM
+        First copy local script content to remote VM
+        Then execute the script in remote VM
+        Only works for Linux system
 
         Args:
             host_obj:
@@ -975,9 +949,7 @@ class ConfigVM(object):
 
         References:
              pyvmomi/docs/vim/vm/guest/GuestOperationsManager.rst
-
         """
-
         auth = vim.vm.guest.NamePasswordAuthentication()
         auth.username = username
         auth.password = password
@@ -1043,16 +1015,15 @@ class ConfigHost(object):
 
         References:
             pyvmomi/docs/vim/HostSystem.rst
-
         """
-
         self.host_obj = host_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def create_svs(self, svs_name, vmnic, num_ports=8, mtu: int = None):
-        """Create a standard virtual switch
-            It calls AddVirtualSwitch method from HostNetworkSystem. It
-            doesn't return a Task to track
+        """
+        Create a standard virtual switch
+        It calls AddVirtualSwitch method from HostNetworkSystem. It
+        doesn't return a Task to track
 
         Args:
             svs_name (str): The name of SVS to be created.
@@ -1065,9 +1036,7 @@ class ConfigHost(object):
 
         References:
             pyvmomi/docs/vim/host/NetworkSystem.rst
-
         """
-
         svs = vim.host.VirtualSwitch.Specification()
         svs.numPorts = num_ports
         svs.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[vmnic])
@@ -1111,7 +1080,8 @@ class ConfigHost(object):
             self.logger.error("Caught vmodl fault: " + e.msg)
 
     def destroy_svs(self, svs_name):
-        """Destroy a standard virtual switch
+        """
+        Destroy a standard virtual switch
 
         Args:
             svs_name (str): The name of SVS to be destroyed
@@ -1121,14 +1091,13 @@ class ConfigHost(object):
 
         References:
             pyvmomi/docs/vim/host/NetworkSystem.rst
-
         """
-
         host_network_obj = self.host_obj.configManager.networkSystem
         host_network_obj.RemoveVirtualSwitch(vswitchName=svs_name)
 
     def create_pg_in_svs(self, svs_name, pg_name, vlan_id=0):
-        """Create a Port Group within standard virtual switch
+        """
+        Create a Port Group within standard virtual switch
 
         Args:
             svs_name (str): The name of SVS to create a port group
@@ -1141,9 +1110,7 @@ class ConfigHost(object):
         References:
             pyvmomi/docs/vim/host/NetworkSystem.rst
             pyvmomi/docs/vim/host/PortGroup.rst
-
         """
-
         pg_spec = vim.host.PortGroup.Specification()
         pg_spec.name = pg_name
         pg_spec.vlanId = vlan_id
@@ -1157,7 +1124,8 @@ class ConfigHost(object):
         host_network_obj.AddPortGroup(portgrp=pg_spec)
 
     def destroy_pg(self, pg_name):
-        """Destroy a Port Group from a Host
+        """
+        Destroy a Port Group from a Host
 
         Args:
             pg_name (str): The name of port group to be destroyed
@@ -1168,7 +1136,6 @@ class ConfigHost(object):
         API References:
             pyvmomi/docs/vim/host/NetworkSystem.rst
             pyvmomi/docs/vim/host/PortGroup.rst
-
         """
 
         host_network_obj = self.host_obj.configManager.networkSystem
@@ -1188,7 +1155,6 @@ class ConfigHost(object):
 
         Returns:
             None
-
         """
         power_policy_mapping = {
             1: "High Performance",
@@ -1263,14 +1229,13 @@ class ConfigDatacenter(object):
 
         API References:
             pyvmomi/docs/vim/Datacenter.rst
-
         """
-
         self.datacenter_obj = datacenter_obj
         self.logger = log.my_logger(name=self.__class__.__name__)
 
     def create_dvs(self, host_vmnics, dvs_name, num_uplinks=4, mtu: int = None):
-        """Create a distributed virtual switch within the datacenter
+        """
+        Create a distributed virtual switch within the datacenter
 
         Args:
             host_vmnics (dict): A dictionary storing {host_obj: vmnics}
@@ -1287,9 +1252,7 @@ class ConfigDatacenter(object):
         References:
             pyvmomi/docs/vim/host/NetworkSystem.rst
             pyvmomi/docs/vim/host/PortGroup.rst
-
         """
-
         for network_obj in GetDatacenter(self.datacenter_obj).network_resources():
             if network_obj.name == dvs_name:
                 self.logger.info("DVS {0} already exists".format(dvs_name))
@@ -1366,13 +1329,12 @@ class ConfigDVS(object):
 
         References:
             pyvmomi/docs/vim/DistributedVirtualSwitch.rst
-
         """
-
         self.dvs_obj = dvs_obj
 
     def create_pg_in_dvs(self, dvs_pg_name, num_ports=1):
-        """Create a port group in the DVS.
+        """
+        Create a port group in the DVS.
 
         Args:
             dvs_pg_name (str): the port group name to be created
@@ -1380,9 +1342,7 @@ class ConfigDVS(object):
 
         Returns:
             Task
-
         """
-
         dpg_spec = vim.dvs.DistributedVirtualPortgroup.ConfigSpec()
         dpg_spec.name = dvs_pg_name
         dpg_policy = vim.dvs.DistributedVirtualPortgroup.PortgroupPolicy()
@@ -1393,13 +1353,12 @@ class ConfigDVS(object):
         return task
 
     def destroy_dvs(self):
-        """Destroy the DVS
+        """
+        Destroy the DVS
 
         Returns:
             Task
-
         """
-
         task = self.dvs_obj.Destroy_Task()
         return task
 
