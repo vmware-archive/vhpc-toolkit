@@ -1,7 +1,5 @@
 # <img src="docs/img/hpc-logo400.png" width="64" valign="middle" alt="vhpclogo"/> vHPC Toolkit
 
-## Overview 
-
 Virtualized High Performance Computing Toolkit (vHPC Toolkit) is a flexible, extensible and easy-to-use toolkit, that allows users to deploy and manage virtualized clusters for High Performance Computing (HPC) and machine learning environments.
 
 [comment]: <> (Due to their extreme demand on performance, HPC workloads often have much 
