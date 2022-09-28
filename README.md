@@ -53,6 +53,18 @@ After proper installation and setup, you should be able to execute ```./vhpc_too
 [Full documentation](https://vmware.github.io/vhpc-toolkit/#/) is available, or run `./vhpc_toolkit --help` under `vhpc_toolkit/bin` folder to view all available 
 operations
 
+## Tutorial
+We have a [VMUG tutorial video](https://innovatisgroup.zoom.us/rec/play/C1p-AylB9TI9VNwVhRD3hhLdOSp8Xq7t7EDvzCbACaUdEvC-KAyC5B4erMBaN2qtx7usJJCigPON2cti.-Ss9SBxRSyirtzM9?continueMode=true). It covers basic to advanced usage to deploy a vHPC environment. 
+More tutorial video will come soon.
+
+Feel free to use these materials to teach users at your organization about vHPC toolkit.
+
+## Community
+vHPC Toolkit is an open source project. Questions, discussion, and contributions are welcome. Contributions can be anything from new packages to bugfixes, documentation, or even new core features.
+
+Resources:
+
+* **Mailing list**: [some_site](some_site)
 
 ## Contributing
 
