@@ -47,7 +47,9 @@ pip install -r requirements.txt
 pip install vhpc_toolkit
 ```
 
-After proper installation and setup, you should be able to execute ```./vhpc_toolkit view``` under `vhpc_toolkit/bin` folder to view the cluster. 
+Follow [this page](https://vmware.github.io/vhpc-toolkit/#/install) about how to securely store your vSphere Client username and password in the ```vCenter.conf``` in order to enable the possibility of automation (without prompting password every operation).
+
+Then you should be able to execute ```./vhpc_toolkit view``` under `vhpc_toolkit/bin` folder to view the cluster. 
 
 ## Documentation
 [Full documentation](https://vmware.github.io/vhpc-toolkit/#/) is available, or run `./vhpc_toolkit --help` under `vhpc_toolkit/bin` folder to view all available 
