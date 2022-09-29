@@ -64,7 +64,7 @@ vHPC Toolkit is an open source project. Questions, discussion, and contributions
 
 Resources:
 
-* **Mailing list**: [some_site](some_site)
+* **Mailing list**: [vhpc-toolkit@vmware.com](vhpc-toolkit@vmware.com)
 
 ## Contributing
 
