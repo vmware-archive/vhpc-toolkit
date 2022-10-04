@@ -1,19 +1,18 @@
-# Virtualized High Performance Computing Toolkit (vHPC Toolkit) 
-!["vhpclogo"](docs/img/hpc-logo400.png)
+# <img src="docs/img/hpc-logo400.png" width="64" valign="middle" alt="vhpclogo"/> vHPC Toolkit
 
-## Overview 
+Virtualized High Performance Computing Toolkit (vHPC Toolkit) is a flexible, extensible and easy-to-use toolkit, that allows users to deploy and manage virtualized clusters for High Performance Computing (HPC) and machine learning environments.
 
-Due to their extreme demand on performance, HPC workloads often have much 
+[comment]: <> (Due to their extreme demand on performance, HPC workloads often have much 
 more intensive resource requirements than those workloads found in the 
 typical enterprise. For example, HPC commonly leverages hardware 
 accelerators, such as GPU and FPGA for compute as well as RDMA 
-interconnects, which require special vSphere configurations. 
+interconnects, which require special vSphere configurations. )
 
 This toolkit is intended to facilitate managing the lifecycle of these 
 special configurations by leveraging vSphere APIs. It also includes features 
 that help vSphere administrators perform some common vSphere tasks that are 
 related to creating such high-performing environments, such as VM cloning, 
-setting Latency Sensitivity, and sizing vCPUs, memory, etc.
+setting Latency Sensitivity, sizing vCPUs and memory, creating SRIOV dirtributed virtual switch (DVS) network, using assignable hardware (AH) accelerators (RDMA interconnects, GPU and FPGA), etc.
 
 ## Try It Out
 
@@ -48,71 +47,26 @@ pip install -r requirements.txt
 pip install vhpc_toolkit
 ```
 
-If you want to actively modify the toolkit, it is recommended to install it in "develop" mode
-```bash
-pip install -e <folder_with_setup.py>
-# If setup.py is in current folder
-pip install -e .
-```
+Follow [this page](https://vmware.github.io/vhpc-toolkit/#/install) about how to securely store your vSphere Client username and password in the ```vCenter.conf``` in order to enable the possibility of automation (without prompting password every operation).
 
-### Secure Setup via Vault 
-
-This toolkit leverages vSphere APIs to manage vSphere objects (such as VMs, 
-distributed virtual switches). So it needs connection to vCenter. In order 
-to enable the possibility of automation (without prompting password every 
-operation), as one option, you could put your vCenter information in 
-```vCenter.conf``` under ```vhpc_toolkit/config``` or ```~/vhpc_toolkit```, 
-such as 
-
-```text  
-# vCenter configuration 
-server: 192.168.0.1 
-username: mySecretUsername
-password: mySecretPassword
-```
-  
-However, it's NOT secure to explicitly store your sensitive information in a 
-plain text file. So we enable [Vault](https://learn.hashicorp.com/vault) 
-integration. With Vault, the setup procedure is like this: 
-  
-1. Follow [Vault](https://learn.hashicorp.com/tutorials/vault/getting-started-install?in=vault/getting-started) instructions to install 
-Vault and setup a Vault server if you don't have one
-  
-2. Connect to Vault server by `export VAULT_ADDR=xx` and `export 
-VAULT_TOKEN=xx` environment variables 
-
-3. Store your vCenter secrets as key value pairs under a secret path into the
- Vault server, e.g. 
-
-```
-vault kv put secret/vCenter vcenter-hostname=192.168.0.1 vcenter-username=mySecretUsername vcenter-password=mySecretPassword
-```
-
-4. Finally, you can directly put your keys in ```vCenter.conf``` file as:  
-  
-```text  
-# vCenter configuration 
-vault: yes
-vault_secret_path: vCenter
-server: vcenter-hostname
-username: vcenter-username
-password: vcenter-password
-```
-
-For more advanced features of Vault, such as managing token leases, dynamic 
-secrets and Web UI, please refer to  [Vault](https://learn.hashicorp.com/vault). 
-
-### Verification 
-
-After proper installation and setup, you should be able to execute `
-./vhpc_toolkit --help` under `vhpc_toolkit/bin` folder to view all available 
-operations. Use ```./vhpc_toolkit view``` as a quick test. 
+Then you should be able to execute ```./vhpc_toolkit view``` under `vhpc_toolkit/bin` folder to view the cluster. 
 
 ## Documentation
-Please refer to our [Documentation Site](https://vmware.github.io/vhpc-toolkit/#/)
+[Full documentation](https://vmware.github.io/vhpc-toolkit/#/) is available, or run `./vhpc_toolkit --help` under `vhpc_toolkit/bin` folder to view all available 
+operations
 
-## Additional functions 
-Please share your ideas
+## Tutorial
+We have a [VMUG tutorial video](https://innovatisgroup.zoom.us/rec/play/C1p-AylB9TI9VNwVhRD3hhLdOSp8Xq7t7EDvzCbACaUdEvC-KAyC5B4erMBaN2qtx7usJJCigPON2cti.-Ss9SBxRSyirtzM9?continueMode=true). It covers basic to advanced usage to deploy a vHPC environment. 
+More tutorial video will come soon.
+
+Feel free to use these materials to teach users at your organization about vHPC toolkit.
+
+## Community
+vHPC Toolkit is an open source project. Questions, discussion, and contributions are welcome. Contributions can be anything from new packages to bugfixes, documentation, or even new core features.
+
+Resources:
+
+* **Mailing list**: [vhpc-toolkit@vmware.com](vhpc-toolkit@vmware.com)
 
 ## Contributing
 
@@ -124,9 +78,3 @@ as an open-source patch. For more detailed information, refer to [CONTRIBUTING.m
 ## License
 
 This toolkit is available under the [Apache 2 license](https://vmware.github.io/vhpc-toolkit/#/license).
-
-
-
-
-
-
