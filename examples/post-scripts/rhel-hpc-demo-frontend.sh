@@ -1,6 +1,6 @@
 #!/bin/bash
 # Example of vHPC-Toolkit Cluster post provision script file to create a SLURM ready cluster
-# Author: Yuankun Fu <fyuankun@vmware.com>
+# Author: Yuankun Fu <vhpc-toolkit@vmware.com>
 # 1. Change FrontEnd VM's hostname
 # 2. Install xCAT and Configure FrontEnd and Compute VMs.
 # 3. Install OpenHPC repo
