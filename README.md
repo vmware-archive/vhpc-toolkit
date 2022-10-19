@@ -45,6 +45,7 @@ virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
+# Modify config/vCenter.conf
 cd bin
 ./vhpc_toolkit view
 ```
