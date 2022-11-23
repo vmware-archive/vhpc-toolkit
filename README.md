@@ -44,7 +44,7 @@ cd vhpc-toolkit
 virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install vhpc_toolkit
+pip install -e .
 ```
 
 Follow [this page](https://vmware.github.io/vhpc-toolkit/#/install) about how to securely store your vSphere Client username and password in the ```vCenter.conf``` in order to enable the possibility of automation (without prompting password every operation).
