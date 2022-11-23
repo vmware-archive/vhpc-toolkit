@@ -24,7 +24,7 @@ sudo pip3 install virtualenv
 ```
 
 
-Setup this toolkit with an virtual env:
+Setup this toolkit with an virtual env and install it in "develop" mode (allow actively modify the toolkit):
  
 ```bash 
 git clone https://github.com/vmware/vhpc-toolkit.git
@@ -32,13 +32,6 @@ cd vhpc-toolkit
 virtualenv -p python3 venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install vhpc_toolkit
-```
-
-If you want to actively modify the toolkit, it is recommended to install it in "develop" mode
-```bash
-pip install -e <folder_with_setup.py>
-# If setup.py is in current folder
 pip install -e .
 ```
 
