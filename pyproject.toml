@@ -1,0 +1,22 @@
+[project]
+name = "vhpc-toolkit"
+version = "1.0.2"
+authors = [
+  { name="VMware OCTO HPC/ML Group", email="vhpc-toolkit@vmware.com" },
+]
+description = "Deploy and manage virtualized clusters for High Performance Computing (HPC) and machine learning environments on VMware software stacks"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/vmware/vhpc-toolkit"
+"Bug Tracker" = "https://github.com/vmware/vhpc-toolkit/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
