@@ -459,12 +459,15 @@ class Cluster(object):
         """
 
         str_keys = ["name", "port_group", "host", "datacenter"]
+        int_keys = ["mtu"]
         list_keys = ["pnic"]
         try:
             if key in str_keys:
                 cfg[key] = value
             elif key in list_keys:
                 cfg[key] = self._find_list(value)
+            elif key in int_keys:
+                cfg[key] = int(value)
             else:
                 raise UnknownKeyError(key)
         except UnknownKeyError as e:
