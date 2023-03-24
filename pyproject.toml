@@ -1,6 +1,6 @@
 [project]
 name = "vhpc-toolkit"
-version = "1.0.2"
+version = "1.0.3"
 authors = [
   { name="VMware OCTO HPC/ML Group", email="vhpc-toolkit@vmware.com" },
 ]
